@@ -1,0 +1,34 @@
+# Agent Platform — 공유 블록 드리프트
+#
+# 이 저장소가 소비하는 것은 **공유 블록 규약**이다. `docs/agents/*.md` 는 전부 생성물이며
+# 손으로 고치면 이 잡이 실패한다. 고칠 곳은 플랫폼 템플릿이다. 오늘 이 저장소의 자격 블록은
+# 셋(triage-labels · domain · design)이고, 자격은 등록부 격자가 계산한다 — measureCommand ·
+# uiPaths 가 실측되는 날 issue-tracker · skills 가 따라온다 (Agent-Platform ISSUE-347).
+#
+# ⚠️ `constitution-guard` 가 아니다 — 디자인 하네스가 없는 저장소는 그 관할 밖이다.
+# **관할이 다르면 액션이 다르다** (Agent-Platform ISSUE-70). moayo-hq 와 같은 처지다.
+#
+# 플랫폼 저장소를 체크아웃하지 않는다 — `uses:` 가 러너에 내려놓는다. 토큰도 시크릿도 없다.
+# 이 잡은 저장소에 **아무것도 쓰지 않는다.** 판정만 한다.
+name: Agent Platform
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: agent-platform-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  shared-block:
+    name: 공유 블록 드리프트
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: Moayo-app/Agent-Platform/.github/actions/shared-block-guard@main
+        with:
+          service: graduand
