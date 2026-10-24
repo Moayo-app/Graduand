@@ -1,0 +1,18 @@
+# 개방 목록 — **단일 정본** (결정 기록: [ISSUE-2] → moayo-hq #209 · 자리 발급: [ISSUE-12] 부수).
+#
+# 모형 = 허용 목록: 여기 적힌 나라만 열리고, **미등재 국가 = 닫힘**이다.
+# 확장 절차 = 「요청이 오면 그 나라를 잰다」 — 나라별 측정 → 결정 티켓 → 이 파일 PR
+# (자매 제품 Re-Stance #101 모형 상속 · 조용한 증식 금지). 줄이는 법 = 행 삭제.
+#
+# ⭐ 문서 로케일 분모가 이 파일에서 유도된다 — `doc_locale` 의 합집합 = 정책 문서
+# (docs/policies/) 의 로케일 집합이고, 로케일 대조 가드(tools/test/policy-guards.test.mjs,
+# tools/lib/policy.mjs policyFiles)가 이 파일을 읽는다. 테스트에 로케일 수를 적지 않는다.
+#
+# 표기 = ISO 3166-1 alpha-2 대문자. 행마다 근거 필수.
+countries:
+  - code: KR
+    doc_locale: ko
+    basis: "본국(법인 소재국) — 선택지가 아니라 준수 대상 (moayo-hq #209 결정 4)"
+  - code: US
+    doc_locale: en
+    basis: "B2B 개발자 도구 최대 시장 — ⏳ 조건부(moayo-hq #209 결정 4, 선행 측정 moayo-hq #218 통과 전에는 결제를 열지 않는다)"

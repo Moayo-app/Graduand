@@ -1,0 +1,12 @@
+{
+  "name": "graduand",
+  "private": true,
+  "type": "module",
+  "description": "규칙을 코드로 쥐고, 에이전트가 낸 일을 그 규칙으로 판정한다. ⚠️ 이름은 잠정이다.",
+  "scripts": {
+    "test": "node --test \"tools/test/*.test.mjs\""
+  },
+  "devDependencies": {
+    "js-yaml": "^4.1.0"
+  }
+}
