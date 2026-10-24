@@ -33,10 +33,13 @@
 담지 않는다. 진단 페이지의 소스 공개는 「결과가 우리에게 오지 않는다」를 **검증 가능한
 주장**으로 만들기 위한 것이다.
 
-오늘 상태 (2026-10-24): 첫 코드 = **정책 문서 6벌과 그 가드**([#12](https://github.com/Moayo-app/Graduand/issues/12) —
-`docs/policies/` · `config/` · `tools/`). 판정기·어댑터·계측기·진단 페이지는 아직 열린 이슈다 —
-열린 이슈가 할 일의 전부이고, **닫힌 이슈가 결정의 색인이다**(각 본문이 정본 포인터를 든다.
-결정의 정본과 그 근거는 moayo-hq 에 산다 — 비공개이고, 여기서 다시 쓰지 않는다).
+오늘 상태 (2026-10-24): 첫 코드 = **정책 문서 6벌과 그 가드**([Graduand_dev#13](https://github.com/Moayo-app/Graduand_dev/issues/13) —
+`docs/policies/` · `config/` · `tools/`). ⚠️ **이슈·개발은 여기서 하지 않는다** — 작업장은
+비공개 [`Graduand_dev`](https://github.com/Moayo-app/Graduand_dev) 다 (Henry 2026-10-24:
+「여기서 만들고, 공개할 범위만 Graduand 에 배포한다」). 할 일의 전부(열린 구현 이슈)와 결정의
+색인(닫힌 이슈)은 2026-10-24 에 전부 그쪽으로 이사했고(옛 번호는 리다이렉트로 남는다),
+**이 저장소의 이슈 트래커는 공개 전환 뒤 고객의 것**이다. 결정의 정본과 그 근거는 여전히
+moayo-hq 에 산다 — 비공개이고, 여기서 다시 쓰지 않는다.
 
 ## 2. 확정 결정 색인 (상세·근거는 각 이슈의 포인터)
 
@@ -70,7 +73,7 @@
 - **`main` 직접 push 금지** — ruleset 이 집행한다. 반드시 PR 이고, 필수 체크는
   **「공유 블록 드리프트」** (`.github/workflows/agent-platform.yml`) — `docs/agents/*.md` 는
   전부 생성물이라 **손으로 고치면 빨강이다.** 고칠 곳은 플랫폼 템플릿이다. **측정 명령 =
-  `npm test`** — 정책 가드(`.github/workflows/policy-guards.yml`, [#12](https://github.com/Moayo-app/Graduand/issues/12))가
+  `npm test`** — 정책 가드(`.github/workflows/policy-guards.yml`, [Graduand_dev#13](https://github.com/Moayo-app/Graduand_dev/issues/13))가
   첫 코드와 함께 섰고 필수 체크에 올린다. 타입 검사는 아직 없다 — 판정기 첫 코드와 함께 세운다.
 - **PR 본문에 `Closes #<N>`.** ⚠️ 커밋 제목에 `fix` 와 `#<N>` 을 같이 두지 않는다 — GitHub 이
   종료 키워드로 읽는다. 참조는 본문에 `Refs #<N>`.
@@ -86,3 +89,8 @@
 
 이 저장소는 공개를 전제로 쓴다 — **여기 커밋되는 모든 것(이슈 포함)은 공개되어도 되는
 내용이어야 한다.** 내부 근거·분석·전략은 여기 적지 않고 정본 포인터로만 가리킨다.
+
+⭐ **작업장과 배포 표적** (Henry 2026-10-24) — 개발·이슈·내부 산문·프로토타입은 비공개
+작업장 [`Graduand_dev`](https://github.com/Moayo-app/Graduand_dev) 에 살고, **공개할 범위만
+이 저장소로 배포한다.** 이 분리가 위 문장을 저장소 전체에서 지켜지게 하는 기전이다.
+⚠️ 배포 기전은 미정 — 정해지면 Graduand_dev `CLAUDE.md` 가 그 포인터를 받는다.
