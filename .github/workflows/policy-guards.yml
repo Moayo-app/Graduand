@@ -1,0 +1,30 @@
+# 정책 가드 — 이 저장소의 측정 명령 ([ISSUE-12] · CLAUDE.md §19 「첫 코드와 함께 세우고 필수 체크에 올린다」).
+#
+# 재는 것: docs/policies/ 6벌 × 저장소 내 가드 10종(G1–G10) + 저장소 간 정본 선언표.
+# 가드의 본체는 tools/lib/policy.mjs, 금칙·필수 문자열의 정본은 config/policy-strings.yml,
+# 로케일 분모의 정본은 config/allowed-countries.yml 이다 — 이 잡은 판정만 하고 아무것도 쓰지 않는다.
+name: 정책 가드
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: policy-guards-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  policy-guards:
+    name: 정책 가드
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
