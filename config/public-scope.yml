@@ -78,7 +78,7 @@ entries:
   - path: config/
     origin: local
     license: Apache-2.0
-    basis: "선언 정본들 — 개방 목록 · 정책 문자열 · 이 파일 자신"
+    basis: "선언 정본들 — 개방 목록 · 정책 문자열 · 보호 설정(ruleset.json) · 이 파일 자신. ⚠️ 어느 것도 실물을 **바꾸지** 않는다: 「무엇이 참이어야 하는가」를 적고, 가드가 실물과 대조한다"
   - path: docs/agents/
     origin: platform
     license: Apache-2.0

@@ -1,0 +1,27 @@
+{
+  "주": [
+    "보호 설정의 선언 — 이 파일이 분모고, tools/lib/ruleset-drift.mjs 가 실물과 대조한다.",
+    "⛔ 가드는 고치지 않는다. 바꾸는 것은 Administration: write 이고, 그 권한을 CI 에 주는 것은",
+    "   아래 bypass_actors: [] (「우회로 없음」)이 배제한 바로 그 주체를 만드는 일이다.",
+    "⚠️ 이 파일을 고치는 것으로 실물이 바뀌지 않는다 — 실물은 사람이 설정 화면에서 바꾸고,",
+    "   이 파일은 「무엇이 참이어야 하는가」를 적는다. 둘이 어긋나면 가드가 그 축을 지목한다.",
+    "⚠️ required_status_checks 의 문자열은 **잡 이름**이다(워크플로 이름이 아니다). 잡 이름을",
+    "   바꾸면 룰셋이 가리키는 context 가 사라져 그 PR 이 영구 pending 이 된다 — 바꿀 때는",
+    "   이 파일과 실물을 같이 바꾼다.",
+    "⛔ require_extra_approval_for_unattributed_changes 는 일부러 적지 않는다 — 실물은 true 지만",
+    "   그것이 의도인지 조직 기본값인지 모르는 채로 적으면 우연을 결정으로 굳힌다."
+  ],
+  "name": "main protection",
+  "target": "branch",
+  "enforcement": "active",
+  "conditions": {
+    "include": ["~DEFAULT_BRANCH"],
+    "exclude": []
+  },
+  "rule_types": ["pull_request", "required_status_checks"],
+  "required_approving_review_count": 0,
+  "allowed_merge_methods": ["merge", "squash", "rebase"],
+  "required_status_checks": ["공유 블록 드리프트", "정책 가드", "타입 검사 + 테스트 + 빌드"],
+  "strict_required_status_checks_policy": false,
+  "bypass_actors": []
+}

@@ -1,0 +1,59 @@
+# 보호 설정 드리프트 — 커밋된 선언과 실물을 대조한다. [ISSUE-38]
+#
+# ⭐⭐ **자격 0 이다.** 룰셋을 읽는 데 필요한 것은 `Metadata: read` 뿐이고 `GITHUB_TOKEN` 이
+#    그것을 **항상** 갖는다 — 시크릿도 App 토큰도 없다. (`permissions:` 목록에
+#    `administration` 이 없는 것이 「못 읽는다」를 뜻하지 않는다: 그 권한은 **고치는** 쪽이다.)
+#
+# ⛔ **고치지 않는다.** 바꾸는 것은 `Administration: write` 이고, 그 권한을 CI 에 주는 것은
+#    선언의 `bypass_actors: []`(「우회로 없음」)가 배제한 바로 그 주체를 만드는 일이다.
+#
+# ⚠️ **PR 체크가 아니다** — 룰셋은 PR 마다 바뀌는 것이 아니라 사람이 설정 화면에서 바꾼다.
+#    그래서 주마다 묻고, 필요할 때 손으로 띄운다. ⇒ 빨강은 「이 PR 이 틀렸다」가 아니라
+#    **「보호 설정이 선언과 어긋났다」**다.
+name: 보호 설정 드리프트
+
+on:
+  schedule:
+    # 매주 월요일 00:17 UTC — 정시를 피해 큐가 밀리는 자리를 비켜 둔다.
+    - cron: '17 0 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ruleset-drift
+  cancel-in-progress: true
+
+jobs:
+  ruleset-drift:
+    name: 보호 설정 드리프트
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: 룰셋이 하나인지 본다
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # ⛔ 분모가 빈 채로 초록이 되지 않는다 — 룰셋이 0개면 「어긋남 0」이 아니라
+          #    보호가 **사라진** 것이다.
+          n=$(gh api "repos/${{ github.repository }}/rulesets" --jq 'length')
+          echo "룰셋 $n개"
+          if [ "$n" -eq 0 ]; then
+            echo "⛔ 룰셋이 0개다 — 보호 설정이 사라졌다. 선언은 하나를 기대한다." >&2
+            exit 1
+          fi
+
+      - name: 선언과 실물을 대조한다
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          name=$(node -e "console.log(require('./config/ruleset.json').name)")
+          id=$(gh api "repos/${{ github.repository }}/rulesets" --jq ".[] | select(.name == \"$name\") | .id")
+          if [ -z "$id" ]; then
+            echo "⛔ 선언이 부르는 룰셋 「$name」 이 실물에 없다 — 이름이 바뀌었거나 지워졌다." >&2
+            gh api "repos/${{ github.repository }}/rulesets" --jq '.[] | "  실물에 있는 것: \(.name) (#\(.id))"' >&2
+            exit 1
+          fi
+          gh api "repos/${{ github.repository }}/rulesets/$id" | node tools/ruleset-drift.mjs
