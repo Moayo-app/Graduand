@@ -49,8 +49,18 @@ export const COVERED = {
     'required_approving_review_count',
     'allowed_merge_methods',
     'require_extra_approval_for_unattributed_changes',
+    'dismiss_stale_reviews_on_push',
+    'dismissal_restriction',
+    'require_code_owner_review',
+    'require_last_push_approval',
+    'required_review_thread_resolution',
+    'required_reviewers',
   ],
-  required_status_checks: ['required_status_checks', 'strict_required_status_checks_policy'],
+  required_status_checks: [
+    'required_status_checks',
+    'strict_required_status_checks_policy',
+    'do_not_enforce_on_create',
+  ],
 };
 
 const sorted = (xs) => [...(xs ?? [])].sort();
@@ -70,6 +80,12 @@ export function judge(decl, live) {
   const unjudged = (axis, reason) => out.push({ axis, status: 'unjudged', reason });
   const eq = (axis, want, got) =>
     String(want) === String(got) ? pass(axis, `${got}`) : fail(axis, `선언 「${want}」 · 실물 「${got}」`);
+  // ⚠️ 중첩 객체는 String() 이 「[object Object]」가 되어 **무엇이든 같아 보인다** — 그 자리에
+  //    조용한 초록이 생기므로 모양까지 비교한다. 키 순서는 의미가 아니니 정렬해 센다.
+  const deep = (axis, want, got) => {
+    const norm = (o) => JSON.stringify(Object.fromEntries(Object.entries(o ?? {}).sort()));
+    return norm(want) === norm(got) ? pass(axis, norm(got)) : fail(axis, `선언 「${norm(want)}」 · 실물 「${norm(got)}」`);
+  };
   const set = (axis, want, got, shown) =>
     same(want, got) ? pass(axis, shown ?? (got.length === 0 ? '(비어 있다)' : got.join(' · '))) : fail(axis, `선언 「${sorted(want).join(' · ')}」 · 실물 「${sorted(got).join(' · ')}」`);
 
@@ -83,8 +99,10 @@ export function judge(decl, live) {
 
   const pr = ruleOf(live, 'pull_request');
   if (!pr) {
-    fail('승인 수', 'pull_request 규칙이 실물에 없다');
-    fail('머지 방식', 'pull_request 규칙이 실물에 없다');
+    // ⚠️ 규칙이 없으면 그 규칙의 **축 전부**가 빨갛다 — 하나만 울고 나머지가 조용하면
+    //    「나머지는 괜찮다」로 읽힌다.
+    for (const axis of ['승인 수', '미귀속 변경 추가 승인', '머지 방식', '마지막 push 승인', '지정 리뷰어', '코드 소유자 리뷰', 'push 때 승인 무효화', '승인 무효화 제한', '리뷰 스레드 해결'])
+      fail(axis, 'pull_request 규칙이 실물에 없다');
   } else {
     eq('승인 수', decl.required_approving_review_count, pr.parameters?.required_approving_review_count);
     // ⭐ 켜고 끈 것이 **결정**이 된 뒤에 선언이 든 칸이다 — 그 전에는 ⬜ 로 남아 있었다.
@@ -96,12 +114,28 @@ export function judge(decl, live) {
     // ⭐ 머지 방식도 결정이다 — squash 가 이 저장소의 관행이고, 그 칸이 혼자 움직이면
     //    `main` 의 역사 모양이 조용히 바뀐다.
     set('머지 방식', decl.allowed_merge_methods, pr.parameters?.allowed_merge_methods ?? []);
+
+    // ⭐ 아래 다섯은 「승인 수 0」의 파생이다 — 지금은 무의미하고, 승인을 켜는 날 **함께**
+    //    재어진다. ⚠️ 마지막 push 승인만은 지금도 뜻이 있다: 켜면 협업자 1명인 저장소에서
+    //    모든 PR 이 영구 차단된다(자기 push 를 자기가 승인할 수 없다).
+    eq('마지막 push 승인', decl.require_last_push_approval, pr.parameters?.require_last_push_approval);
+    set('지정 리뷰어', decl.required_reviewers, pr.parameters?.required_reviewers ?? []);
+    // ⛔ CODEOWNERS 가 없다 — 켜 두면 「있는데 비어서 통과」와 「없어서 통과」가 구별되지 않는다.
+    eq('코드 소유자 리뷰', decl.require_code_owner_review, pr.parameters?.require_code_owner_review);
+    eq('push 때 승인 무효화', decl.dismiss_stale_reviews_on_push, pr.parameters?.dismiss_stale_reviews_on_push);
+    deep('승인 무효화 제한', decl.dismissal_restriction, pr.parameters?.dismissal_restriction);
+    // ⚠️ 승인자가 필요 없는 유일한 리뷰 계열 칸 — 켜면 「열린 질문 위로 머지하지 않는다」가 된다.
+    eq(
+      '리뷰 스레드 해결',
+      decl.required_review_thread_resolution,
+      pr.parameters?.required_review_thread_resolution,
+    );
   }
 
   const rsc = ruleOf(live, 'required_status_checks');
   if (!rsc) {
-    fail('필수 체크', 'required_status_checks 규칙이 실물에 없다');
-    fail('최신 상태 요구', 'required_status_checks 규칙이 실물에 없다');
+    for (const axis of ['필수 체크', '최신 상태 요구', '생성 때 체크 면제'])
+      fail(axis, 'required_status_checks 규칙이 실물에 없다');
   } else {
     const got = (rsc.parameters?.required_status_checks ?? []).map((c) => c.context);
     same(decl.required_status_checks, got)
@@ -113,6 +147,9 @@ export function judge(decl, live) {
         );
     // ⭐ 끈 것이 결정이라 선언이 든다 — 켜지면 열린 PR 전부가 리베이스를 요구한다.
     eq('최신 상태 요구', decl.strict_required_status_checks_policy, rsc.parameters?.strict_required_status_checks_policy);
+    // ⚠️ 부정형 이름이다 — false 가 **엄한 쪽**(생성 때도 집행)이다. true 면 ref 를 만드는
+    //    경로가 필수 체크를 비켜 간다.
+    eq('생성 때 체크 면제', decl.do_not_enforce_on_create, rsc.parameters?.do_not_enforce_on_create);
   }
 
   // ⚠️⚠️ 미판정 ⑵ — 실물에 있는데 어느 축도 재지 않는 칸. 「선언이 이 칸을 들지 않는다」는
