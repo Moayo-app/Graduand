@@ -29,6 +29,15 @@ entries:
   - path: CLAUDE.md
     origin: local
     basis: "세션 부트스트랩 — 칼이 첫 화면에 산다. 내부 근거는 포인터로만 가리킨다"
+  - path: CONTRIBUTING.md
+    origin: local
+    basis: "기여 안내 — 받는 입력과 받지 않는 입력. 공개 산문 가드(tools/lib/public-surface.mjs)의 모집단이 이 파일이다"
+  - path: LICENSE
+    origin: local
+    basis: "지금 적용되는 라이선스 — BSL 1.1 증서. ⚠️ 발행마다 Change Date 칸이 다시 박히므로 **판마다 바뀌는 파일**이고, verifier/LICENSE 가 그 사본이다(드리프트는 tools/lib/license-copy.mjs 가 잰다)"
+  - path: LICENSE-APACHE-2.0
+    origin: local
+    basis: "Change License 의 전문 — Apache-2.0. Change Date 이후에 적용되는 라이선스이고, 증서가 이 파일을 이름으로 가리킨다"
   - path: README.md
     origin: local
     basis: "입구 산문"
@@ -38,6 +47,9 @@ entries:
   - path: docs/agents/
     origin: platform
     basis: "공유 블록 생성물 — 트리아지 라벨 · 도메인 · 디자인 경계"
+  - path: docs/licensing/
+    origin: local
+    basis: "라이선스 경계의 정본 — 기능 → 게이트·선언 조건. 증서의 Additional Use Grant 가 이 문서를 이름으로 가리킨다(둘은 같은 사실에서 나온다)"
   - path: docs/policies/
     origin: local
     basis: "정책 문서 6벌 + 저장소 간 정본 선언표"
