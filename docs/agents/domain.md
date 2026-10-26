@@ -2,7 +2,7 @@
      정본 템플릿: platform/shared-blocks/templates/domain.md
      재생성(플랫폼 저장소에서): npm run shared-block -- --service <서비스> --file <이름> --out <서비스 저장소>/docs/agents/domain.md --force
      대상 저장소: Moayo-app/Graduand
-     생성 판: 4c6d8c07b598 -->
+     생성 판: d99aefcb96cc -->
 
 # Domain Docs
 
@@ -10,8 +10,8 @@ How the engineering skills should consume this repo's domain documentation when 
 
 ## Before exploring, read these
 
-- **`CONTEXT.md`** at the repo root, or
-- **`CONTEXT-MAP.md`** at the repo root if it exists: it points at one `CONTEXT.md` per context. Read each one relevant to the topic.
+- **`GLOSSARY.md`** at the repo root, or
+- **`GLOSSARY-MAP.md`** at the repo root if it exists: it points at one `GLOSSARY.md` per context. Read each one relevant to the topic.
 - **`docs/adr/`**: read ADRs that touch the area you're about to work in. In multi-context repos, also check `src/<context>/docs/adr/` for context-scoped decisions.
 
 If any of these files don't exist, **proceed silently**. Don't flag their absence; don't suggest creating them upfront. The `/domain-modeling` skill (reached via `/grill-with-docs` and `/improve-codebase-architecture`) creates them lazily when terms or decisions actually get resolved.
@@ -22,31 +22,31 @@ Single-context repo (most repos):
 
 ```
 /
-├── CONTEXT.md
+├── GLOSSARY.md
 ├── docs/adr/
 │   ├── 0001-event-sourced-orders.md
 │   └── 0002-postgres-for-write-model.md
 └── src/
 ```
 
-Multi-context repo (presence of `CONTEXT-MAP.md` at the root):
+Multi-context repo (presence of `GLOSSARY-MAP.md` at the root):
 
 ```
 /
-├── CONTEXT-MAP.md
+├── GLOSSARY-MAP.md
 ├── docs/adr/                          ← system-wide decisions
 └── src/
     ├── ordering/
-    │   ├── CONTEXT.md
+    │   ├── GLOSSARY.md
     │   └── docs/adr/                  ← context-specific decisions
     └── billing/
-        ├── CONTEXT.md
+        ├── GLOSSARY.md
         └── docs/adr/
 ```
 
 ## Use the glossary's vocabulary
 
-When your output names a domain concept (in an issue title, a refactor proposal, a hypothesis, a test name), use the term as defined in `CONTEXT.md`. Don't drift to synonyms the glossary explicitly avoids.
+When your output names a domain concept (in an issue title, a refactor proposal, a hypothesis, a test name), use the term as defined in `GLOSSARY.md`. Don't drift to synonyms the glossary explicitly avoids.
 
 If the concept you need isn't in the glossary yet, that's a signal: either you're inventing language the project doesn't use (reconsider) or there's a real gap (note it for `/domain-modeling`).
 
@@ -59,7 +59,7 @@ If the concept you need isn't in the glossary yet, that's a signal: either you'r
 
 - Close-Unfold: *"**ADR 이 스펙을 이깁니다** — ADR 은 스펙보다 나중에 내려진 결정이고,
   스펙의 일부를 명시적으로 뒤집었습니다."*
-- Moayo: *"정책 값이 필요하면 `docs/policies/` 를, 용어 정의가 필요하면 `CONTEXT.md` 를 본다.
+- Moayo: *"정책 값이 필요하면 `docs/policies/` 를, 용어 정의가 필요하면 `GLOSSARY.md` 를 본다.
   **둘이 충돌하면 `docs/policies/` 가 이긴다.**"*
 
 > 두 서비스에서 **독립적으로** 같은 형태가 나왔다 (2026-08-26). [#20](https://github.com/Moayo-app/Agent-Platform/issues/20) 의 「두 번째 인스턴스」
