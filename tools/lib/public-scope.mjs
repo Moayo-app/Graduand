@@ -1,6 +1,8 @@
 // 공개 범위 가드의 공유 모듈 — [ISSUE-16] (선언 정본 config/public-scope.yml).
 //
-// 재는 것 둘. ⑴ **선언 밖 파일이 0** 인가(AC2) ⑵ **배달된 산문에 내부 표기가 0** 인가(AC3).
+// 재는 것 셋. ⑴ **선언 밖 파일이 0** 인가(AC2) ⑵ **배달된 산문에 내부 표기가 0** 인가(AC3)
+// ⑶ **허가 없이 공개되는 경로가 0** 인가 — 행마다 `license` 가 서 있고, 그 값이 사유 문서에
+// 불리는가. ⚠️ 셋째는 침묵을 겨냥한다: 기본값은 all rights reserved 라서 **적지 않으면 닫힌다.**
 //
 // ⭐ 모집단 단일화 — scopeEntries() 한 함수가 선언을 읽고, 두 가드가 그것만 쓴다. AC3 의
 // 분모를 테스트에 적지 않는다: `origin: workshop` 항들이 그 분모이고, 그래서 배달 범위가
@@ -18,6 +20,16 @@ export const SCOPE_PATH = 'config/public-scope.yml';
 
 /** 정본이 어디 사는가. workshop 항만 내부 산문 스윕의 대상이다. */
 export const ORIGINS = ['local', 'platform', 'workshop'];
+
+/** 그 경로에 붙는 허가. ⛔ 닫힌 목록이다 — 모르는 값은 던진다(새 허가는 사유와 함께 들어온다).
+ *
+ * ⚠️ `reserved` 가 「아직 안 정했다」가 아니다. **정해서 닫은 것**이고, 그 둘을 한 값으로
+ * 적으면 미판정이 결정으로 읽힌다 — 이 저장소가 파는 바로 그 혼동이다. 미정은 값이 없고,
+ * 값이 없으면 scopeEntries 가 던진다. */
+export const LICENSES = ['BSL-1.1', 'Apache-2.0', 'reserved', 'upstream'];
+
+/** 허가 묶음마다의 **사유**. 배정(선언의 license 축)과 사유를 나눠 둔 쪽. */
+export const LICENSE_GROUNDS = 'docs/licensing/repository-licensing.md';
 
 /** 어떤 선언에도 들지 않는 이름 — 발행되지 않고 .gitignore 가 말할 대상도 아니다.
  * ⚠️ 디렉터리가 아닐 수 있다: 워크트리에서 `.git` 는 **파일**이다. */
@@ -45,7 +57,10 @@ export function ignoredDirs(root) {
   };
 }
 
-/** 선언 → [경로, origin, 근거][]. 모양이 틀리면 던진다 — 조용히 건너뛰면 그 행이 없는 것과 같다. */
+/** 선언 → [경로, origin, 근거, 허가][]. 모양이 틀리면 던진다 — 조용히 건너뛰면 그 행이 없는 것과 같다.
+ *
+ * ⭐ `license` 가 **필수**인 것이 이 축의 요점이다: 새 경로는 행을 요구하고, 행은 허가를
+ * 요구한다 ⇒ 어떤 파일도 「허가 없이 공개」로 **조용히 떨어질 수 없다**. */
 export function scopeEntries(root) {
   const { entries } = loadScope(root);
   if (!Array.isArray(entries) || entries.length === 0) throw new Error(`${SCOPE_PATH}: entries 가 비었다 — 선언이 분모다`);
@@ -55,7 +70,11 @@ export function scopeEntries(root) {
     if (e.path.startsWith('/') || e.path.includes('..')) throw new Error(`${label}: path 가 저장소 상대경로가 아니다 — ${e.path}`);
     if (!ORIGINS.includes(e.origin)) throw new Error(`${label}: origin 이 ${ORIGINS.join('·')} 중 하나가 아니다 — ${e.origin}`);
     if (typeof e?.basis !== 'string' || !e.basis.trim()) throw new Error(`${label}: basis 가 없다 — 행마다 근거 필수다`);
-    return [e.path, e.origin, e.basis];
+    if (!LICENSES.includes(e.license))
+      throw new Error(
+        `${label}: license 가 ${LICENSES.join('·')} 중 하나가 아니다 — ${e.license} (빈 칸은 「미정」이 아니라 all rights reserved 다)`,
+      );
+    return [e.path, e.origin, e.basis, e.license];
   });
 }
 
@@ -154,4 +173,23 @@ export function checkWorkshopProse(root) {
     }
   }
   return errors;
+}
+
+/**
+ * 선언이 쓰는 허가마다 **사유가 적혀 있는가** — 배정과 사유가 갈라지지 않게.
+ *
+ * ⭐⭐ 왜 이 방향만 재는가. 배정의 정본은 선언이고 사유의 정본은 문서다 — 같은 사실을 두 번
+ * 적지 않으므로 둘을 바이트로 비교할 수 없다. 대신 **쓰이는 값의 집합**이 문서에 전수
+ * 등장하는지를 잰다: 새 허가를 선언에 적고 사유를 안 적는 그 한 번이 이 가드의 표적이다.
+ *
+ * ⚠️ 반대 방향(문서에만 있고 선언에 없는 값)은 **재지 않는다** — 쓰지 않게 된 허가의 사유가
+ * 문서에 남는 것은 결함이 아니고, 이 저장소는 선언된 갈라짐을 사유와 함께 남긴다.
+ */
+export function checkLicenseGrounds(root) {
+  const used = [...new Set(scopeEntries(root).map(([, , , license]) => license))].sort();
+  if (used.length === 0) throw new Error(`${SCOPE_PATH}: 쓰이는 허가가 0 이다 — 분모가 비면 아래 비교는 아무것도 재지 않는다`);
+  const grounds = read(root, LICENSE_GROUNDS);
+  return used
+    .filter((license) => !grounds.includes(license))
+    .map((license) => `${LICENSE_GROUNDS}: 허가 「${license}」 의 사유가 없다 — ${SCOPE_PATH} 가 그 값을 쓰고 있다`);
 }

@@ -11,6 +11,8 @@ import path from 'node:path';
 import {
   SCOPE_PATH,
   ORIGINS,
+  LICENSES,
+  LICENSE_GROUNDS,
   ignoredDirs,
   scopeEntries,
   coveringEntry,
@@ -19,6 +21,7 @@ import {
   checkScopeCoverage,
   checkScopeEntries,
   checkWorkshopProse,
+  checkLicenseGrounds,
 } from '../lib/public-scope.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '../..');
@@ -71,9 +74,38 @@ test('선언 행마다 origin 과 근거가 있다 — 모양이 틀리면 scope
   }
 });
 
+test('선언 행마다 허가가 있다 — 빈 칸은 「미정」이 아니라 all rights reserved 다', () => {
+  for (const [p, , , license] of scopeEntries(ROOT)) assert.ok(LICENSES.includes(license), `${p}: license = ${license}`);
+});
+
+test('⭐⭐ 허가 없이 공개되는 파일이 0 이다 — 두 가드의 합성이 그것을 단정한다', () => {
+  // AC2 가 「덮는 행이 없는 파일 0」을 주고, scopeEntries 가 「허가 없는 행 0」을 준다 —
+  // 그 둘의 합성이 이 단정이다. 합성인 채로 두면 한쪽이 약해질 때 아무도 울지 않으므로,
+  // **실물 전수에서** 직접 잰다: 이것이 이 이슈가 닫은 공백 그 자체다.
+  const entries = scopeEntries(ROOT);
+  const files = walkFiles(ROOT);
+  assert.ok(files.length > 50, `분모가 비면 아래 전수는 아무것도 재지 않는다 — ${files.length}건`);
+  for (const f of files) assert.ok(LICENSES.includes(coveringEntry(entries, f)?.[3]), `${f}: 허가 없이 공개된다`);
+});
+
+test('⭐ 결정 넷이 선언에 **박혀** 있다 — 묶음의 성질이 다르다는 그 결정이다', () => {
+  const entries = scopeEntries(ROOT);
+  const licenseOf = (file) => coveringEntry(entries, file)?.[3];
+  // 제품 — 증서가 부르는 둘. (증서와의 1:1 은 license-copy 가드가 잰다.)
+  assert.equal(licenseOf('verifier/src/cli.ts'), 'BSL-1.1');
+  // 운영 — 가드 본체. ⭐ 베껴 쓸 수 있어야 「정본을 보여라」가 논증이 된다.
+  assert.equal(licenseOf('tools/lib/public-scope.mjs'), 'Apache-2.0');
+  // 정책 — ⚠️ 읽히기 위해 공개하고 재사용 허가는 두지 않는다. 침묵이 아니라 **결정**이다.
+  assert.equal(licenseOf('docs/policies/terms.md'), 'reserved');
+  // 남의 증서 전문 — 우리가 줄 수 있는 허가가 아니다.
+  assert.equal(licenseOf('LICENSE-APACHE-2.0'), 'upstream');
+  assert.equal(new Set(entries.map(([, , , l]) => l)).size, LICENSES.length, '네 값이 모두 쓰인다 — 사유 대조의 분모다');
+});
+
 clean(`AC2: 선언 밖 파일이 0 이다 — ${'config/public-scope.yml'} 가 분모다`, checkScopeCoverage);
 clean('선언 자신이 건강하다 — 중복 0 · 허공을 가리키는 행 0', checkScopeEntries);
 clean('AC3: 배달된 파일에 내부 표기가 0 이다', checkWorkshopProse);
+clean(`선언이 쓰는 허가마다 사유가 ${LICENSE_GROUNDS} 에 있다`, checkLicenseGrounds);
 
 test('⭐ AC3 의 분모가 비어 있지 않다 — 초록이 「안 읽었다」가 아님을 따로 잰다', () => {
   const swept = workshopFiles(ROOT);
@@ -127,7 +159,12 @@ test('AC2 (negative): 루트에 심은 파일도 잡는다 — 접두사 없이 
 
 test('(negative): 허공을 가리키는 선언 행은 범위를 조용히 넓힌다 — 그래서 빨갛다', () => {
   const root = cloneRoot();
-  addEntry(root, '  - path: telemetry/\n    origin: workshop\n    basis: "아직 서지 않은 것을 가리키는 행"\n');
+  // ⚠️ `license` 를 함께 적는다 — 축이 없으면 scopeEntries 가 먼저 던져 이 테스트의 표적(허공
+  // 을 가리키는 행)이 가려진다. 축 자체의 negative 는 아래에 따로 있다.
+  addEntry(
+    root,
+    '  - path: telemetry/\n    origin: workshop\n    license: Apache-2.0\n    basis: "아직 서지 않은 것을 가리키는 행"\n',
+  );
   assert.equal(hits(checkScopeEntries(root), 'telemetry/').length, 1);
 });
 
@@ -163,4 +200,31 @@ test('⭐ AC3 의 분모는 배달 항뿐이다 — local 산문의 같은 표�
   plant(root, 'docs/agents/scratch.md', '근거: ISSUE-99\n');
   assert.deepEqual(checkWorkshopProse(root), [], '재지 않은 자리는 「위반 0」이 아니라 모집단 밖이다');
   assert.equal(hits(checkScopeCoverage(root), 'docs/agents/scratch.md').length, 0, 'docs/agents/ 는 선언돼 있다');
+});
+
+test('(negative): ⚠️ 행에서 license 를 지우면 scopeEntries 가 **던진다** — 조용히 넘어가지 않는다', () => {
+  const root = cloneRoot();
+  const file = path.join(root, SCOPE_PATH);
+  const text = fs.readFileSync(file, 'utf8');
+  const target = '  - path: tools/\n    origin: local\n    license: Apache-2.0\n';
+  assert.ok(text.includes(target), '지울 칸을 선언에서 찾는다');
+  fs.writeFileSync(file, text.replace(target, '  - path: tools/\n    origin: local\n'));
+  assert.throws(() => scopeEntries(root), /license/, '빈 칸이 통과하면 그 경로는 허가 없이 공개된다');
+});
+
+test('(negative): 모르는 허가 값도 던진다 — 새 허가는 사유와 함께 들어온다', () => {
+  const root = cloneRoot();
+  const file = path.join(root, SCOPE_PATH);
+  fs.writeFileSync(file, fs.readFileSync(file, 'utf8').replace('    license: reserved\n', '    license: MIT\n'));
+  assert.throws(() => scopeEntries(root), /MIT/);
+});
+
+test('(negative): 사유 없는 허가를 쓰면 가드가 그 값을 지목한다 — 배정과 사유가 갈라지는 자리', () => {
+  const root = cloneRoot();
+  assert.deepEqual(checkLicenseGrounds(root), [], '심기 전의 사본은 초록이다');
+  const grounds = path.join(root, LICENSE_GROUNDS);
+  fs.writeFileSync(grounds, fs.readFileSync(grounds, 'utf8').replaceAll('reserved', '재사용 금지'));
+  const errors = checkLicenseGrounds(root);
+  assert.equal(errors.length, 1, errors.join(' · '));
+  assert.ok(errors[0].includes('reserved'), errors[0]);
 });
