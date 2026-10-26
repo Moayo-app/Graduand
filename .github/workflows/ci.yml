@@ -1,0 +1,94 @@
+# CI — 받은 코드의 타입 검사 · 테스트 · 빌드 ([ISSUE-16] 담는 것 4 · AC1).
+#
+# 이 저장소의 초록은 여태 「공유 블록이 안 어긋났다」와 「정책 문서 가드가 통과한다」 둘이었다.
+# 판정기와 진단 페이지가 들어온 지금, **「코드가 타입에 맞고 테스트를 통과하고 페이지가
+# 빌드된다」를 재는 것이 없다** — `node --test` 는 타입을 지우고 돌므로 `tsc` 와 빌드만 보는
+# 결함을 못 본다. 그 공백을 이 잡이 메운다.
+#
+# ⚠️ **required 는 이 잡이 `main` 에 선 뒤에 걸린다.** GitHub 은 아직 본 적 없는 체크
+# 이름을 ruleset 에 걸 수 없고, 걸어 두면 그 PR 이 영구 Pending 이 된다. 순서는
+# ⑴ 이 파일이 머지된다 ⑵ 사람이 ruleset 에 체크 이름을 더한다. ⛔ ruleset 은 에이전트가
+# 건드리지 않는다.
+#
+# ⭐ **`paths:` 필터를 쓰지 않는다.** 필터로 걸러진 워크플로는 체크가 **아예 나타나지 않아**
+# 문서 PR 이 영영 Pending 으로 막힌다. 늘 뜨고, 할 일이 없으면 초록으로 끝난다.
+#
+# 토큰도 시크릿도 없다. 이 잡은 저장소에 아무것도 쓰지 않는다 — 판정만 한다.
+name: CI
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    # ⚠️ 잡 이름은 **한글**이다 — 이 저장소의 다른 잡(「공유 블록 드리프트」·「정책 가드」)과
+    #    같은 표기다. 이 이름이 곧 required 체크의 `context` 이므로 **바꾸면 ruleset 이
+    #    가리키는 것이 사라진다**(그 PR 은 영구 Pending 이 된다). 바꿀 때는 ruleset 을 같은
+    #    커밋에서 바꾼다.
+    name: 타입 검사 + 테스트 + 빌드
+    runs-on: ubuntu-latest
+    steps:
+      # checkout 판은 이 저장소의 다른 워크플로와 같은 v7 로 둔다 — 한 저장소의 워크플로들이
+      # 다른 판을 쓰면 다음 워크플로가 어느 쪽을 베낄지 모르게 된다.
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v4
+        with:
+          # ⚠️ 두 패키지의 engines 는 `>=23.6`(Node 가 타입을 지우고 도는 첫 판)이다 —
+          # 그 아래로 내리면 `.ts` 실행이 깨진다(개발에는 빌드 단계가 없다: `node src/cli.ts`).
+          # ⭐ 판정기의 **발행본**은 그와 별도로 `dist/` 를 내므로, 고객이 받는 모듈은 이
+          # 하한에 매이지 않는다.
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            verifier/package-lock.json
+            diagnosis/package-lock.json
+
+      # ⚠️ 패키지마다 단계를 나눈다 — 한 덩어리로 묶으면 무엇이 깨졌는지 로그를 열어야 안다.
+      #    `npm ci` 가 받는 것은 devDependencies(typescript · @types/node)뿐이고
+      #    **런타임 의존은 0 그대로**다.
+      - name: verifier — 의존 설치
+        working-directory: verifier
+        run: npm ci
+
+      - name: verifier — 타입 검사
+        working-directory: verifier
+        run: npm run typecheck
+
+      # ⭐ 판정기도 빌드가 선다 — **발행본의 산출**이다. 아래 테스트가 `npm pack` 으로 같은
+      #    것을 돌리지만, 단계를 따로 두는 이유는 로그다: 산출이 깨졌을 때 「테스트 하나가
+      #    빨갛다」가 아니라 **빌드가 빨갛다**고 읽혀야 한다.
+      - name: verifier — 빌드
+        working-directory: verifier
+        run: npm run build
+
+      - name: verifier — 테스트
+        working-directory: verifier
+        run: npm test
+
+      - name: diagnosis — 의존 설치
+        working-directory: diagnosis
+        run: npm ci
+
+      - name: diagnosis — 타입 검사
+        working-directory: diagnosis
+        run: npm run typecheck
+
+      - name: diagnosis — 테스트
+        working-directory: diagnosis
+        run: npm test
+
+      # ⭐ 빌드가 따로 서는 이유 — 타입 검사와 빌드는 같은 tsc 지만 설정이 다르다
+      #    (`tsconfig.build.json`). ⚠️ 이 패키지의 빌드는 **페이지의 산출**이고, 위
+      #    판정기의 빌드는 **발행본의 산출**이다 — 같은 명령 이름이지만 가는 곳과 뜻이 다르다.
+      - name: diagnosis — 빌드
+        working-directory: diagnosis
+        run: npm run build

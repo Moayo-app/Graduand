@@ -33,8 +33,12 @@
 담지 않는다. 진단 페이지의 소스 공개는 「결과가 우리에게 오지 않는다」를 **검증 가능한
 주장**으로 만들기 위한 것이다.
 
-오늘 상태 (2026-10-24): 첫 코드 = **정책 문서 6벌과 그 가드**([Graduand_dev#13](https://github.com/Moayo-app/Graduand_dev/issues/13) —
-`docs/policies/` · `config/` · `tools/`). ⚠️ **이슈·개발은 여기서 하지 않는다** — 작업장은
+오늘 상태 (2026-10-26): 제품 코드가 들어왔다 — **판정기 `verifier/` 와 진단 페이지
+`diagnosis/`**(2단 배포의 둘째 홉 [#16](https://github.com/Moayo-app/Graduand/issues/16)).
+무엇이 공개 범위인지는 **선언**이 들고(`config/public-scope.yml`), 가드가 그 분모로 「선언 밖
+파일이 0」을 단정한다 — ⚠️ allowlist 이므로 **빠뜨린 파일은 공개되지 않고 빨강이 된다.**
+먼저 선 것은 정책 문서 6벌과 그 가드다(`docs/policies/` · `config/` · `tools/`).
+⚠️ **이슈·개발은 여기서 하지 않는다** — 작업장은
 비공개 [`Graduand_dev`](https://github.com/Moayo-app/Graduand_dev) 다 (Henry 2026-10-24:
 「여기서 만들고, 공개할 범위만 Graduand 에 배포한다」). 할 일의 전부(열린 구현 이슈)와 결정의
 색인(닫힌 이슈)은 2026-10-24 에 전부 그쪽으로 이사했고(옛 번호는 리다이렉트로 남는다),
@@ -72,9 +76,11 @@ moayo-hq 에 산다 — 비공개이고, 여기서 다시 쓰지 않는다.
 
 - **`main` 직접 push 금지** — ruleset 이 집행한다. 반드시 PR 이고, 필수 체크는
   **「공유 블록 드리프트」** (`.github/workflows/agent-platform.yml`) — `docs/agents/*.md` 는
-  전부 생성물이라 **손으로 고치면 빨강이다.** 고칠 곳은 플랫폼 템플릿이다. **측정 명령 =
-  `npm test`** — 정책 가드(`.github/workflows/policy-guards.yml`, [Graduand_dev#13](https://github.com/Moayo-app/Graduand_dev/issues/13))가
-  첫 코드와 함께 섰고 필수 체크에 올린다. 타입 검사는 아직 없다 — 판정기 첫 코드와 함께 세운다.
+  전부 생성물이라 **손으로 고치면 빨강이다.** 고칠 곳은 플랫폼 템플릿이다. **측정 명령 셋** — 루트
+  `npm test`(정책 가드 + 공개 범위 가드, `.github/workflows/policy-guards.yml`)와 받은 두
+  패키지 각자의 `npm test` · `npm run typecheck` · `npm run build`(「타입 검사 + 테스트 +
+  빌드」, `.github/workflows/ci.yml`). ⚠️ 두 패키지는 **각자 선다** — 루트 `package.json` 은
+  `tools/` 가드의 자리이고 워크스페이스가 아니다(`cd verifier && npm ci` 로 들어간다).
 - **PR 본문에 `Closes #<N>`.** ⚠️ 커밋 제목에 `fix` 와 `#<N>` 을 같이 두지 않는다 — GitHub 이
   종료 키워드로 읽는다. 참조는 본문에 `Refs #<N>`.
 - 커밋 메시지 끝: `Co-Authored-By: Claude <실제 작업 모델> <noreply@anthropic.com>` —
