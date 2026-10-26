@@ -1,0 +1,24 @@
+{
+  "//": [
+    "최소 빌드 — tsc 하나로 끝난다 (번들러 없음 · 런타임 의존성 0).",
+    "타입만 지우고 상대 .ts import 를 .js 로 고쳐 쓴다(rewriteRelativeImportExtensions).",
+    "rootDir 이 저장소 루트라서 산출은 dist/diagnosis/src/ 와 dist/verifier/src/ 로 내려앉는다 —",
+    "판정기 모듈이 페이지 안으로 복사되는 게 아니라 같은 소스에서 함께 산출된다."
+  ],
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "lib": ["esnext", "dom", "dom.iterable"],
+    "types": [],
+    "strict": true,
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+    "rootDir": "..",
+    "outDir": "dist"
+  },
+  "include": ["src/main.ts"]
+}

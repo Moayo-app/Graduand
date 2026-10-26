@@ -1,0 +1,19 @@
+{
+  "name": "graduand-diagnosis",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Static diagnosis page — imports the verifier module, judges in the visitor's browser, sends nothing home.",
+  "type": "module",
+  "engines": {
+    "node": ">=23.6"
+  },
+  "scripts": {
+    "test": "node --test \"src/**/*.test.ts\"",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc -p tsconfig.build.json"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.1",
+    "typescript": "5.9.3"
+  }
+}
