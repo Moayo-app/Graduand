@@ -13,6 +13,7 @@ import {
   ORIGINS,
   LICENSES,
   LICENSE_GROUNDS,
+  mirrorPairs,
   ignoredDirs,
   scopeEntries,
   coveringEntry,
@@ -106,6 +107,19 @@ clean(`AC2: 선언 밖 파일이 0 이다 — ${'config/public-scope.yml'} 가 �
 clean('선언 자신이 건강하다 — 중복 0 · 허공을 가리키는 행 0', checkScopeEntries);
 clean('AC3: 배달된 파일에 내부 표기가 0 이다', checkWorkshopProse);
 clean(`선언이 쓰는 허가마다 사유가 ${LICENSE_GROUNDS} 에 있다`, checkLicenseGrounds);
+
+test('⭐ 피할 수 없는 사본이 **선언으로** 들려 있다 — 손으로 맞추는 자리가 0 이다', () => {
+  // ⚠️ 이 축이 배달 접두사 밖의 한 자리를 배달이 건드리게 하는 유일한 길이다. 경로가
+  //    스크립트가 아니라 선언에 있다는 것이 요점이라, 그 사실을 여기서 잰다.
+  const pairs = mirrorPairs(ROOT);
+  assert.ok(pairs.length > 0, '미러가 0 이면 바이트 대조 가드의 분모가 비어 있다');
+  for (const [mirror, canon] of pairs) {
+    const [, origin, , , declared] = coveringEntry(scopeEntries(ROOT), mirror);
+    assert.equal(origin, 'local', `${mirror}: 미러는 배달받는 것이 아니라 유도되는 것이다`);
+    assert.equal(declared, canon);
+    assert.ok(coveringEntry(scopeEntries(ROOT), canon), `${canon}: 정본이 선언 밖이면 미러는 제 바이트를 못 받는다`);
+  }
+});
 
 test('⭐ AC3 의 분모가 비어 있지 않다 — 초록이 「안 읽었다」가 아님을 따로 잰다', () => {
   const swept = workshopFiles(ROOT);
@@ -227,4 +241,31 @@ test('(negative): 사유 없는 허가를 쓰면 가드가 그 값을 지목한�
   const errors = checkLicenseGrounds(root);
   assert.equal(errors.length, 1, errors.join(' · '));
   assert.ok(errors[0].includes('reserved'), errors[0]);
+});
+
+test('(negative): 자기 자신을 가리키는 미러는 던진다 — 정본 없는 사본이다', () => {
+  const root = cloneRoot();
+  const file = path.join(root, SCOPE_PATH);
+  fs.writeFileSync(file, fs.readFileSync(file, 'utf8').replace('    mirrors: verifier/LICENSE\n', '    mirrors: LICENSE\n'));
+  assert.throws(() => scopeEntries(root), /자기 자신/);
+});
+
+test('(negative): 미러 행의 origin 이 local 이 아니면 던진다 — 배달받는 것과 유도되는 것이 다르다', () => {
+  const root = cloneRoot();
+  const file = path.join(root, SCOPE_PATH);
+  const target = '  - path: LICENSE\n    origin: local\n';
+  assert.ok(fs.readFileSync(file, 'utf8').includes(target));
+  fs.writeFileSync(file, fs.readFileSync(file, 'utf8').replace(target, '  - path: LICENSE\n    origin: workshop\n'));
+  assert.throws(() => scopeEntries(root), /origin 은 local/);
+});
+
+test('(negative): 선언 밖을 정본으로 삼은 미러는 가드가 지목한다 — 배달이 나르지 않는다', () => {
+  const root = cloneRoot();
+  const file = path.join(root, SCOPE_PATH);
+  plant(root, 'NOTICE-SCRATCH', 'x\n');
+  fs.writeFileSync(
+    file,
+    fs.readFileSync(file, 'utf8').replace('    mirrors: verifier/LICENSE\n', '    mirrors: NOTICE-SCRATCH\n'),
+  );
+  assert.equal(hits(checkScopeEntries(root), '선언 밖이다').length, 1, '정본이 선언 밖이면 그 미러는 영원히 뒤처진다');
 });

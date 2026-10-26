@@ -1,8 +1,9 @@
 // 공개 범위 가드의 공유 모듈 — [ISSUE-16] (선언 정본 config/public-scope.yml).
 //
-// 재는 것 셋. ⑴ **선언 밖 파일이 0** 인가(AC2) ⑵ **배달된 산문에 내부 표기가 0** 인가(AC3)
+// 재는 것 셋 + 하나. ⑴ **선언 밖 파일이 0** 인가(AC2) ⑵ **배달된 산문에 내부 표기가 0** 인가(AC3)
 // ⑶ **허가 없이 공개되는 경로가 0** 인가 — 행마다 `license` 가 서 있고, 그 값이 사유 문서에
 // 불리는가. ⚠️ 셋째는 침묵을 겨냥한다: 기본값은 all rights reserved 라서 **적지 않으면 닫힌다.**
+// 그리고 `mirrors` 축이 **사본을 선언으로 들고 있다** — 그 대조는 license-copy.mjs 가 한다.
 //
 // ⭐ 모집단 단일화 — scopeEntries() 한 함수가 선언을 읽고, 두 가드가 그것만 쓴다. AC3 의
 // 분모를 테스트에 적지 않는다: `origin: workshop` 항들이 그 분모이고, 그래서 배달 범위가
@@ -30,6 +31,19 @@ export const LICENSES = ['BSL-1.1', 'Apache-2.0', 'reserved', 'upstream'];
 
 /** 허가 묶음마다의 **사유**. 배정(선언의 license 축)과 사유를 나눠 둔 쪽. */
 export const LICENSE_GROUNDS = 'docs/licensing/repository-licensing.md';
+
+/** 선언된 미러 → [[사본 경로, 정본 경로]].
+ *
+ * ⭐⭐ 사본을 피할 수 없는 자리를 **선언으로** 들고 있는 축이다. 루트 `LICENSE` 는 저장소의
+ * 공개 얼굴이라 루트에 있어야 하고, 증서의 정본은 발행본이 싣는 `verifier/LICENSE` 다.
+ * ⇒ 손으로 맞추는 대신 **적는다**: 배달이 이것을 읽어 따라 쓰고, 가드가 바이트까지 댄다.
+ *
+ * ⚠️ 배달이 `origin: workshop` 접두사 **밖**을 건드리는 유일한 길이므로, 경로가 스크립트가
+ * 아니라 여기 있는 것이 요점이다 — 예외가 선언 안에 있어야 「선언이 분모」가 깨지지 않는다. */
+export const mirrorPairs = (root) =>
+  scopeEntries(root)
+    .filter(([, , , , mirrors]) => mirrors)
+    .map(([p, , , , mirrors]) => [p, mirrors]);
 
 /** 어떤 선언에도 들지 않는 이름 — 발행되지 않고 .gitignore 가 말할 대상도 아니다.
  * ⚠️ 디렉터리가 아닐 수 있다: 워크트리에서 `.git` 는 **파일**이다. */
@@ -74,7 +88,17 @@ export function scopeEntries(root) {
       throw new Error(
         `${label}: license 가 ${LICENSES.join('·')} 중 하나가 아니다 — ${e.license} (빈 칸은 「미정」이 아니라 all rights reserved 다)`,
       );
-    return [e.path, e.origin, e.basis, e.license];
+    if (e.mirrors !== undefined) {
+      // ⛔ 모양이 틀린 미러는 **조용히 무시하지 않는다** — 무시된 미러는 배달이 따라 쓰지
+      //    않는 사본이 되고, 그 사본은 손으로 맞춰지지도 않으면서 초록으로 남는다.
+      if (typeof e.mirrors !== 'string' || !e.mirrors.trim()) throw new Error(`${label}: mirrors 가 경로가 아니다`);
+      if (e.mirrors.startsWith('/') || e.mirrors.includes('..')) throw new Error(`${label}: mirrors 가 저장소 상대경로가 아니다 — ${e.mirrors}`);
+      if (e.mirrors === e.path) throw new Error(`${label}: mirrors 가 자기 자신을 가리킨다 — ${e.path}`);
+      if (e.path.endsWith('/')) throw new Error(`${label}: 디렉터리 접두사는 미러가 될 수 없다 — 바이트 사본은 파일 하나다 (${e.path})`);
+      // ⚠️ 미러는 배달받는 것이 아니라 배달이 **유도하는** 파생물이다 — origin 이 그 사실을 말한다.
+      if (e.origin !== 'local') throw new Error(`${label}: 미러 행의 origin 은 local 이다 — 배달받는 것이 아니라 유도되는 것이다 (${e.origin})`);
+    }
+    return [e.path, e.origin, e.basis, e.license, e.mirrors ?? null];
   });
 }
 
@@ -130,6 +154,14 @@ export function checkScopeEntries(root) {
     } else if (!fs.existsSync(path.join(root, p))) {
       errors.push(`${SCOPE_PATH}: 「${p}」 가 실재하지 않는다 — 허공을 가리키는 선언이다`);
     }
+  }
+  // 미러가 가리키는 정본도 선언에 덮여 있어야 한다 — 선언 밖 정본은 배달이 나르지 않으므로
+  // 그 미러는 영원히 제 바이트를 못 받는다.
+  for (const [mirror, canon] of mirrorPairs(root)) {
+    if (!fs.existsSync(path.join(root, canon)))
+      errors.push(`${SCOPE_PATH}: 「${mirror}」 의 정본 「${canon}」 이 실재하지 않는다`);
+    else if (!coveringEntry(entries, canon))
+      errors.push(`${SCOPE_PATH}: 「${mirror}」 의 정본 「${canon}」 이 선언 밖이다 — 배달이 나르지 않는 것을 정본으로 삼았다`);
   }
   return errors;
 }
