@@ -42,11 +42,29 @@ function cloneRoot() {
 }
 const rewrite = (root, rel, fn) => fs.writeFileSync(path.join(root, rel), fn(read(root, rel)));
 
-/** Change Date 줄을 **지금 값과 무관하게** 다른 값으로 바꾼다 — 발행 전후 양쪽에서 산다. */
-const restamp = (text, value) => {
-  const next = text.replace(/^(Change Date:[ \t]+)\S+/m, `$1${value}`);
-  assert.notEqual(next, text, `Change Date 줄을 찾지 못했다 — 심기가 아무것도 바꾸지 않았다`);
-  return next;
+const CHANGE_DATE_LINE = /^(Change Date:[ \t]+)(\S+)/m;
+
+/** Change Date 칸을 그 값으로 적는다 — 모양이 틀린 값을 심는 자리. */
+const setChangeDate = (text, value) => {
+  assert.match(text, CHANGE_DATE_LINE, 'Change Date 줄을 찾지 못했다 — 심기가 분모를 잃었다');
+  return text.replace(CHANGE_DATE_LINE, `$1${value}`);
+};
+
+/**
+ * Change Date 를 **지금과 다른 올바른 날짜**로 다시 박는다 — 발행마다 오는 그 사건의 재현.
+ *
+ * ⭐⭐ 심을 값을 **지금 값에서 유도한다.** 고정 날짜를 적으면 그 날짜가 실제로 박히는 판에서
+ * replace 가 무효타가 되고, 심지 않은 채 「심었는데 안 잡힌다」로 빨개진다 — `UNSET` 문자열에
+ * 매여 있던 그 결함이 **찾는 값에서 쓰는 값으로** 한 칸 옮겨 간 꼴이다. 유도하면 충돌이
+ * 구조적으로 불가능하다. ⇒ 이 함수가 「값에 매이지 않는다」의 실물이다.
+ */
+const restamp = (text) => {
+  const current = text.match(CHANGE_DATE_LINE)?.[2];
+  assert.ok(current, 'Change Date 줄을 찾지 못했다 — 심기가 분모를 잃었다');
+  const next = current === '2030-10-26.' ? '2031-01-02.' : '2030-10-26.';
+  const out = setChangeDate(text, next);
+  assert.notEqual(out, text, '심기가 아무것도 바꾸지 않았다 — 분모가 빈 채로 도는 자리다');
+  return out;
 };
 
 // ── 양성 ──────────────────────────────────────────────────────────────────────
@@ -70,7 +88,7 @@ test('⚠️ 단정이 **정본**을 읽는다 — 미러를 읽으면 발행 �
   // ⭐ 정본에만 날짜를 박고 미러는 그대로 둔다 = 배달 직후의 상태. 그때 Terms 단정이
   //    **정본을 보고 있어야** 하고, 미러가 뒤처진 사실은 checkMirrors 가 따로 말한다.
   const root = cloneRoot();
-  rewrite(root, CERTIFICATE, (s) => restamp(s, '2030-10-26.'));
+  rewrite(root, CERTIFICATE, restamp);
   assert.deepEqual(checkTermsBlock(root), [], '정본의 ISO 날짜는 올바른 모양이라 초록이다');
   assert.equal(checkMirrors(root).length, 1, '뒤처진 미러는 미러 가드가 말한다');
   // ⛔ 거꾸로 — 정본은 미결인데 미러에만 날짜가 박히면, 정본을 읽는 단정은 그것을 모른다.
@@ -103,7 +121,7 @@ test('미러 (negative) — 정본의 Change Date 가 박히고 미러가 뒤처
   const root = cloneRoot();
   assert.deepEqual(checkMirrors(root), [], '심기 전의 사본은 초록이다');
   // ⭐ 이것이 **발행마다 오는 그 사건**이다 — 지금 칸이 UNSET 이든 날짜든 같은 심기로 선다.
-  rewrite(root, CERTIFICATE, (s) => restamp(s, '2030-10-26.'));
+  rewrite(root, CERTIFICATE, restamp);
   const errors = checkMirrors(root);
   assert.equal(errors.length, 1, errors.join(' · '));
   assert.ok(errors[0].includes(MIRROR) && errors[0].includes(CERTIFICATE), errors[0]);
@@ -112,7 +130,7 @@ test('미러 (negative) — 정본의 Change Date 가 박히고 미러가 뒤처
 
 test('미러 (negative) — ⛔ 미러만 손으로 고쳐도 빨갛다: 고칠 자리가 그쪽이 아니다', () => {
   const root = cloneRoot();
-  rewrite(root, MIRROR, (s) => restamp(s, '2030-10-26.'));
+  rewrite(root, MIRROR, restamp);
   assert.equal(checkMirrors(root).length, 1, '미러를 앞질러 고치는 손도 갈라짐이다');
 });
 
@@ -140,9 +158,9 @@ test('증서 (negative) — Terms 블록의 칸을 지우면 그 칸 이름이 �
 
 test('증서 (negative) — 지어낸 모양이 박히면 단정이 운다 (빈 칸도 같다)', () => {
   const root = cloneRoot();
-  rewrite(root, CERTIFICATE, (s) => restamp(s, '2030년.'));
+  rewrite(root, CERTIFICATE, (s) => setChangeDate(s, '2030년.'));
   assert.equal(checkTermsBlock(root).filter((e) => e.includes('Change Date')).length, 1);
-  rewrite(root, CERTIFICATE, (s) => s.replace(/^Change Date:[ \t]+\S+/m, 'Change Date:'));
+  rewrite(root, CERTIFICATE, (s) => setChangeDate(s, '').replace(/^Change Date:[ \t]+$/m, 'Change Date:'));
   assert.equal(checkTermsBlock(root).filter((e) => e.includes('Change Date')).length, 1);
 });
 
