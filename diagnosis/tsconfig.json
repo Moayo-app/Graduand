@@ -1,0 +1,20 @@
+{
+  "//": [
+    "타입 검사 전용 (noEmit) — 테스트 포함. 브라우저용 산출은 tsconfig.build.json 이 한다.",
+    "판정기 모듈(../verifier)은 import 경로를 따라 함께 검사된다 — 사본이 없다."
+  ],
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "lib": ["esnext", "dom", "dom.iterable"],
+    "types": ["node"],
+    "strict": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*.ts"]
+}

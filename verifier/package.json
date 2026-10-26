@@ -1,0 +1,37 @@
+{
+  "name": "graduand",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Configuration verifiers that run in the customer's CI and browser — one module, no copies, no telemetry.",
+  "type": "module",
+  "engines": {
+    "node": ">=23.6"
+  },
+  "bin": {
+    "graduand": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./workspace": {
+      "types": "./dist/hosts/workspace.d.ts",
+      "default": "./dist/hosts/workspace.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node --test \"src/**/*.test.ts\"",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc -p tsconfig.build.json",
+    "prepack": "npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.1",
+    "typescript": "5.9.3"
+  }
+}

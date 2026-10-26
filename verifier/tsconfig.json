@@ -1,0 +1,21 @@
+{
+  "//": [
+    "빌드 단계가 없다 — Node 가 타입을 지울 뿐이다 (erasableSyntaxOnly 가 그것을 지킨다:",
+    "enum · parameter property · namespace 가 들어오면 런타임이 깨지므로 여기서 먼저 실패시킨다).",
+    "런타임 의존성 0 — devDependencies 는 typecheck 와 타입 선언뿐이다."
+  ],
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "lib": ["esnext"],
+    "types": ["node"],
+    "strict": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*.ts"]
+}
