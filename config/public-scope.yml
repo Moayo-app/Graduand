@@ -62,6 +62,9 @@ entries:
   - path: tools/
     origin: local
     basis: "가드 본체와 그 테스트 — 이 저장소가 스스로를 재는 자리"
+  - path: verifier/LICENSE
+    origin: local
+    basis: "증서 사본 — 발행본이 싣는 자리다(BSL 축자가 「each original or modified copy」를 요구하고 npm 은 패키지 루트 밖을 실을 수 없다). ⚠️⚠️ **이 행은 `verifier/` 행보다 앞에 있어야 한다** — coveringEntry 가 `.find()` 라 **먼저 매칭되는 행이 이긴다**(tools/lib/public-scope.mjs). 뒤로 옮기면 조용히 workshop 이 되고, 배달이 거울을 맞추는 순간 작업장에 없는 이 파일이 **삭제 대상**이 된다. 알파벳순 재정렬이 그 자리다 — 순서를 tools/test/public-scope.test.mjs 가 단정한다"
   - path: verifier/
     origin: workshop
     basis: "판정기 · 어댑터 — CLAUDE.md §1 범위 정의의 첫 두 항. 유료 층의 소스까지 보인다: 「제로 액세스」는 검증 가능한 주장이고, 검증 가능성은 소스 공개에서 온다"
