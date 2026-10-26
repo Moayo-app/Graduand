@@ -1,5 +1,5 @@
-// 증서 가드의 공유 모듈 — 발행본이 싣는 증서가 루트의 정본과 **같은가**, 그리고 Terms
-// 블록의 칸들이 **서 있는가**.
+// 증서 가드의 공유 모듈 — 발행본이 싣는 증서가 루트의 정본과 **같은가**, Terms 블록의 칸들이
+// **서 있는가**, 그리고 증서가 부르는 경로와 선언이 BSL 을 적은 경로가 **같은가**.
 //
 // ⭐⭐ 왜 사본이 하나 있는가. BSL 1.1 축자가 「You must conspicuously display this License
 // on each original or modified copy of the Licensed Work」 이고, 발행되는 npm 패키지가 그
@@ -15,6 +15,8 @@
 // negative 테스트가 사본 트리에 갈라짐을 심고 빨간불을 확인하기 위해서다.
 import fs from 'node:fs';
 import path from 'node:path';
+
+import { SCOPE_PATH, scopeEntries } from './public-scope.mjs';
 
 /** 증서의 정본과, 발행본이 싣는 그 사본. */
 export const CANON = 'LICENSE';
@@ -50,5 +52,53 @@ export function checkTermsBlock(root) {
     if (!canon.includes(field)) errors.push(`${CANON}: 「${field}」 칸이 없다 — Covenants of Licensor 가 요구하는 칸이다`);
   if (!/^Change Date:\s+UNSET\./m.test(canon))
     errors.push(`${CANON}: Change Date 칸이 UNSET 로 읽히지 않는다 — 날짜가 박혔다면 이 단정을 지운다`);
+  return errors;
+}
+
+/** 선언이 「제품」이라고 적는 허가. 증서의 `Licensed Work` 가 그 모집단의 다른 쪽 얼굴이다. */
+export const PRODUCT_LICENSE = 'BSL-1.1';
+
+/**
+ * 증서의 `Licensed Work` 칸 본문 — 다음 Terms 칸이 시작되기 전까지.
+ *
+ * ⚠️ 칸 이름은 **열 0 에서** 시작하고 본문은 들여쓰인다. 그 모양으로 끊는 이유는 칸의
+ * **순서에 기대지 않기** 위해서다 — 「Additional Use Grant 까지」로 적으면 칸 순서가 바뀌는
+ * 날 이 가드가 조용히 너무 많이(또는 너무 적게) 읽는다.
+ */
+export function licensedWorkBlock(canon) {
+  const m = canon.match(/^Licensed Work:([\s\S]*?)(?=^[A-Z][A-Za-z][A-Za-z ]*:)/m);
+  if (!m) throw new Error(`${CANON}: 「Licensed Work:」 칸을 읽을 수 없다 — 이 가드의 분모가 그 칸이다`);
+  return m[1];
+}
+
+/**
+ * 증서가 부르는 경로와 선언의 `license: BSL-1.1` 행이 **양방향 1:1** 인가.
+ *
+ * ⭐⭐ 왜 이 축이 필요한가. 같은 사실이 두 자리에 적힌다 — 증서는 법률 산문으로 디렉터리를
+ * 부르고, 선언은 행마다 허가를 적는다. 둘 중 하나만 움직이는 날의 뜻이 **양쪽으로 나쁘다**:
+ * 선언에만 BSL 을 적으면 증서가 덮지 않는 코드를 덮는다고 **주장**하게 되고(허가 없는 코드가
+ * 유료 층으로 읽힌다), 증서에만 적으면 그 디렉터리는 선언에서 다른 허가를 받아 **두 증서가
+ * 동시에** 걸린다. ⇒ 사본을 피할 수 없으면 갈라짐을 **잰다**.
+ *
+ * ⛔ 분모가 빈 채로 초록이 되지 않는다 — 양쪽 다 0 이어도 「같다」는 참이다.
+ */
+export function checkLicensedWorkScope(root) {
+  const errors = [];
+  const block = licensedWorkBlock(read(root, CANON));
+  const named = [...block.matchAll(/`([^`\n]+\/)`/g)].map((m) => m[1]);
+  const declared = scopeEntries(root)
+    .filter(([, , , license]) => license === PRODUCT_LICENSE)
+    .map(([p]) => p);
+
+  if (named.length === 0) errors.push(`${CANON}: Licensed Work 가 경로를 하나도 부르지 않는다 — 아래 대조가 아무것도 재지 않는다`);
+  if (declared.length === 0) errors.push(`${SCOPE_PATH}: license: ${PRODUCT_LICENSE} 행이 0 이다 — 아래 대조가 아무것도 재지 않는다`);
+  if (errors.length > 0) return errors;
+
+  for (const p of declared)
+    if (!named.includes(p))
+      errors.push(`${SCOPE_PATH}: 「${p}」 가 ${PRODUCT_LICENSE} 인데 ${CANON} 의 Licensed Work 가 부르지 않는다 — 증서 없이 유료 층으로 읽힌다`);
+  for (const p of named)
+    if (!declared.includes(p))
+      errors.push(`${CANON}: Licensed Work 가 「${p}」 를 부르는데 ${SCOPE_PATH} 가 ${PRODUCT_LICENSE} 로 적지 않았다 — 두 허가가 동시에 걸린다`);
   return errors;
 }

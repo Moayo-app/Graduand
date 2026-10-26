@@ -15,58 +15,88 @@
 #   platform — 공유 블록 생성물. ⛔ 손으로 고치지 않는다(드리프트 체크가 집행한다).
 #   workshop — 비공개 작업장에서 **배달된** 제품 코드. ⭐ 내부 산문 0 이 단정되는 모집단이
 #              정확히 이 항들이다 — `local`·`platform` 산문은 내부 포인터를 당연히 들고,
-#              그것을 같은 잣대로 재면 가드가 저장소 전체를 빨갛게 하고 뜻을 잃는다.
+#              그것을 같은 잣대로 재면 가드가 저장소 전체를 빨갛게 하고 뜻을 잃는다.#
+# license = **그 경로에 어떤 허가가 붙는가.** ⚠️⚠️ 이 축이 없으면 기본값은 **침묵**이고,
+# 침묵의 뜻은 all rights reserved 다 — 저장소를 읽은 사람이 가드 한 줄도 베껴 쓸 수 없다.
+# 그래서 행마다 **적는다**. 네 값의 성질이 다르다:
+#   BSL-1.1    — 제품. ⭐ 증서(`LICENSE`)의 `Licensed Work` 가 이 경로를 **이름으로 부른다** —
+#                가드가 양방향 1:1 을 잰다(tools/lib/license-copy.mjs). 증서가 부르지 않는
+#                경로에 이 값을 적거나, 증서가 부르는 경로에 적지 않으면 빨강이다.
+#   Apache-2.0 — 저장소 운영. ⭐ 전문이 **이미 여기 있다**(LICENSE-APACHE-2.0 = Change License)
+#                — 이 허가는 증서 파일을 한 벌도 늘리지 않는다.
+#   reserved   — 선언된 all rights reserved. ⚠️ **읽히기 위해** 공개된 것이고 재사용 허가는
+#                없다. 핵은 답이 아니라 **적힌다는 것**이다 — 미판정은 통과가 아니다.
+#   upstream   — 남이 쓴 증서의 전문. 우리가 줄 수 있는 허가가 아니다.
+# ⛔ **파일 머리 표기를 쓰지 않는다** — `origin: platform` 항은 손으로 고칠 수 없고(드리프트가
+# 집행한다), 머리 표기는 파일마다 갈라지는 사본이다. ⇒ 경로 → 허가의 정본은 **이 축 하나**고,
+# 묶음마다의 **사유**는 docs/licensing/repository-licensing.md 가 갖는다(배정과 사유를 나눈다).
 #
 # 줄이는 법 = 행 삭제(그 경로는 다음 배달에서 가지 않는다). 늘리는 법 = 행 추가 + 근거.
 # 표기: `/` 로 끝나면 디렉터리 접두사(그 아래 전부), 아니면 파일 하나.
 entries:
   - path: .github/workflows/
     origin: local
+    license: Apache-2.0
     basis: "저장소 운영 — 가드와 CI. 공개 저장소에서 무엇이 재어지는지가 보여야 한다"
   - path: .gitignore
     origin: local
+    license: Apache-2.0
     basis: "산출물 제외 — 이 파일이 가드의 미추적 분모를 유도한다(사본 금지)"
   - path: CLAUDE.md
     origin: local
+    license: Apache-2.0
     basis: "세션 부트스트랩 — 칼이 첫 화면에 산다. 내부 근거는 포인터로만 가리킨다"
   - path: CONTRIBUTING.md
     origin: local
+    license: Apache-2.0
     basis: "기여 안내 — 받는 입력과 받지 않는 입력. 공개 산문 가드(tools/lib/public-surface.mjs)의 모집단이 이 파일이다"
   - path: LICENSE
     origin: local
+    license: upstream
     basis: "지금 적용되는 라이선스 — BSL 1.1 증서. ⚠️⚠️ **정본은 이 파일이 아니다** — 증서는 작업장이 들고 배달이 verifier/LICENSE 로 나른다. 이 파일은 저장소의 **공개 얼굴**이고 배달 접두사 밖이라 **손으로 따라간다**. ⚠️ 발행마다 Change Date 칸이 다시 박히므로 배달 뒤 이 파일이 뒤처지면 tools/lib/license-copy.mjs 가 빨강이 된다 — 고칠 쪽은 **이 파일**이다"
   - path: LICENSE-APACHE-2.0
     origin: local
+    license: upstream
     basis: "Change License 의 전문 — Apache-2.0. Change Date 이후에 적용되는 라이선스이고, 증서가 이 파일을 이름으로 가리킨다"
   - path: README.md
     origin: local
+    license: Apache-2.0
     basis: "입구 산문"
   - path: config/
     origin: local
+    license: Apache-2.0
     basis: "선언 정본들 — 개방 목록 · 정책 문자열 · 이 파일 자신"
   - path: docs/agents/
     origin: platform
+    license: Apache-2.0
     basis: "공유 블록 생성물 — 트리아지 라벨 · 도메인 · 디자인 경계"
   - path: docs/licensing/
     origin: local
-    basis: "라이선스 경계의 정본 — 기능 → 게이트·선언 조건. 증서의 Additional Use Grant 가 이 문서를 이름으로 가리킨다(둘은 같은 사실에서 나온다)"
+    license: Apache-2.0
+    basis: "라이선스 사유의 정본 둘 — feature-boundary.md 가 기능 → 게이트·선언 조건(증서의 Additional Use Grant 가 이름으로 가리킨다)이고, repository-licensing.md 가 경로 묶음마다 **왜 그 허가인가**다. ⚠️ 어느 경로에 무엇이 붙는지는 이 문서가 아니라 위 license 축이 갖는다 — 배정과 사유를 같은 자리에 두면 둘이 갈라진다"
   - path: docs/policies/
     origin: local
+    license: reserved
     basis: "정책 문서 6벌 + 저장소 간 정본 선언표"
   - path: package.json
     origin: local
+    license: Apache-2.0
     basis: "루트 — `tools/` 가드의 측정 명령이 사는 자리 (⚠️ 받은 두 패키지는 각자 선다)"
   - path: package-lock.json
     origin: local
+    license: Apache-2.0
     basis: "루트 가드의 고정 — `npm ci` 가 읽는다"
   - path: tools/
     origin: local
+    license: Apache-2.0
     basis: "가드 본체와 그 테스트 — 이 저장소가 스스로를 재는 자리"
   - path: verifier/
     origin: workshop
+    license: BSL-1.1
     basis: "판정기 · 어댑터 — CLAUDE.md §1 범위 정의의 첫 두 항. ⭐ **증서(verifier/LICENSE)도 이 안에서 배달된다** — 정본이 작업장이고, 예외 행이 있던 이유(「작업장에 없다」)가 사라졌다. 유료 층의 소스까지 보인다: 「제로 액세스」는 검증 가능한 주장이고, 검증 가능성은 소스 공개에서 온다"
   - path: diagnosis/
     origin: workshop
+    license: BSL-1.1
     basis: "진단 페이지 소스 — CLAUDE.md §1 범위 정의의 넷째 항. 결과가 서버로 오지 않음을 읽어서 확인할 수 있게 한다"
 
 # 배달된 산문에 **없어야 하는 것** — 비공개 쪽의 이름과 내부 티켓 표기.

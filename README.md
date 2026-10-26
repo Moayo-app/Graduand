@@ -10,3 +10,20 @@
 오늘 상태 (2026-10-24): 첫 코드 = **정책 문서 6벌과 그 가드**(약관·환불·개인정보 × ko·en —
 [docs/policies/](docs/policies/), 측정 명령 `npm test`). 판정기·어댑터·계측기·진단 페이지는 아직
 열린 이슈다 — 열린 이슈가 할 일의 전부이고, 닫힌 이슈가 결정의 색인이다. 세션 부트스트랩은 [CLAUDE.md](CLAUDE.md).
+
+## 라이선스
+
+이 저장소는 **한 벌의 허가로 덮이지 않습니다** — 성질이 다른 넷이 한 트리에 삽니다.
+
+| 묶음 | 허가 |
+|---|---|
+| 판정기 · 진단 페이지 (파는 제품) | **BSL 1.1** — [`LICENSE`](LICENSE) · 무료 범위는 Additional Use Grant 에 **기능으로** ([경계](docs/licensing/feature-boundary.md)) · Change License = Apache-2.0 |
+| 가드 · CI · 선언 · 입구 산문 (저장소 운영) | **Apache-2.0** — [`LICENSE-APACHE-2.0`](LICENSE-APACHE-2.0) |
+| 약관 · 환불 · 개인정보 ([docs/policies/](docs/policies/)) | **all rights reserved** — 읽히기 위해 공개하고, 재사용 허가는 두지 않습니다 |
+| 두 증서의 전문 자체 | 각자의 저작권자(MariaDB · ASF) 조건대로 |
+
+⚠️ **어느 경로에 무엇이 붙는지의 정본은 산문이 아니라 선언입니다** —
+[`config/public-scope.yml`](config/public-scope.yml) 의 `license` 축이 **행마다** 적고, 그
+값이 빠진 행은 가드가 막습니다(침묵의 기본값은 all rights reserved 이고, 그 뜻은 「아직 안
+정했다」가 아니라 「베껴 쓸 수 없다」입니다). 묶음마다의 **사유**는
+[docs/licensing/repository-licensing.md](docs/licensing/repository-licensing.md) 가 갖습니다.
