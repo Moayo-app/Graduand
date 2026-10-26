@@ -84,24 +84,22 @@ test('⭐ AC3 의 분모가 비어 있지 않다 — 초록이 「안 읽었다�
   );
 });
 
-test('⭐⭐ 증서 사본은 `local` 이다 — 그리고 그 사실이 **행의 순서**에 걸려 있다', () => {
-  // ⭐ `verifier/LICENSE` 는 **이 공개 저장소에서 쓰인다** — 작업장 트리에 없다. 그래서
-  // 배달 항(`verifier/` = workshop)이 그것을 덮으면 안 된다: 배달이 접두사를 거울처럼
-  // 맞추는 순간, 작업장에 없는 그 파일은 **삭제 대상**이 된다(발행본의 증서가 사라진다).
+test('⭐⭐ 증서는 **배달된다** — 정본이 작업장이고 `verifier/` 가 그것을 덮는다', () => {
+  // ⭐ 증서의 정본이 작업장으로 올라갔다 — 그래서 이 파일은 더 이상 **이 저장소가 쓰는 것**이
+  // 아니라 **배달받는 것**이다. 예외 행(`verifier/LICENSE` = local)은 그 사실과 함께 사라졌다:
+  // 예외가 있던 이유가 「작업장에 없다」였고, 이제 있다.
   //
-  // ⚠️ 그 선언이 서는 조건이 **순서**다 — coveringEntry 가 `.find()` 라 먼저 매칭되는 행이
-  // 이긴다. 산문으로 두면 알파벳순 재정렬 한 번에 조용히 깨지므로 여기서 **잰다.**
+  // ⚠️ 예외 행이 되살아나면 배달은 이 파일을 **보내지도 지우지도 않고**, 루트 증서와 조용히
+  // 갈라질 길이 열린다(사본 가드가 그때 운다). 그래서 「무엇이 덮는가」를 여기서 잰다.
   const found = coveringEntry(scopeEntries(ROOT), 'verifier/LICENSE');
-  assert.ok(found, '증서 사본을 덮는 선언 행이 없다');
+  assert.ok(found, '증서를 덮는 선언 행이 없다');
   const [declared, origin] = found;
-  assert.equal(declared, 'verifier/LICENSE');
-  assert.equal(origin, 'local', `증서 사본이 ${origin} 로 읽힌다 — 「verifier/LICENSE」 행이 「verifier/」 행보다 뒤로 밀렸다`);
+  assert.equal(declared, 'verifier/', `증서가 「${declared}」 로 덮인다 — 예외 행이 되살아났다면 배달이 증서를 더 이상 나르지 않는다`);
+  assert.equal(origin, 'workshop');
 
-  // ⇒ 그래서 이 파일은 **배달 산문 스윕의 모집단 밖**이다. 배달된 산문이 아니기 때문이고,
-  //    영문 전문이라 실질 영향도 없다. ⚠️ 이 단정이 지는 것은 「행이 local 이다」가 아니라
-  //    **그 사실이 모집단까지 닿는가**다 — workshopFiles 가 전수 선언에 묻지 않으면
-  //    (workshop 항만 골라 놓고 물으면) 행은 local 인데 모집단은 그대로다.
-  assert.ok(!workshopFiles(ROOT).includes('verifier/LICENSE'), '증서 사본이 배달 스윕의 모집단에 남아 있다');
+  // ⇒ 그래서 이 파일은 배달 산문 스윕의 **모집단 안**이다. 영문 전문이라 위반은 0 이지만,
+  //    모집단에 있다는 것이 「배달된다」의 다른 쪽 얼굴이다 — 아래 negative 가 그쪽을 잰다.
+  assert.ok(workshopFiles(ROOT).includes('verifier/LICENSE'), '증서가 배달 모집단에 없다');
 });
 
 // ── negative ─────────────────────────────────────────────────────────────────
@@ -149,15 +147,15 @@ test('AC3 (negative): 비공개 쪽 저장소 이름 모양도 같은 가드가 
   assert.equal(hits(checkWorkshopProse(root), 'acme-hq').length, 1);
 });
 
-test('(negative): ⚠️ 증서 사본의 행을 `verifier/` 뒤로 옮기면 workshop 이 이긴다', () => {
+test('(negative): ⚠️ 증서도 배달 산문 스윕을 받는다 — 모집단 안이라는 사실의 다른 쪽', () => {
+  // ⭐ 양성은 `workshopFiles` 에 이름이 있는지를 봤다. 여기서는 **가드 쪽에서** 잰다 —
+  // 모집단에 이름만 있고 스윕이 그 파일을 읽지 않으면 초록은 「위반 0」이 아니라
+  // 「안 읽었다」다. 증서에 내부 표기를 심어 그 줄이 불리는지 본다.
   const root = cloneRoot();
-  dropEntry(root, 'verifier/LICENSE');
-  addEntry(root, '  - path: verifier/LICENSE\n    origin: local\n    basis: "뒤로 밀린 행 — 효과가 없다"\n');
-  const [, origin] = coveringEntry(scopeEntries(root), 'verifier/LICENSE');
-  assert.equal(origin, 'workshop', '순서가 바뀌었는데도 local 로 읽힌다면 위 양성 단정이 아무것도 재지 않는다');
-  // ⇒ 그리고 그 순간 이 파일은 **배달 산문 스윕의 모집단에 들어온다** — 영문 전문이라
-  //    위반은 0 이지만, 모집단이 순서 하나로 움직인다는 사실이 여기 드러난다.
-  assert.ok(workshopFiles(root).includes('verifier/LICENSE'));
+  plant(root, 'verifier/LICENSE', 'Business Source License 1.1\n\nParameters\n\nLicensor:  근거 ISSUE-99\n');
+  const errors = checkWorkshopProse(root);
+  assert.equal(hits(errors, 'verifier/LICENSE:5').length, 1, '증서가 모집단 밖이면 이 단정이 비어 돈다');
+  assert.ok(errors.some((e) => e.includes('ISSUE-99')));
 });
 
 test('⭐ AC3 의 분모는 배달 항뿐이다 — local 산문의 같은 표기는 이 가드의 모집단 밖이다', () => {
