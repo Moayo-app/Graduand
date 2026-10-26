@@ -11,7 +11,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { DECL_PATH, loadDecl, judge, MARK, tally } from './lib/ruleset-drift.mjs';
+import { DECL_PATH, loadDecl, judge, MARK, tally, UNDECLARED_AXIS } from './lib/ruleset-drift.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 
@@ -38,5 +38,11 @@ for (const r of results) console.log(`  ${MARK[r.status]} ${r.axis.padEnd(20)} $
 
 const n = tally(results);
 console.log(`\n위반 ${n.violation} · 통과 ${n.pass} · 미판정 ${n.unjudged}`);
-if (n.unjudged > 0) console.log('⬜ 미판정은 통과가 아니다 — 그 축은 이 자격으로 판정할 수 없다.');
+
+// ⚠️ 미판정의 **까닭이 둘이라 따로 센다.** 한 줄로 뭉치면 「이 자격으로는 못 본다」가 「선언이
+//    아직 안 정했다」를 덮어, 사람이 할 일(결정)을 권한 문제로 읽는다.
+const undeclared = results.filter((r) => r.axis === UNDECLARED_AXIS).length;
+const unseen = n.unjudged - undeclared;
+if (undeclared > 0) console.log(`⬜ 선언이 들지 않는 칸 ${undeclared}개 — 통과가 아니다. 정한 뒤 ${DECL_PATH} 로 옮겨라.`);
+if (unseen > 0) console.log(`⬜ 이 자격으로 판정할 수 없는 축 ${unseen}개 — 통과가 아니다. 그 축은 사람이 본다.`);
 process.exit(n.violation === 0 ? 0 : 1);

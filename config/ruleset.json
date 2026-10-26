@@ -8,8 +8,11 @@
     "⚠️ required_status_checks 의 문자열은 **잡 이름**이다(워크플로 이름이 아니다). 잡 이름을",
     "   바꾸면 룰셋이 가리키는 context 가 사라져 그 PR 이 영구 pending 이 된다 — 바꿀 때는",
     "   이 파일과 실물을 같이 바꾼다.",
-    "⛔ require_extra_approval_for_unattributed_changes 는 일부러 적지 않는다 — 실물은 true 지만",
-    "   그것이 의도인지 조직 기본값인지 모르는 채로 적으면 우연을 결정으로 굳힌다."
+    "⭐⭐ 적지 않은 칸은 가드가 **미판정**으로 부른다 — 침묵하지 않는다. 그 까닭의 실증이",
+    "   require_extra_approval_for_unattributed_changes 다: 코파일럿 쓰는 계정의 **기본값**으로",
+    "   켜져 있었고, 실물을 그대로 베껴 적었다면 **우연을 결정으로 굳혔을** 자리다. Henry 가",
+    "   끄기로 정한 뒤에야 선언이 그 칸을 든다(아래 require_extra_approval_for_unattributed_changes).",
+    "⇒ 「아직 정하지 않았다」와 「false 로 정했다」는 다른 것이고, 전자는 ⬜ 로 남아 보인다."
   ],
   "name": "main protection",
   "target": "branch",
@@ -20,6 +23,7 @@
   },
   "rule_types": ["pull_request", "required_status_checks"],
   "required_approving_review_count": 0,
+  "require_extra_approval_for_unattributed_changes": false,
   "allowed_merge_methods": ["merge", "squash", "rebase"],
   "required_status_checks": ["공유 블록 드리프트", "정책 가드", "타입 검사 + 테스트 + 빌드"],
   "strict_required_status_checks_policy": false,
