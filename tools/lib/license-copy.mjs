@@ -1,8 +1,9 @@
-// 증서 가드의 공유 모듈 — 재는 것 셋.
+// 증서 가드의 공유 모듈 — 재는 것 넷.
 //
 //   ⑴ **선언된 미러가 제 정본과 바이트까지 같은가** (checkMirrors)
 //   ⑵ **Terms 블록의 칸들이 서 있고 Change Date 칸이 읽히는 모양인가** (checkTermsBlock)
-//   ⑶ **증서가 부르는 경로와 선언이 BSL 을 적은 경로가 같은가** (checkLicensedWorkScope)
+//   ⑶ **박힌 Change Date 가 아직 오지 않았는가** (checkChangeDatePassed)
+//   ⑷ **증서가 부르는 경로와 선언이 BSL 을 적은 경로가 같은가** (checkLicensedWorkScope)
 //
 // ⭐⭐ **증서의 정본은 `verifier/LICENSE` 다.** 작업장이 그것을 들고 배달이 나른다 — 루트
 //    `LICENSE` 는 저장소의 **공개 얼굴**이고 선언의 `mirrors` 축이 그 사본임을 적는다.
@@ -91,6 +92,58 @@ export function checkTermsBlock(root) {
   if (!CHANGE_DATE.test(text))
     errors.push(`${CERTIFICATE}: Change Date 칸이 「UNSET」 도 ISO 날짜(YYYY-MM-DD)도 아니다 — 빈 칸은 조용하고 지어낸 모양은 거짓이다`);
   return errors;
+}
+
+/** Change Date 칸이 말할 수 있는 네 상태. ⭐ 초록에 **이름이 붙는** 자리다. */
+export const CHANGE_DATE_STATES = ['unstamped', 'future', 'passed', 'unreadable'];
+
+/** `YYYY-MM-DD` → UTC 자정. ⚠️ 지역 시간으로 지으면 같은 커밋이 시간대에 따라 다른 답을 준다. */
+const utcDay = (y, m, d) => Date.UTC(y, m - 1, d);
+const dayOf = (date) => utcDay(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate());
+
+/**
+ * Change Date 칸이 **지금 어느 상태인가** — 순수 판정.
+ *
+ * ⭐⭐ 왜 상태에 **이름을 붙이는가.** 「잴 날짜가 없어서 초록」(`unstamped`)과 「재서
+ * 초록」(`future`)이 같은 초록으로 그려지면 미판정이 통과가 된다 — 발행 전에는 이 가드가
+ * 영원히 초록이고, 그 초록이 「날짜가 괜찮다」로 읽히는 순간 아무도 이 축을 다시 보지 않는다.
+ * ⇒ 상태를 돌려주고, 테스트가 **지금 어느 초록인지**를 단정한다.
+ *
+ * ⚠️ `unreadable` 은 이 함수가 가르기만 하고 **말하지 않는다** — 모양의 주인은
+ * checkTermsBlock 이다. 한 사실에 주인이 둘이면 같은 빨강이 두 번 울고, 고칠 자리가 흐려진다.
+ */
+export function changeDateState(text, now = new Date()) {
+  const m = text.match(/^Change Date:[ \t]+(\S+)/m);
+  if (!m) return { state: 'unreadable' };
+  if (m[1] === 'UNSET.') return { state: 'unstamped' };
+  const iso = m[1].match(/^(\d{4})-(\d{2})-(\d{2})\.$/);
+  if (!iso) return { state: 'unreadable' };
+  const date = utcDay(Number(iso[1]), Number(iso[2]), Number(iso[3]));
+  // ⚠️ 당일도 늦다 — 효력이 **그날** 시작한다.
+  return { state: date <= dayOf(now) ? 'passed' : 'future', date: m[1].slice(0, -1) };
+}
+
+/**
+ * ⑶ 박힌 Change Date 가 **아직 오지 않았는가.**
+ *
+ * ⭐⭐ 이 가드만 **시계를 읽는다** — 시간이 지나면 코드를 안 고쳐도 빨개진다. 보통은 그것이
+ * 결함이지만 여기서는 **재는 것 자체**다: 그날 증서는 정말로 틀리다. BSL 의 효력이 「Change
+ * Date 또는 그 판이 처음 공개 배포된 날의 4주년 중 **먼저 오는 날**」이라, 박힌 날짜가 지난
+ * 뒤에 내는 판은 **발행 당일부터** Change License 로 넘어간다 — 유료 층 보호가 그 판에서 0 이다.
+ *
+ * ⚠️ 그 실패는 **조용하다**: 날짜가 지나가는 날 저장소에는 아무 일도 일어나지 않고, 코드도
+ * 증서도 그대로다. 그래서 기계가 말해 준다. ⛔ 빨강은 「고쳐라」가 아니라 **「지금 내는 판은
+ * 보호되지 않는다」**는 사실이다 — 판정은 하고 고치지 않는다.
+ *
+ * ⛔ 「그 날짜가 **맞는 값**인가」(= 그 판의 발행일 + 4년)는 재지 않는다 — 발행일을 저장소가
+ *    알지 못한다. 재지 않는 자리는 「옳다」가 아니라 이 가드의 모집단 밖이다.
+ */
+export function checkChangeDatePassed(root, now = new Date()) {
+  const { state, date } = changeDateState(read(root, CERTIFICATE), now);
+  if (state !== 'passed') return [];
+  return [
+    `${CERTIFICATE}: Change Date ${date} 가 이미 지나갔다 — 지금 내는 판은 **발행 당일부터** Change License 로 넘어간다(유료 층 보호 0). 발행 절차대로 그 판의 값으로 다시 박아라`,
+  ];
 }
 
 /** 선언이 「제품」이라고 적는 허가. 증서의 `Licensed Work` 가 그 모집단의 다른 쪽 얼굴이다. */

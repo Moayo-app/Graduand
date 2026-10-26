@@ -18,10 +18,13 @@ import path from 'node:path';
 import {
   CERTIFICATE,
   CHANGE_DATE,
+  CHANGE_DATE_STATES,
   TERMS_FIELDS,
   PRODUCT_LICENSE,
   checkMirrors,
   checkTermsBlock,
+  changeDateState,
+  checkChangeDatePassed,
   licensedWorkBlock,
   checkLicensedWorkScope,
 } from '../lib/license-copy.mjs';
@@ -195,4 +198,70 @@ test('증서 (negative) — ⛔ 분모가 빈 채로 초록이 되지 않는다:
   const errors = checkLicensedWorkScope(root);
   assert.equal(errors.length, 2, errors.join(' · '));
   assert.ok(errors.some((e) => e.includes(CERTIFICATE)) && errors.some((e) => e.includes(PRODUCT_LICENSE)));
+});
+
+// ── Change Date 가 지나갔는가 ─────────────────────────────────────────────────
+//
+// ⭐⭐ 이 축만 **시계를 읽는다.** 그래서 판정에 오늘을 **주입**하고, 테스트는 고정 날짜로
+//    양쪽을 다 잰다 — 같은 커밋이 돌리는 날에 따라 다른 답을 주지 않는다.
+
+/** 고정된 「오늘」 — UTC 자정으로 지어, 돌리는 기계의 시간대가 답을 바꾸지 않게 한다. */
+const DAY = (iso) => new Date(`${iso}T00:00:00Z`);
+const TODAY = DAY('2030-06-15');
+const stamped = (text, iso) => setChangeDate(text, `${iso}.`);
+
+test('⭐⭐ 지금의 초록에 **이름이 붙어 있다** — 「잴 날짜가 없다」이지 「날짜가 괜찮다」가 아니다', () => {
+  // 이 단정이 이 축의 요점이다. 발행 전에는 이 가드가 영원히 초록이고, 그 초록이
+  // 「괜찮다」로 읽히는 순간 아무도 이 축을 다시 보지 않는다 — 미판정이 통과가 된다.
+  assert.deepEqual(checkChangeDatePassed(ROOT), []);
+  assert.deepEqual(changeDateState(read(ROOT, CERTIFICATE)), { state: 'unstamped' });
+  assert.equal(CHANGE_DATE_STATES.length, 4);
+});
+
+test('상태 넷이 갈린다 — 미결 · 아직 멀다 · 지나갔다 · 모양이 아니다', () => {
+  const base = read(ROOT, CERTIFICATE);
+  assert.equal(changeDateState(base, TODAY).state, 'unstamped');
+  assert.equal(changeDateState(stamped(base, '2030-06-16'), TODAY).state, 'future');
+  assert.equal(changeDateState(stamped(base, '2030-06-14'), TODAY).state, 'passed');
+  assert.equal(changeDateState(setChangeDate(base, '2030년.'), TODAY).state, 'unreadable');
+  assert.equal(changeDateState('증서가 아니다\n', TODAY).state, 'unreadable');
+});
+
+test('⚠️ 당일도 늦다 — 효력이 **그날** 시작한다', () => {
+  const base = read(ROOT, CERTIFICATE);
+  assert.equal(changeDateState(stamped(base, '2030-06-15'), TODAY).state, 'passed', '그날은 이미 넘어간 날이다');
+  assert.equal(changeDateState(stamped(base, '2030-06-16'), TODAY).state, 'future');
+});
+
+test('⚠️ 날짜 비교가 **UTC 일자**다 — 시간대가 같은 커밋의 답을 바꾸지 않는다', () => {
+  const base = stamped(read(ROOT, CERTIFICATE), '2030-06-15');
+  // 같은 순간을 UTC 의 서로 다른 시각으로 봐도 「그 날」이면 판정이 같다.
+  for (const at of ['2030-06-15T00:00:00Z', '2030-06-15T12:34:56Z', '2030-06-15T23:59:59Z'])
+    assert.equal(changeDateState(base, new Date(at)).state, 'passed', at);
+  assert.equal(changeDateState(base, new Date('2030-06-14T23:59:59Z')).state, 'future', '전날은 아직 멀다');
+});
+
+test('(negative): 지나간 날짜가 박혀 있으면 가드가 그 날짜를 지목한다', () => {
+  const root = cloneRoot();
+  rewrite(root, CERTIFICATE, (s) => stamped(s, '2030-06-14'));
+  const errors = checkChangeDatePassed(root, TODAY);
+  assert.equal(errors.length, 1, errors.join(' · '));
+  assert.ok(errors[0].includes('2030-06-14') && errors[0].includes('유료 층 보호 0'), errors[0]);
+  // ⭕ 그리고 **모양**은 여전히 올바르다 — 두 축이 서로 다른 것을 잰다.
+  assert.deepEqual(checkTermsBlock(root), [], '지나간 날짜도 ISO 날짜라 모양 축은 초록이다');
+});
+
+test('(negative): 아직 오지 않은 날짜는 초록이고, 그 초록은 **재서** 초록이다', () => {
+  const root = cloneRoot();
+  rewrite(root, CERTIFICATE, (s) => stamped(s, '2030-06-16'));
+  assert.deepEqual(checkChangeDatePassed(root, TODAY), []);
+  assert.equal(changeDateState(read(root, CERTIFICATE), TODAY).state, 'future');
+});
+
+test('⚠️ 모양이 아닌 칸은 이 가드가 **말하지 않는다** — 모양의 주인은 checkTermsBlock 이다', () => {
+  // 한 사실에 주인이 둘이면 같은 빨강이 두 번 울고 고칠 자리가 흐려진다.
+  const root = cloneRoot();
+  rewrite(root, CERTIFICATE, (s) => setChangeDate(s, '2030년.'));
+  assert.deepEqual(checkChangeDatePassed(root, TODAY), [], '여기서는 침묵한다');
+  assert.equal(checkTermsBlock(root).filter((e) => e.includes('Change Date')).length, 1, '그쪽이 말한다');
 });
