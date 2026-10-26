@@ -108,6 +108,11 @@ test('발행 AC1 — 타르볼에 담기는 것이 의도와 같고, 비공개 �
   // ⛔ 파일 수를 적지 않는다 — 산출은 모듈 하나당 `.js` 와 `.d.ts` 하나씩이다.
   assert.ok(shippedModules.length > 10, '분모가 비면 이 테스트는 아무것도 재지 않는다');
   const expected = [
+    // ⭐ 증서가 **실린다** — BSL 축자가 「each original or modified copy」에 라이선스를
+    // 걸라고 요구하고, 발행되는 타르볼이 그 copy 다. 표준 이름이라 npm 이 자동으로
+    // 싣지만 `files` 에도 적혀 있다: 선언이 실물과 1:1 이라는 이 파일의 규율이,
+    // 「도구 기본값이 그렇다」에 기대는 것을 허락하지 않는다.
+    'LICENSE',
     'README.md',
     'package.json',
     ...shippedModules.flatMap((path) => [

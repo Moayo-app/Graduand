@@ -120,11 +120,18 @@ export function checkScopeEntries(root) {
  * ⭐⭐ 따로 내놓는 이유. 분모가 빈 채로 스윕이 도는 날, checkWorkshopProse 는 **초록**이다 —
  * 「내부 산문 0」이 아니라 **아무것도 읽지 않았다**인데 같은 초록으로 그려진다. 이 제품이
  * 파는 규율(미판정은 통과가 아니다)을 이 저장소의 가드 자신이 어기는 자리라, 분모를 세는
- * 함수를 내놓고 테스트가 「0 이 아니다」를 따로 단정한다. */
+ * 함수를 내놓고 테스트가 「0 이 아니다」를 따로 단정한다.
+ *
+ * ⚠️⚠️ **묻는 순서가 뜻을 바꾼다.** 먼저 workshop 항만 골라 놓고 묻으면, 그 파일을 **더
+ * 앞에서 덮는 `local` 행이 경쟁에 끼지 못한다** — 배달 디렉터리 안에 이 저장소가 쓴 파일이
+ * 하나라도 있으면(증서 사본이 그렇다) 그 파일이 「배달된 것」으로 읽힌다. 그래서 **전수
+ * 선언에 먼저 묻고**(coveringEntry 의 「먼저 매칭되는 행이 이긴다」) 그 **이긴 행의** origin
+ * 을 본다. ⇒ 덮는 규칙이 라이브러리 전체에서 **하나**다: 두 함수가 다른 답을 주면, 둘 다
+ * 자기 기준으로는 옳으면서 갈라진다. */
 export function workshopFiles(root) {
-  const entries = scopeEntries(root).filter(([, origin]) => origin === 'workshop');
-  if (entries.length === 0) return [];
-  return walkFiles(root).filter((f) => coveringEntry(entries, f));
+  const entries = scopeEntries(root);
+  if (!entries.some(([, origin]) => origin === 'workshop')) return [];
+  return walkFiles(root).filter((f) => coveringEntry(entries, f)?.[1] === 'workshop');
 }
 
 /** AC3 — 배달된 파일(`origin: workshop`)에 내부 표기가 0 이다.

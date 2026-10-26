@@ -2,6 +2,7 @@
   "name": "graduand",
   "version": "0.1.0",
   "private": true,
+  "license": "SEE LICENSE IN LICENSE",
   "description": "Configuration verifiers that run in the customer's CI and browser — one module, no copies, no telemetry.",
   "type": "module",
   "engines": {
@@ -22,7 +23,8 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "test": "node --test \"src/**/*.test.ts\"",

@@ -55,6 +55,7 @@ moayo-hq 에 산다 — 비공개이고, 여기서 다시 쓰지 않는다.
 | 해지 | **구독을 받은 그 표면에서 해지된다** — 호스티드 고객 포털 |
 | 입구 | 공개 저장소 = URL 만(토큰 0) · 비공개 = `npx <식별자> --open` 한 줄 · ⛔ PAT 입력 없음 |
 | 보고 | 3상태 수 + 체크별 근거 축자 + 판정기 버전 · 판정 불가 3종은 전용 화면 |
+| 라이선스 | 모듈 전체 **BSL 1.1**([`LICENSE`](LICENSE)) · 무료 범위는 **Additional Use Grant 에 기능으로** · Change License = **Apache-2.0**([`LICENSE-APACHE-2.0`](LICENSE-APACHE-2.0), ⚠️ Change Date **이후**에 적용된다) · 경계의 정본 = [docs/licensing/feature-boundary.md](docs/licensing/feature-boundary.md) |
 | 계측 | 사건 다섯만 센다 — 저장소 이름·판정 내용은 어느 모드에서도 서버로 오지 않는다 |
 
 ## 3. 행동지침 — 모든 작업의 process foundation
