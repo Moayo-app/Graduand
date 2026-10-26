@@ -2,7 +2,7 @@
      정본 템플릿: platform/shared-blocks/templates/triage-labels.md
      재생성(플랫폼 저장소에서): npm run shared-block -- --service <서비스> --file <이름> --out <서비스 저장소>/docs/agents/triage-labels.md --force
      대상 저장소: Moayo-app/Graduand
-     생성 판: 4c6d8c07b598 -->
+     생성 판: d99aefcb96cc -->
 
 # Triage Labels
 
