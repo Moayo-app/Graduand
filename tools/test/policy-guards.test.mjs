@@ -38,7 +38,7 @@ clean('G3: 금칙·필수 문자열 config 가 형태를 갖춘다', checkString
 clean('G4+AC1: 제품 이름(잠정 식별자)이 전 로케일에서 일치하고 옛 이름이 0건이다', checkProductName);
 clean('G5+AC1: 벤더 이름이 전 로케일에서 일치하고 옛 벤더가 0건이다', checkVendor);
 clean('G6: 법인명은 처리방침 §5·§6 표에만 산다 — 산문 0건', checkLegalName);
-clean('G7: 메타는 ko 한 벌 — 번역판에 기계 줄이 없고, 시행일 상태가 전 로케일 본문과 1:1 이다', checkMeta);
+clean('G7: 메타는 ko 한 벌 — 번역판에 기계 줄이 없고, 판번호와 시행일 상태가 전 로케일 본문과 1:1 이다', checkMeta);
 clean('AC5: 번역판의 정본 해시가 ko 본문의 지금 해시와 같다 — 재전파 대조', checkTranslationSync);
 clean('G9+AC2: 번역판 선두에 한국어판 우선 조항이 축자로 선다', checkPriorityClause);
 clean('G10+AC4: 본문에 가격 숫자가 0건이다 — 금액은 결제 화면 위임', checkPriceFigures);

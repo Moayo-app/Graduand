@@ -15,6 +15,7 @@ import {
   checkPriceFigures,
   checkRefundAbsolutes,
   checkCanon,
+  docLocales,
 } from '../lib/policy.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '../..');
@@ -111,4 +112,40 @@ test('G9 (negative): 우선 조항을 걷어낸 번역판은 운다', () => {
     s.replace('The official version of this document is the Korean version.', ''),
   );
   assert.ok(hits(checkPriorityClause(root), 'en/privacy').length >= 1);
+});
+
+/**
+ * ⭐⭐ G7 (버전) — 판번호가 사는 자리가 둘이고, **머리말은 발행본에서 걷힌다.** 그래서
+ * 둘이 갈라지면 **공개되는 쪽만 틀린다** — 기계는 새 번호를, 방문자는 옛 번호를 본다.
+ * 아래 셋이 그 세 방향을 각각 막는다: 머리말만 올림 · 본문만 올림 · 핀 결손.
+ */
+test('G7 (negative): 머리말 판번호만 올리면 전 로케일 본문이 지목된다', () => {
+  const root = cloneRoot();
+  rewrite(root, 'docs/policies/terms.md', (t) => t.replace('버전: 1.0', '버전: 1.1'));
+  const errors = hits(checkMeta(root), '본문 판번호');
+  // ⛔ 수를 적지 않는다 — 분모는 로케일이고, 한 로케일만 울면 나머지는 조용히 통과한 것이다.
+  const locales = docLocales(root);
+  assert.deepEqual(
+    errors.map((e) => e.split('/')[0]).sort(),
+    [...locales].sort(),
+    '머리말을 올렸는데 울지 않은 로케일이 있다 — 그 독자에게는 문서가 거짓이다',
+  );
+});
+
+test('G7 (negative): 본문 판번호만 올려도 같은 가드가 운다 — 반대 방향', () => {
+  const root = cloneRoot();
+  rewrite(root, 'docs/policies/refund.md', (t) => t.replace('(판 1.0)', '(판 2.0)'));
+  assert.equal(hits(checkMeta(root), 'ko/refund').filter((e) => e.includes('2.0')).length, 1);
+});
+
+test('G7 (negative): 본문에서 판번호를 지우면 「없다」로 지목된다', () => {
+  const root = cloneRoot();
+  rewrite(root, 'docs/policies/locales/en/terms.md', (t) => t.replace('(version 1.0)', ''));
+  assert.equal(hits(checkMeta(root), 'en/terms').filter((e) => e.includes('판번호')).length, 1);
+});
+
+test('G7 (negative): 로케일의 핀이 config 에서 빠지면 조용히 통과하지 않는다', () => {
+  const root = cloneRoot();
+  rewrite(root, 'config/policy-strings.yml', (t) => t.replace(/\n    en: version\n/, '\n'));
+  assert.ok(hits(checkMeta(root), 'version_label.en').length > 0, '핀이 없는데 초록이다 — 미판정이 통과로 적혔다');
 });
