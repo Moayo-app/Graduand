@@ -1,5 +1,5 @@
 <!--
-  en 번역판 — [ISSUE-12]. 정본 = docs/policies/refund.md (한국어판).
+  en 번역판. 정본 = docs/policies/refund.md (한국어판).
   기한(14일)·조건은 축자로 옮긴다 — 번역가 재량 0. 「환불 불가」류 단정을 영어에서도 만들지 않는다
   (금칙의 정본은 config/policy-strings.yml).
   ko 정본이 개정되면 이 판을 재전파하고 아래 정본 해시를 갱신한다 — 가드가 둘의 일치를 잰다.

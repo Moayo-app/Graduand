@@ -6,8 +6,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { PUBLIC_PROSE, checkProseLeaks, checkPublicProse, checkWorkshopName } from '../lib/public-surface.mjs';
-import { walkFiles } from '../lib/public-scope.mjs';
+import { PUBLIC_PROSE, checkProseLeaks, checkPublicProse, checkWorkshopName, checkInternalPointers, editableFiles } from '../lib/public-surface.mjs';
+import { coveringEntry, scopeEntries, walkFiles } from '../lib/public-scope.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '../..');
 
@@ -26,9 +26,9 @@ test('양성: 기여 안내가 선다 — 공개 생성물의 머리말이 가�
 test('negative: 누설을 심으면 그 문면을 지목한다 — 모양 일곱 가지', () => {
   const planted = [
     `작업장은 ${['Example', '_dev'].join('')} 다.`,
-    '정본은 example-hq 에 산다.',
+    `정본은 ${COMPANY} 에 산다.`,
     '템플릿은 Example-Platform 쪽이다.',
-    '근거는 ADR-4 다.',
+    `근거는 ${DECISION} 다.`,
     '티켓은 ISSUE-249 다.',
     '자세한 것은 Example-app/example#241 을 보라.',
     '라이선스는 #23 이 세운다.',
@@ -46,7 +46,7 @@ test('negative: 사본에 누설을 심으면 양성 경로가 빨갛다 — 심
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'graduand-public-'));
   fs.copyFileSync(path.join(ROOT, 'CONTRIBUTING.md'), path.join(root, 'CONTRIBUTING.md'));
   assert.deepEqual(checkPublicProse(root), [], '심기 전의 사본은 초록이다');
-  fs.appendFileSync(path.join(root, 'CONTRIBUTING.md'), '\n정본은 example-hq 에 있다.\n');
+  fs.appendFileSync(path.join(root, 'CONTRIBUTING.md'), `\n정본은 ${COMPANY} 에 있다.\n`);
   assert.equal(checkPublicProse(root).length, 1);
 });
 
@@ -68,6 +68,8 @@ test('⭐ 분모가 전수다 — 세션 부트스트랩도 든다(그 면제가
  * 관행이다(금칙 목록이 사명과 티켓 모양을 같은 꼴로 적는다).
  */
 const PLANTED = ['Example', '_dev'].join('');
+const COMPANY = ['example', '-hq'].join('');
+const DECISION = ['ADR', '-4'].join('');
 
 test('negative: 어느 파일에 심어도 빨갛다 — 면제가 없다', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'graduand-workshop-'));
@@ -84,5 +86,42 @@ test('negative: 어느 파일에 심어도 빨갛다 — 면제가 없다', () =
     assert.ok(errors.some((e) => e.startsWith(`${rel}:`)), `${rel}: 심었는데 조용하다`);
     assert.ok(errors.some((e) => e.includes(PLANTED)), '이름을 지목하지 않는다');
     fs.writeFileSync(path.join(root, rel), '비공개 작업장이라고만 적는다.\n');
+  }
+});
+
+/* ──── 내부 포인터의 꼴 — 분모가 「손으로 고칠 수 있는 자리」 전수다 ──── */
+
+const originOf = (rel) => coveringEntry(scopeEntries(ROOT), rel)?.[1];
+const subject = () => editableFiles(ROOT, walkFiles(ROOT), originOf);
+
+test('⭕ 손으로 고칠 수 있는 자리에 내부 포인터가 0 이다', () => {
+  assert.deepEqual(checkInternalPointers(ROOT, subject()), []);
+});
+
+test('⭐ 분모가 선언에서 유도된다 — 생성물은 밖이고, 그것이 「위반 0」이 아니다', () => {
+  const all = walkFiles(ROOT);
+  const mine = subject();
+  assert.ok(mine.length > 0 && mine.length < all.length, '분모가 전수와 같거나 비면 유도가 아무것도 안 한다');
+  // ⚠️ 밖으로 뺀 자리에는 **실제로 포인터가 남아 있다** — 고칠 자리가 다른 저장소라서다.
+  const generated = all.filter((rel) => !mine.includes(rel));
+  assert.ok(checkInternalPointers(ROOT, generated).length > 0, '생성물에 포인터가 0 이면 이 면제는 낡았다');
+});
+
+test('negative: 세 모양이 각각 잡힌다 — 심으면 빨갛다', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'graduand-pointer-'));
+  const rel = 'CLAUDE.md';
+  const clean = '정본은 비공개 상류가 갖는다.\n';
+  fs.writeFileSync(path.join(root, rel), clean);
+  assert.deepEqual(checkInternalPointers(root, [rel]), [], '심기 전의 사본은 초록이다');
+
+  for (const [planted, needle] of [
+    [`정본은 ${COMPANY} 에 있다.`, COMPANY],
+    [`근거는 ${['[ISSUE', '-12]'].join('')} 다.`, 'ISSUE-12'],
+    [`근거는 ${DECISION} 다.`, DECISION],
+  ]) {
+    fs.writeFileSync(path.join(root, rel), `${clean}${planted}\n`);
+    const errors = checkInternalPointers(root, [rel]);
+    assert.equal(errors.length, 1, `${planted}: ${errors.join(' · ')}`);
+    assert.ok(errors[0].includes(needle), errors[0]);
   }
 });

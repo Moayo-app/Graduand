@@ -1,5 +1,5 @@
 <!--
-  저장소 간 정본 선언표 — [ISSUE-12] (가드 명세 정본 moayo-hq #211 §3 「저장소 간」 — 비공개, 포인터만).
+  저장소 간 정본 선언표 — 가드 명세의 정본은 **비공개 상류**가 갖는다. 포인터만 둔다.
   코드는 저장소를 가로질러 재사용하지 않는다 — 빌리는 것은 문제 정의다:
   「이것이 없으면 제외 목록은 조용히 두 번째 정본이 된다.」
   아래 표는 가드(tools/test/policy-guards.test.mjs)가 기계로 읽는다 — 열 구성을 바꾸면 가드가 운다.
@@ -21,7 +21,7 @@
 | 정책 금칙·필수 문자열 | Moayo-app/Graduand | config/policy-strings.yml |
 | 이 선언표 | Moayo-app/Graduand | docs/policies/canon.md |
 | 자매 제품(Re:Stance)의 정책 문서와 가드 | Moayo-app/Re-Stance | docs/policies/ |
-| 결정의 근거·조문 측정 (컴플라이언스) | Moayo-app/moayo-hq | 비공개 — 이 저장소는 포인터만 둔다 |
+| 결정의 근거·조문 측정 (컴플라이언스) | **비공개 상류** | 이 저장소는 포인터만 둔다 — 이름도 적지 않는다 |
 
 ## 규율
 

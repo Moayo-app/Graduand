@@ -72,6 +72,55 @@ export function checkWorkshopName(root, files) {
   return errors;
 }
 
+/**
+ * ⭐⭐ **비공개 쪽을 가리키는 포인터의 꼴** — 누출 심사(2026-10-27)가 정한 규칙을 집행한다.
+ *
+ * 규칙: **「비공개」와 「무엇의 정본인가」만 적는다** — 저장소 이름 · 티켓 번호 · 링크는
+ * 적지 않는다. 사유 둘: ⑴ 이름은 **공격 면**이다(작업장 이름을 걷은 것과 같은 사유)
+ * ⑵ 번호는 공개 독자에게 **404 로 끝나는 포인터**다 — 있는데 못 보는 것은 외부 사실도
+ * 계약도 아니다. ⭕ 포인터 **자체**는 남는다: 「정본이 여기 없다」는 이 저장소가 선언한
+ * 규율이고(정본 선언표), 그 사실은 이름 없이 선다.
+ *
+ * ⛔ **`…-platform` 은 이 목록에 없다 — 막을 수 없어서가 아니라 막으면 거짓이 되기 때문이다.**
+ * 워크플로가 그 저장소의 액션을 `uses:` 로 부른다(`…/shared-block-guard@main`) — **기능
+ * 참조**라 지우면 잡이 돌지 않는다. 금칙을 걸고 면제로 빼면 그 면제가 금칙을 삼킨다.
+ */
+const POINTER_PATTERNS = [
+  [/[A-Za-z0-9]+-hq\b/i, '회사 층 저장소의 이름'],
+  [/\[ISSUE-\d+\]/i, '내부 티켓 번호 — 공개 독자가 누르면 404 다'],
+  [/\bADR-\d/i, '내부 결정 기록 번호'],
+];
+
+/**
+ * 분모 — **손으로 고칠 수 있는 자리**. ⚠️ `origin: platform` 항은 드리프트 가드가 손편집을
+ * 막으므로(그 파일들의 머리가 축자로 「손으로 고치지 말 것」) 이 모집단 밖이다. ⛔ 그것은
+ * 「위반 0」이 아니라 **고칠 자리가 다른 저장소**라는 뜻이고, 누출 심사가 그 셋을 따로 든다.
+ */
+export function editableFiles(root, files, originOf) {
+  return files.filter((rel) => originOf(rel) !== 'platform');
+}
+
+/** 손으로 고칠 수 있는 자리에 내부 포인터가 0 이다. */
+export function checkInternalPointers(root, files) {
+  const errors = [];
+  for (const rel of files) {
+    if (/\.(png|jpg|jpeg|ico|woff2?|svg|lock)$/.test(rel)) continue;
+    let text;
+    try {
+      text = fs.readFileSync(path.join(root, rel), 'utf8');
+    } catch {
+      continue;
+    }
+    for (const [i, line] of text.split('\n').entries()) {
+      for (const [re, what] of POINTER_PATTERNS) {
+        const m = line.match(re);
+        if (m) errors.push(`${rel}:${i + 1}: ${what} — 「${m[0]}」 (「비공개」와 무엇의 정본인가만 적는다)`);
+      }
+    }
+  }
+  return errors;
+}
+
 /** 모집단 전수. root 를 받는 이유는 negative 테스트가 사본에 누설을 심기 위해서다. */
 export function checkPublicProse(root, files = PUBLIC_PROSE) {
   const errors = [];

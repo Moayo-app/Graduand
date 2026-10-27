@@ -1,4 +1,4 @@
-// 화면 로케일 분모 가드 — 양성 + negative (작업장 [ISSUE-35] AC2·AC3).
+// 화면 로케일 분모 가드 — 양성 + negative (작업장 쪽 AC2·AC3).
 // 가드의 본체는 tools/lib/screen-locales.mjs, 분모의 정본은 config/allowed-countries.yml 이다.
 //
 // ⚠️ negative 가 양성보다 많다. AC3 이 요구하는 것이 「**빨갛다**」라서, 실제 트리가 초록인

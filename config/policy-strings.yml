@@ -1,9 +1,9 @@
-# 정책 문서의 금칙·필수 문자열 — **단일 정본** ([ISSUE-12] · 가드 명세 정본: moayo-hq #211 §3 G3).
+# 정책 문서의 금칙·필수 문자열 — **단일 정본**. 가드 명세(G3)의 정본은 비공개 상류다.
 #
 # 가드(tools/test/policy-guards.test.mjs)가 이 파일에서 값을 읽어 docs/policies/ 전수를 판정한다.
 # ⛔ 테스트 코드에 이 값들을 리터럴로 적지 않는다 — 두 벌이 되는 순간 갈라진다.
 #
-# ⭕ product.name 은 **확정됐다** (2026-10-27 · [ISSUE-1] / moayo-hq #207) — 상표 출원 2건
+# ⭕ product.name 은 **확정됐다** (2026-10-27 · 결정 정본은 비공개 상류) — 상표 출원 2건
 # (심볼 40-2026-0226190 · 워드 40-2026-0226216)이 그것을 지탱한다. ⭐ 이름이 **바뀌지 않고**
 # 확정됐으므로 이 값은 그대로이고 former_names 는 빈 채다 — 치환 기전(G4)이 할 일이 0 이다.
 # ⛔ 그래도 기전을 걷지 않는다: **출원은 등록이 아니고** 심사가 열려 있어 거절·이의가 오는
@@ -11,18 +11,18 @@
 # 내린다 — G4 가 둘을 묶고, 그 금칙이 그 순간부터 잔재를 잡는다.
 
 product:
-  name: graduand          # 소문자 한 단어 식별자 ([ISSUE-1]) — 본문 표기도 이것 하나
+  name: graduand          # 소문자 한 단어 식별자 — 본문 표기도 이것 하나
   former_names: []        # 이름 확정·교체 때 이전 이름이 여기로 내려온다
 
 vendor:
-  brand: Polar            # 본문이 쓰는 유일한 표기 ([ISSUE-4] — 브랜드 이름만, 법인명은 처리방침 표에만)
+  brand: Polar            # 본문이 쓰는 유일한 표기 — 브랜드 이름만, 법인명은 처리방침 표에만
   legal_name: Polar Software, Inc.   # 처리방침 §5·§6 표 전용 — 산문 금지 (가드 G6)
   contact: legal@polar.sh # 국외이전 표(처리방침 §6)의 이전받는 자 연락처
   former_brands:
     - Paddle              # 자매 제품이 거절당한 벤더 — 구조 상속 경로로 새어 들어올 수 있는 유일한 옛 이름
 
 required:
-  # 번역판 선두의 한국어판 우선 조항 — moayo-hq #211 §1 축자. 로케일이 늘면 그 로케일의
+  # 번역판 선두의 한국어판 우선 조항 — 비공개 상류의 결의 축자. 로케일이 늘면 그 로케일의
   # 조항을 여기 더한다(없으면 가드 G9 가 config 결손으로 빨갛다).
   priority_clause:
     en: The official version of this document is the Korean version. If this translation and the Korean version differ in interpretation, the Korean version prevails.

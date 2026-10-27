@@ -1,4 +1,4 @@
-// [ISSUE-12] negative 경로 — AC3·AC4·AC5·AC6 는 전부 「가드가 빨갛다」를 요구하므로,
+// negative 경로 — AC3·AC4·AC5·AC6 는 전부 「가드가 빨갛다」를 요구하므로,
 // 실제 트리가 초록인 것만으로는 검증되지 않는다. 사본 트리에 위반을 심고 가드가 우는 것을 잰다.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
