@@ -173,11 +173,11 @@ test('AC2 (negative): 루트에 심은 파일도 잡는다 — 접두사 없이 
 
 test('(negative): 허공을 가리키는 선언 행은 범위를 조용히 넓힌다 — 그래서 빨갛다', () => {
   const root = cloneRoot();
-  // ⚠️ `license` 를 함께 적는다 — 축이 없으면 scopeEntries 가 먼저 던져 이 테스트의 표적(허공
-  // 을 가리키는 행)이 가려진다. 축 자체의 negative 는 아래에 따로 있다.
+  // ⚠️ `license`·`group` 을 함께 적는다 — 축이 없으면 scopeEntries 가 먼저 던져 이 테스트의
+  // 표적(허공을 가리키는 행)이 가려진다. 축 자체의 negative 는 각자 따로 있다.
   addEntry(
     root,
-    '  - path: telemetry/\n    origin: workshop\n    license: Apache-2.0\n    basis: "아직 서지 않은 것을 가리키는 행"\n',
+    '  - path: telemetry/\n    origin: workshop\n    license: Apache-2.0\n    group: "저장소 운영"\n    basis: "아직 서지 않은 것을 가리키는 행"\n',
   );
   assert.equal(hits(checkScopeEntries(root), 'telemetry/').length, 1);
 });
@@ -220,9 +220,10 @@ test('(negative): ⚠️ 행에서 license 를 지우면 scopeEntries 가 **던�
   const root = cloneRoot();
   const file = path.join(root, SCOPE_PATH);
   const text = fs.readFileSync(file, 'utf8');
-  const target = '  - path: tools/\n    origin: local\n    license: Apache-2.0\n';
+  // ⚠️ `tools/` 한 행은 더 이상 없다 — 묶음 둘을 걸쳐서 넷으로 쪼갰다([ISSUE-52]).
+  const target = '  - path: tools/lib/\n    origin: local\n    license: Apache-2.0\n';
   assert.ok(text.includes(target), '지울 칸을 선언에서 찾는다');
-  fs.writeFileSync(file, text.replace(target, '  - path: tools/\n    origin: local\n'));
+  fs.writeFileSync(file, text.replace(target, '  - path: tools/lib/\n    origin: local\n'));
   assert.throws(() => scopeEntries(root), /license/, '빈 칸이 통과하면 그 경로는 허가 없이 공개된다');
 });
 

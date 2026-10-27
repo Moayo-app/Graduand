@@ -31,6 +31,23 @@
 # 집행한다), 머리 표기는 파일마다 갈라지는 사본이다. ⇒ 경로 → 허가의 정본은 **이 축 하나**고,
 # 묶음마다의 **사유**는 docs/licensing/repository-licensing.md 가 갖는다(배정과 사유를 나눈다).
 #
+# group = **그 경로가 CLAUDE.md §1 의 어느 묶음인가.** 축 셋째이고 성질이 앞 둘과 다르다 —
+# `origin`·`license` 의 값은 이 파일이 닫힌 목록으로 들지만, 묶음의 **정본은 §1 의 표**다
+# ([ISSUE-20] 이 정한 분담: 「범위의 정의」는 산문이 하고 **배정**은 선언이 한다). ⇒ 가드가
+# 둘을 **양방향으로** 묶는다 — 표에 없는 이름을 쓰면 빨갛고, 표에 있는데 **아무 행도 쓰지
+# 않는 묶음**도 빨갛다(「허공을 가리키는 행 0」의 반대 방향이다).
+#
+# ⭐⭐ **왜 축을 더하는가.** 분모의 사슬이 셋인데 마지막 칸만 기계가 없었다 —
+# 「파일 전수 → 선언의 행」은 가드가 집행하고, 「선언의 행 → §1 의 묶음」은 **사람이 셌다.**
+# 한 행이 셋을 함께 쥐면 **선언에 있으면서 묶음 밖인 행이 생길 수 없다.**
+#
+# ⚠️ **그래서 행의 입자가 묶음보다 굵으면 안 된다.** `tools/` 가 한 행이던 동안 그 행은
+# 가드(운영)와 정책 렌더(사이트 배선)를 **함께** 담고 있었다 — 어느 값을 적어도 절반이
+# 거짓이다. ⛔ 접두사 안에 더 좁은 행을 넣는 길은 막혀 있다: 덮는 규칙이 「**먼저 매칭되는
+# 행이 이긴다**」(tools/lib/public-scope.mjs)라 더 좁은 행이 **조용히 죽은 행**이 된다.
+# ⇒ 겹치지 않게 **쪼갠다.** 대가는 그 아래 새 파일이 행을 요구한다는 것이고, 빠뜨림이
+# 누설이 아니라 빨강인 방향이라 이 저장소가 이미 고른 쪽이다.
+#
 # mirrors = **이 파일은 <경로>의 바이트 사본이고, 정본은 그 <경로>다.** 선택 축이다.
 #
 # ⭐⭐ 왜 사본을 선언하는가. 사본을 피할 수 없는 자리가 하나 있다 — 루트 `LICENSE` 는
@@ -49,71 +66,103 @@ entries:
   - path: .github/workflows/
     origin: local
     license: Apache-2.0
+    group: "저장소 운영"
     basis: "저장소 운영 — 가드와 CI. 공개 저장소에서 무엇이 재어지는지가 보여야 한다"
   - path: .gitignore
     origin: local
     license: Apache-2.0
+    group: "저장소 운영"
     basis: "산출물 제외 — 이 파일이 가드의 미추적 분모를 유도한다(사본 금지)"
   - path: CLAUDE.md
     origin: local
     license: Apache-2.0
+    group: "저장소 운영"
     basis: "세션 부트스트랩 — 칼이 첫 화면에 산다. 내부 근거는 포인터로만 가리킨다"
   - path: CONTRIBUTING.md
     origin: local
     license: Apache-2.0
+    group: "저장소 운영"
     basis: "기여 안내 — 받는 입력과 받지 않는 입력. 공개 산문 가드(tools/lib/public-surface.mjs)의 모집단이 이 파일이다"
   - path: LICENSE
     origin: local
     license: upstream
+    group: "증서 전문"
     mirrors: verifier/LICENSE
     basis: "지금 적용되는 라이선스 — BSL 1.1 증서. ⚠️⚠️ **정본은 이 파일이 아니다** — 증서는 작업장이 들고 배달이 verifier/LICENSE 로 나른다. 이 파일은 저장소의 **공개 얼굴**이라 루트에 있어야 하고, 배달 접두사 밖이다. ⭕ 그래서 위 mirrors 축으로 **선언했다** — 배달이 따라 쓰고 사람 손은 0 이다. ⚠️ 발행마다 Change Date 가 다시 박히는 자리가 정본 쪽이므로, 손으로 고칠 유혹이 생기는 파일은 이쪽이다: ⛔ 여기를 고치지 않는다(다음 배달이 되돌린다). 고칠 자리는 작업장의 증서다"
   - path: LICENSE-APACHE-2.0
     origin: local
     license: upstream
+    group: "증서 전문"
     basis: "Change License 의 전문 — Apache-2.0. Change Date 이후에 적용되는 라이선스이고, 증서가 이 파일을 이름으로 가리킨다"
   - path: README.md
     origin: local
     license: Apache-2.0
+    group: "저장소 운영"
     basis: "입구 산문"
   - path: config/
     origin: local
     license: Apache-2.0
+    group: "저장소 운영"
     basis: "선언 정본들 — 개방 목록 · 정책 문자열 · 보호 설정(ruleset.json) · 이 파일 자신. ⚠️ 어느 것도 실물을 **바꾸지** 않는다: 「무엇이 참이어야 하는가」를 적고, 가드가 실물과 대조한다"
   - path: docs/agents/
     origin: platform
     license: Apache-2.0
+    group: "저장소 운영"
     basis: "공유 블록 생성물 — 트리아지 라벨 · 도메인 · 디자인 경계"
   - path: docs/licensing/
     origin: local
     license: Apache-2.0
+    group: "저장소 운영"
     basis: "라이선스 사유의 정본 둘 — feature-boundary.md 가 기능 → 게이트·선언 조건(증서의 Additional Use Grant 가 이름으로 가리킨다)이고, repository-licensing.md 가 경로 묶음마다 **왜 그 허가인가**다. ⚠️ 어느 경로에 무엇이 붙는지는 이 문서가 아니라 위 license 축이 갖는다 — 배정과 사유를 같은 자리에 두면 둘이 갈라진다"
   - path: docs/policies/
     origin: local
     license: reserved
+    group: "정책 문서"
     basis: "정책 문서 6벌 + 저장소 간 정본 선언표"
   - path: package.json
     origin: local
     license: Apache-2.0
+    group: "저장소 운영"
     basis: "루트 — `tools/` 가드의 측정 명령이 사는 자리 (⚠️ 받은 두 패키지는 각자 선다)"
   - path: package-lock.json
     origin: local
     license: Apache-2.0
+    group: "저장소 운영"
     basis: "루트 가드의 고정 — `npm ci` 가 읽는다"
-  - path: tools/
+  - path: tools/lib/
     origin: local
     license: Apache-2.0
-    basis: "가드 본체와 그 테스트 — 이 저장소가 스스로를 재는 자리"
+    group: "저장소 운영"
+    basis: "가드 본체 — 이 저장소가 스스로를 재는 자리"
+  - path: tools/render-policies.mjs
+    origin: local
+    license: Apache-2.0
+    group: "사이트 배선"
+    basis: "정책 정본(md)을 발행 루트의 HTML 로 내는 자리 — 산출이 사이트의 일부라 묶음이 운영이 아니라 배선이다. ⚠️ 디렉터리 한 행으로 두면 이 파일과 가드가 **한 행 안에서 두 묶음을 걸친다** — 선언의 입자가 묶음보다 굵으면 배정이 거짓이 된다"
+  - path: tools/ruleset-drift.mjs
+    origin: local
+    license: Apache-2.0
+    group: "저장소 운영"
+    basis: "보호 설정의 선언과 실물을 대조하는 진입점 — 판정은 순수하고 실물은 표준입력으로 받는다"
+  - path: tools/test/
+    origin: local
+    license: Apache-2.0
+    group: "저장소 운영"
+    basis: "가드의 테스트 — negative 가 양성보다 많다(가드가 울지 않으면 초록은 아무것도 뜻하지 않는다)"
   - path: verifier/
     origin: workshop
     license: BSL-1.1
-    basis: "판정기 · 어댑터 — CLAUDE.md §1 범위 정의의 첫 두 항. ⭐ **증서(verifier/LICENSE)도 이 안에서 배달된다** — 정본이 작업장이고, 예외 행이 있던 이유(「작업장에 없다」)가 사라졌다. 유료 층의 소스까지 보인다: 「제로 액세스」는 검증 가능한 주장이고, 검증 가능성은 소스 공개에서 온다"
+    group: "판정기 · 어댑터"
+    basis: "판정기 · 어댑터. ⭐ **증서(verifier/LICENSE)도 이 안에서 배달된다** — 정본이 작업장이고, 예외 행이 있던 이유(「작업장에 없다」)가 사라졌다. 유료 층의 소스까지 보인다: 「제로 액세스」는 검증 가능한 주장이고, 검증 가능성은 소스 공개에서 온다"
   - path: diagnosis/
     origin: workshop
     license: BSL-1.1
-    basis: "진단 페이지 소스 — CLAUDE.md §1 범위 정의의 넷째 항. 결과가 서버로 오지 않음을 읽어서 확인할 수 있게 한다"
+    group: "진단 페이지 소스"
+    basis: "진단 페이지 소스. 결과가 서버로 오지 않음을 읽어서 확인할 수 있게 한다"
   - path: wrangler.jsonc
     origin: workshop
     license: Apache-2.0
+    group: "사이트 배선"
     basis: "사이트가 서는 자리의 선언 — 배포가 이 저장소에서 일어나므로 파일은 여기 있어야 하고, 정본은 작업장이다(그쪽의 가드가 「헤더 분기 0 · 루트가 한 곳으로 · 발행 루트를 가리킨다」를 단정한다). 사본을 손으로 맞추지 않고 배달이 나른다 — 허가는 저장소 운영이다(제품이 아니라 발판이고, 증서가 이름으로 부르지 않는다)"
 
 # 배달된 산문에 **없어야 하는 것** — 비공개 쪽의 이름과 내부 티켓 표기.
