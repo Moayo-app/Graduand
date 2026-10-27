@@ -1,8 +1,5 @@
-<!-- 이 파일은 Agent-Platform 생성물이다 — 손으로 고치지 말 것 (ISSUE-42).
-     정본 템플릿: platform/shared-blocks/templates/design.md
-     재생성(플랫폼 저장소에서): npm run shared-block -- --service <서비스> --file <이름> --out <서비스 저장소>/docs/agents/design.md --force
-     대상 저장소: Moayo-app/Graduand
-     생성 판: d99aefcb96cc -->
+<!-- 이 파일은 생성물이다 — 손으로 고치지 말 것. 고칠 자리는 이 저장소가 아니라 상류의 생성기다.
+     생성 판: 5937d365ce94 -->
 
 # Design Tokens: Shared Values
 
