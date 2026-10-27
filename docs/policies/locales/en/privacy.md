@@ -3,7 +3,7 @@
   ⚠️ ko·en 양 벌이 같은 합집합(🇰🇷 ∪ 🇺🇸 13절)을 담는다 — 한쪽에만 담으면 한쪽 독자에게 요건이 빠진다.
   ko 정본이 개정되면 이 판을 재전파하고 아래 정본 해시를 갱신한다 — 가드가 둘의 일치를 잰다.
   ⛔ 머리말에 「버전:」·「발행일:」·「시행일:」 기계 줄을 넣지 않는다 — 메타의 출처는 ko 정본 하나다.
-  정본 해시: sha256:f4046c84a59cd8187cebea816fd9ab2e38e68ce66e88248fde9bedfb6f4c16b1
+  정본 해시: sha256:3240c913124e462d1f56b24a61c592e517cf1b3a8b3ac47639269a6b357e527e
 -->
 
 # Privacy Policy
@@ -43,7 +43,7 @@ The items the Company processes, or is scheduled to process when the Service tak
 
 **Information collected at checkout** (email address, payment method, business verification details) is collected and processed by the Seller under the Seller's own privacy policy, and is provided directly from the customer's browser to the Seller — it does not pass through the Company. Payment method details do not reach the Company. Sections 5 and 6 state that entrustment and the overseas transfer.
 
-**What is not personal data (the aggregate).** In the flow from diagnosis to payment the Company counts only the **number of occurrences** of five events — diagnosis completed, not-judgeable shown (by reason), pricing viewed, checkout opened, and subscription activated. The aggregate carries no value that identifies a user, and repository names and judgment contents are not transmitted to the Company's servers in any mode.
+**What is not personal data (the aggregate).** In the flow from diagnosis to payment the Company counts only the **number of occurrences of two events** — checkout opened and subscription activated. Both are requests that take you somewhere else, so the **per-path request counts** kept by the host where the Company's site runs count them as they are; the page sends nothing to the Company. What happens only on screen (diagnosis completed, not-judgeable shown, pricing viewed) produces no request and is **not counted**. The aggregate carries no value that identifies a user, and repository names and judgment contents are not transmitted to the Company's servers in any mode.
 
 ### 2.1 Declarations of non-applicability — an empty cell and "none" are different things
 
@@ -100,7 +100,7 @@ You may at any time demand **access** (including requests for disclosure), **cor
 
 ## 10. Automatic collection devices and how to refuse them · Do Not Track signals · third-party cross-site collection
 
-- The Company places no cookies or identifiers that identify you or follow you over time. The aggregate in Section 2 counts only occurrences of events and uses no identifiers.
+- The Company places no cookies or identifiers that identify you or follow you over time. The aggregate in Section 2 is the **per-path request counts kept by the host**; it counts only occurrences of events and uses no identifiers.
 - **Do Not Track signals** — as there is no tracking that identifies a user and follows them across sites and services, the Company does not respond separately to Do Not Track signals. The fact that it does not respond is itself stated in this section.
 - **Third-party cross-site collection** — the Company does **not allow** third parties to collect users' behavioral information across sites and services through this Service. No advertising tools and no advertising identifiers are used.
 
