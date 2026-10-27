@@ -32,6 +32,10 @@ export const LICENSES = ['BSL-1.1', 'Apache-2.0', 'reserved', 'upstream'];
 /** 허가 묶음마다의 **사유**. 배정(선언의 license 축)과 사유를 나눠 둔 쪽. */
 export const LICENSE_GROUNDS = 'docs/licensing/repository-licensing.md';
 
+/** 묶음 이름의 정본 — §1 의 표. ⚠️ 여기 적는 것은 **어느 문서인가**뿐이고, 표를 읽는 일은
+ * scope-groups.mjs 가 한다. 파서가 산문을 읽기 시작하면 둘이 한 몸이 된다. */
+export const SCOPE_GROUPS_DOC = 'CLAUDE.md';
+
 /** 선언된 미러 → [[사본 경로, 정본 경로]].
  *
  * ⭐⭐ 사본을 피할 수 없는 자리를 **선언으로** 들고 있는 축이다. 루트 `LICENSE` 는 저장소의
@@ -71,10 +75,15 @@ export function ignoredDirs(root) {
   };
 }
 
-/** 선언 → [경로, origin, 근거, 허가][]. 모양이 틀리면 던진다 — 조용히 건너뛰면 그 행이 없는 것과 같다.
+/** 선언 → [경로, origin, 근거, 허가, 미러, 묶음][]. 모양이 틀리면 던진다 — 조용히 건너뛰면 그 행이 없는 것과 같다.
  *
  * ⭐ `license` 가 **필수**인 것이 이 축의 요점이다: 새 경로는 행을 요구하고, 행은 허가를
- * 요구한다 ⇒ 어떤 파일도 「허가 없이 공개」로 **조용히 떨어질 수 없다**. */
+ * 요구한다 ⇒ 어떤 파일도 「허가 없이 공개」로 **조용히 떨어질 수 없다**. `group` 도 같은
+ * 이유로 필수다 — 빠지면 그 경로가 **범위 정의 밖에서** 공개된다.
+ *
+ * ⚠️ `group` 은 **모양만** 여기서 본다(빈 칸 금지). 값이 §1 의 묶음인지는 scope-groups.mjs
+ * 가 묻는다 — 뜻의 정본이 산문이라, 그것을 읽는 일을 파서에 넣으면 파서가 문서에 매인다
+ * (`license` 의 닫힌 목록 ↔ checkLicenseGrounds 와 같은 나눔이다). */
 export function scopeEntries(root) {
   const { entries } = loadScope(root);
   if (!Array.isArray(entries) || entries.length === 0) throw new Error(`${SCOPE_PATH}: entries 가 비었다 — 선언이 분모다`);
@@ -84,6 +93,8 @@ export function scopeEntries(root) {
     if (e.path.startsWith('/') || e.path.includes('..')) throw new Error(`${label}: path 가 저장소 상대경로가 아니다 — ${e.path}`);
     if (!ORIGINS.includes(e.origin)) throw new Error(`${label}: origin 이 ${ORIGINS.join('·')} 중 하나가 아니다 — ${e.origin}`);
     if (typeof e?.basis !== 'string' || !e.basis.trim()) throw new Error(`${label}: basis 가 없다 — 행마다 근거 필수다`);
+    if (typeof e?.group !== 'string' || !e.group.trim())
+      throw new Error(`${label}: group 이 없다 — 행마다 묶음 필수다 (${SCOPE_GROUPS_DOC} §1 의 표가 그 이름의 정본이다)`);
     if (!LICENSES.includes(e.license))
       throw new Error(
         `${label}: license 가 ${LICENSES.join('·')} 중 하나가 아니다 — ${e.license} (빈 칸은 「미정」이 아니라 all rights reserved 다)`,
@@ -98,7 +109,7 @@ export function scopeEntries(root) {
       // ⚠️ 미러는 배달받는 것이 아니라 배달이 **유도하는** 파생물이다 — origin 이 그 사실을 말한다.
       if (e.origin !== 'local') throw new Error(`${label}: 미러 행의 origin 은 local 이다 — 배달받는 것이 아니라 유도되는 것이다 (${e.origin})`);
     }
-    return [e.path, e.origin, e.basis, e.license, e.mirrors ?? null];
+    return [e.path, e.origin, e.basis, e.license, e.mirrors ?? null, e.group];
   });
 }
 
