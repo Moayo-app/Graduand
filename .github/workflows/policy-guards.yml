@@ -1,6 +1,7 @@
 # 정책 가드 — 이 저장소의 측정 명령 ([ISSUE-12] · CLAUDE.md §19 「첫 코드와 함께 세우고 필수 체크에 올린다」).
 #
-# 재는 것: docs/policies/ 6벌 × 저장소 내 가드 10종(G1–G10) + 저장소 간 정본 선언표.
+# 재는 것: docs/policies/ 6벌 × 저장소 내 가드 10종(G1–G10) + 저장소 간 정본 선언표
+# + 화면 로케일 분모(tools/lib/screen-locales.mjs).
 # 가드의 본체는 tools/lib/policy.mjs, 금칙·필수 문자열의 정본은 config/policy-strings.yml,
 # 로케일 분모의 정본은 config/allowed-countries.yml 이다 — 이 잡은 판정만 하고 아무것도 쓰지 않는다.
 name: 정책 가드
@@ -24,7 +25,10 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          # ⚠️ 24 — 화면 로케일 가드가 배달된 카탈로그를 **값으로** 읽고, 그것은 Node 가
+          #   타입을 벗겨 .ts 를 실행할 때만 된다(diagnosis 패키지가 engines 로 선언한 전제와
+          #   같고, ci.yml 도 24 다). ⛔ 떠다니는 부 버전에 기대지 않는다.
+          node-version: 24
           cache: npm
       - run: npm ci
       - run: npm test
