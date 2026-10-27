@@ -3,7 +3,7 @@
   ⚠️ ko·en 양 벌이 같은 합집합(🇰🇷 ∪ 🇺🇸 13절)을 담는다 — 한쪽에만 담으면 한쪽 독자에게 요건이 빠진다.
   ko 정본이 개정되면 이 판을 재전파하고 아래 정본 해시를 갱신한다 — 가드가 둘의 일치를 잰다.
   ⛔ 머리말에 「버전:」·「발행일:」·「시행일:」 기계 줄을 넣지 않는다 — 메타의 출처는 ko 정본 하나다.
-  정본 해시: sha256:3240c913124e462d1f56b24a61c592e517cf1b3a8b3ac47639269a6b357e527e
+  정본 해시: sha256:3ec4c7d4f0bc9d68b8bd76ff7a71b08abcda4f705191588c3d03c43d29ea41f9
 -->
 
 # Privacy Policy
@@ -88,7 +88,8 @@ When a retention period ends or the purpose of processing is achieved, the data 
 - **Minimal collection by structure** — accounts, passwords and repository access tokens are not accepted in the first place. Not creating a place for leaks is the first measure.
 - **Protection in transit** — communications use encrypted channels (TLS).
 - **Minimal handlers** — the number of people handling personal data is kept to a minimum (currently one).
-- **Concretization when the infrastructure is settled** — on the day the Service's infrastructure is settled, the measures prescribed by the Enforcement Decree, such as access control and the keeping of access records, will be concretized in this section.
+- **Access control** — the only accounts that can reach the settings of the host where the Service runs, and the records it keeps, belong to the handlers named above.
+- **Access records** — the Company does **not keep access records itself.** The host where the Service runs does keep them, and the Company **can access** them — those records contain the address requested and the **IP address**. The Company looks at them for two purposes only: **to check for faults and abuse**, and **to read the two counts in Section 2**. They are not used to trace an individual user or to build per-user records, and the Company does not copy them to its own side. Because the host is the party writing the records, the items they contain and how long they are kept are determined by the host.
 
 **If the Company becomes aware of a leak of personal data**, it will notify the affected users and report to the competent authorities without delay, and immediately take measures to reduce the harm.
 
