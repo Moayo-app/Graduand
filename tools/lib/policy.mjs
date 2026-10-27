@@ -178,8 +178,21 @@ export function checkLegalName(root) {
   return errors;
 }
 
+/** 라벨을 정규식 조각으로 — config 의 값이 그대로 패턴이 되지 않게 막는다. */
+const escapeRe = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 /** G7 — 메타는 ko 한 벌: ko 머리말의 버전·시행일이 형식에 맞고, 번역판에는 기계 줄이 없다.
- * 그리고 시행일의 상태(미정/날짜)가 전 로케일 본문과 1:1 이다. */
+ * 그리고 **버전과 시행일**의 상태가 전 로케일 본문과 1:1 이다.
+ *
+ * ⭐⭐ **왜 버전까지 묶는가.** 판번호가 사는 자리가 둘이다 — 기계가 읽는 머리말과 사람이
+ * 읽는 본문 부칙. 그리고 **머리말은 발행본에서 걷힌다**(작업 메모는 게시물에 싣지 않는다).
+ * ⇒ 방문자가 보는 판번호는 본문의 그 자리 하나이고, 둘이 갈라지면 **공개되는 쪽만 틀린다.**
+ * 번역판은 ko **본문** 해시로 묶여 있지만(AC5) 그것은 본문끼리의 묶음이라, 머리말↔본문의
+ * 이 한 변은 비어 있었다.
+ *
+ * ⚠️ **본문의 판번호 전수를 본다** — 하나만 맞추고 다른 자리에 옛 번호가 남는 길을 막는다.
+ * ⛔ 로케일의 핀이 없으면 **조용히 지나가지 않는다**: 핀 없는 로케일은 아무것도 재지 않은
+ * 것이고, 미판정은 통과가 아니다. */
 export function checkMeta(root) {
   const errors = [];
   const { required } = loadStrings(root);
@@ -202,9 +215,29 @@ export function checkMeta(root) {
     const meta = metas[kind];
     if (!meta) continue;
     const body = policyBody(read(root, f));
+
+    // ⭐ 판번호 — 머리말의 그 수가 본문에 **그대로** 서 있고, 다른 수가 섞여 있지 않다.
+    const label = required.version_label?.[locale];
+    if (!label) {
+      errors.push(`${locale}/${kind}: config 에 required.version_label.${locale} 이 없다 — 본문 판번호를 묶을 핀이 없다`);
+    } else {
+      const found = [
+        ...body.matchAll(new RegExp(`${escapeRe(String(label))}[ \t]*([0-9]+(?:\\.[0-9]+)*)`, 'gi')),
+      ].map((m) => m[1]);
+      if (found.length === 0) {
+        errors.push(`${locale}/${kind}: 본문에 판번호(「${label} ${meta.version}」)가 없다 — 머리말은 발행본에서 걷히므로 방문자가 보는 판번호는 본문 하나다`);
+      } else {
+        const diverged = [...new Set(found)].filter((v) => v !== meta.version);
+        if (diverged.length > 0)
+          errors.push(`${locale}/${kind}: 본문 판번호(${diverged.join('·')})가 머리말(${meta.version})과 갈렸다 — 공개되는 쪽만 틀린다`);
+      }
+    }
+
     if (meta.effective_date === null) {
       const pin = required.effective_unset[locale];
-      if (pin && !body.includes(pin)) errors.push(`${locale}/${kind}: 시행일이 미정인데 본문이 그 상태(「${pin}」)를 말하지 않는다`);
+      // ⛔ 핀이 없으면 **조용히 지나가지 않는다** — 안 잰 것을 통과로 적지 않는다.
+      if (!pin) errors.push(`${locale}/${kind}: config 에 required.effective_unset.${locale} 이 없다 — 시행일 상태를 묶을 핀이 없다`);
+      else if (!body.includes(pin)) errors.push(`${locale}/${kind}: 시행일이 미정인데 본문이 그 상태(「${pin}」)를 말하지 않는다`);
     } else {
       const [y, m, d] = meta.effective_date.split('-');
       const ok = locale === MASTER_LOCALE ? body.includes(`${y}년 ${Number(m)}월 ${Number(d)}일`) : body.includes(y) && body.includes(String(Number(d)));
