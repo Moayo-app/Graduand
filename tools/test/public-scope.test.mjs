@@ -23,6 +23,8 @@ import {
   checkScopeEntries,
   checkWorkshopProse,
   checkLicenseGrounds,
+  proseExemptions,
+  loadScope,
 } from '../lib/public-scope.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '../..');
@@ -271,4 +273,38 @@ test('(negative): 선언 밖을 정본으로 삼은 미러는 가드가 지목�
     fs.readFileSync(file, 'utf8').replace('    mirrors: verifier/LICENSE\n', '    mirrors: NOTICE-SCRATCH\n'),
   );
   assert.equal(hits(checkScopeEntries(root), '선언 밖이다').length, 1, '정본이 선언 밖이면 그 미러는 영원히 뒤처진다');
+});
+
+/* ──── 금칙의 면제 축 (`except`) — 모양은 그대로, 토큰만 푼다 ──── */
+
+test('⭐ 면제 축이 선다 — 토큰마다 사유가 함께 있다', () => {
+  const exempt = proseExemptions(ROOT);
+  assert.ok(exempt.length > 0, '면제가 0 이면 아래 negative 가 아무것도 재지 않는다');
+  const { forbidden_prose: forbidden } = loadScope(ROOT);
+  for (const { except } of forbidden) {
+    for (const e of Array.isArray(except) ? except : []) {
+      assert.ok(e.token && e.why, '사유 없는 면제는 조용한 구멍이다');
+    }
+  }
+});
+
+test('AC3 (negative): 면제가 모양을 삼키지 않는다 — 같은 모양의 다른 토큰은 빨갛다', () => {
+  const { forbidden_prose: forbidden } = loadScope(ROOT);
+  const entry = forbidden.find(({ except }) => Array.isArray(except) && except.length > 0);
+  assert.ok(entry, '면제를 든 금칙 항이 있다');
+  const re = new RegExp(entry.pattern);
+  const exempt = new Set(entry.except.map(({ token }) => token));
+  for (const token of exempt) assert.match(token, re, '면제 토큰은 그 모양에 실제로 물린 것이어야 한다');
+  const planted = ['Example', '_dev'].join('');
+  assert.ok(re.test(planted) && !exempt.has(planted), '모양은 여전히 진짜 이름 꼴을 문다');
+});
+
+test('⭐ 사유 없는 면제는 **던진다** — 조용히 통과하지 않는다', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'graduand-exempt-'));
+  fs.mkdirSync(path.join(root, 'config'), { recursive: true });
+  fs.writeFileSync(
+    path.join(root, SCOPE_PATH),
+    'entries: []\nforbidden_prose:\n  - pattern: \'x\'\n    why: "모양"\n    except:\n      - token: y\n',
+  );
+  assert.throws(() => proseExemptions(root), /token 과 why/);
 });

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="9.5 9.5 81 81" role="img" aria-label="Graduand">
+<!-- 생성물 — docs/brand/make-web-assets.mjs 가 굽는다. 손으로 고치지 않는다. -->
+<style>svg{color:#1A1D2E}@media (prefers-color-scheme:dark){svg{color:#F7F6F3}}</style>
+<g fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
+<path d="M16 38 L16 16 L38 16"/>
+<path d="M84 62 L84 84 L62 84"/>
+<path d="M39.28 60.72 L68.5 31.5"/>
+<circle cx="31.5" cy="68.5" r="11"/>
+</g>
+<circle cx="68.5" cy="31.5" r="15.5" fill="currentColor"/>
+</svg>
