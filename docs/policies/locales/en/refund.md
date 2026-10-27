@@ -3,8 +3,8 @@
   기한(14일)·조건은 축자로 옮긴다 — 번역가 재량 0. 「환불 불가」류 단정을 영어에서도 만들지 않는다
   (금칙의 정본은 config/policy-strings.yml).
   ko 정본이 개정되면 이 판을 재전파하고 아래 정본 해시를 갱신한다 — 가드가 둘의 일치를 잰다.
-  ⛔ 머리말에 「버전:」·「시행일:」 기계 줄을 넣지 않는다 — 메타의 출처는 ko 정본 하나다.
-  정본 해시: sha256:79926c012aae9dca47066533b07c1f8a93dea2f6cd6dc4a9148f28ac2b32d435
+  ⛔ 머리말에 「버전:」·「발행일:」·「시행일:」 기계 줄을 넣지 않는다 — 메타의 출처는 ko 정본 하나다.
+  정본 해시: sha256:e46e9933b726b18833963b934d11955bcf46e7acc8352bfb52862708c56adbd4
 -->
 
 # Refund Policy
@@ -55,4 +55,6 @@ Once a refund is applied, the paid scope bought by that payment closes. The rule
 
 ## Addendum
 
-The effective date of this policy (version 1.0) has not yet been set — on the day payments open, the effective date will be set, stated here, and kept one-to-one with the header.
+The effective date of this policy (version 1.0.0) has not yet been set — on the day payments open, the effective date will be set, stated here, and kept one-to-one with the header.
+
+For this version, the publication date has not yet been set either — the publication date and the effective date are the same day, and that day is the day payments open.
