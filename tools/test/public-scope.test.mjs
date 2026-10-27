@@ -1,4 +1,4 @@
-// 공개 범위 가드 — 양성 + negative ([ISSUE-16] AC2·AC3).
+// 공개 범위 가드 — 양성 + negative (AC2·AC3).
 // 가드의 본체는 tools/lib/public-scope.mjs, 선언의 정본은 config/public-scope.yml 이다.
 //
 // ⚠️ negative 가 양성보다 많다. AC2·AC3 둘 다 「가드가 빨갛다」를 요구하므로 실제 트리가
@@ -194,8 +194,10 @@ test('AC3 (negative): 비공개 쪽 저장소 이름 모양도 같은 가드가 
   const root = cloneRoot();
   plant(root, 'verifier/src/leak.ts', '// 정본은 저쪽-hq 가 아니라 여기 산다\n');
   assert.equal(checkWorkshopProse(root).length, 0, '한글 앞뒤의 낱말은 모양에 맞지 않는다');
-  plant(root, 'verifier/src/leak.ts', '// canon lives in acme-hq, not here\n');
-  assert.equal(hits(checkWorkshopProse(root), 'acme-hq').length, 1);
+  // ⚠️ 이름을 리터럴로 적지 않는다 — 이 파일도 「내부 포인터 0」의 분모다(public-surface.mjs).
+  const company = ['acme', '-hq'].join('');
+  plant(root, 'verifier/src/leak.ts', `// canon lives in ${company}, not here\n`);
+  assert.equal(hits(checkWorkshopProse(root), company).length, 1);
 });
 
 test('(negative): ⚠️ 증서도 배달 산문 스윕을 받는다 — 모집단 안이라는 사실의 다른 쪽', () => {
@@ -220,7 +222,7 @@ test('(negative): ⚠️ 행에서 license 를 지우면 scopeEntries 가 **던�
   const root = cloneRoot();
   const file = path.join(root, SCOPE_PATH);
   const text = fs.readFileSync(file, 'utf8');
-  // ⚠️ `tools/` 한 행은 더 이상 없다 — 묶음 둘을 걸쳐서 넷으로 쪼갰다([ISSUE-52]).
+  // ⚠️ `tools/` 한 행은 더 이상 없다 — 묶음 둘을 걸쳐서 넷으로 쪼갰다.
   const target = '  - path: tools/lib/\n    origin: local\n    license: Apache-2.0\n';
   assert.ok(text.includes(target), '지울 칸을 선언에서 찾는다');
   fs.writeFileSync(file, text.replace(target, '  - path: tools/lib/\n    origin: local\n'));

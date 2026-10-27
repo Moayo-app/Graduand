@@ -1,4 +1,4 @@
-// 범위 묶음 가드 — 양성 + negative ([ISSUE-52] AC1~AC7).
+// 범위 묶음 가드 — 양성 + negative (AC1~AC7).
 // 가드의 본체는 tools/lib/scope-groups.mjs, 묶음 이름의 정본은 CLAUDE.md §1 의 표,
 // 경로 → 묶음의 배정은 config/public-scope.yml 의 `group` 축이다.
 //

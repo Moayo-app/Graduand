@@ -1,4 +1,4 @@
-// [ISSUE-12] 저장소 내 가드 10종 + 저장소 간 정본 선언표 — 양성 경로 (AC1·AC2).
+// 저장소 내 가드 10종 + 저장소 간 정본 선언표 — 양성 경로 (AC1·AC2).
 // 가드의 본체는 tools/lib/policy.mjs — 여기서는 실제 트리가 전수 초록인 것만 단정한다.
 // negative 경로(AC3–AC6)는 policy-guards.negative.test.mjs 가 사본 트리에 위반을 심어 확인한다.
 import { test } from 'node:test';
