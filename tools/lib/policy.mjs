@@ -55,9 +55,15 @@ export function policyFiles(root) {
   return files;
 }
 
-// ── ko 정본 머리말 메타 — 「버전: N[.N…] (메모)」 · 「시행일: 미정 | YYYY-MM-DD」 ──
+// ── ko 정본 머리말 메타 — 「버전: N[.N…] (메모)」 · 「발행일 | 시행일: 미정 | YYYY-MM-DD」 ──
+//
+// ⭐ **날짜가 둘인 이유.** 발행일은 그 판이 **게시된 날**이고 시행일은 **효력이 시작되는 날**이다.
+// 이 판은 둘이 같은 날이지만(결제가 열리는 날), 그것은 **이 판의 사실**이지 둘이 같은 칸이라는
+// 뜻이 아니다 — 변경 고지 조항이 「시행 7일/30일 전까지 알린다」라, 다음 판부터는 발행이
+// 시행보다 **앞선다**. ⇒ 칸을 둘로 두고, 아래 가드가 **발행 ≤ 시행**만 불변으로 잰다.
 const HEAD_RE = /^\s*<!--([\s\S]*?)-->/;
 const VERSION_RE = /^[ \t]*버전:[ \t]*([0-9]+(?:\.[0-9]+)*)[ \t]*(?:\(([^)]*)\))?/m;
+const PUBLISHED_RE = /^[ \t]*발행일:[ \t]*(\S+)/m;
 const EFFECTIVE_RE = /^[ \t]*시행일:[ \t]*(\S+)/m;
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const EFFECTIVE_UNSET = '미정';
@@ -71,16 +77,26 @@ export function parsePolicyMeta(markdown, label = '정책 문서') {
   if (head === null) throw new Error(`${label}: 머리말 HTML 주석이 없다 — 버전 메타가 사는 자리다`);
   const v = head.match(VERSION_RE);
   if (!v) throw new Error(`${label}: 머리말에 「버전: <N.N> (<상태 메모>)」 줄이 없다`);
-  const e = head.match(EFFECTIVE_RE);
-  if (!e) throw new Error(`${label}: 머리말에 「시행일: 미정」 또는 「시행일: <YYYY-MM-DD>」 줄이 없다`);
-  const raw = e[1];
-  if (raw !== EFFECTIVE_UNSET && !ISO_DATE_RE.test(raw)) {
-    throw new Error(`${label}: 「시행일: ${raw}」 — 「미정」이거나 YYYY-MM-DD 여야 한다`);
+  const dateLine = (re, name) => {
+    const m = head.match(re);
+    if (!m) throw new Error(`${label}: 머리말에 「${name}: 미정」 또는 「${name}: <YYYY-MM-DD>」 줄이 없다`);
+    if (m[1] !== EFFECTIVE_UNSET && !ISO_DATE_RE.test(m[1])) {
+      throw new Error(`${label}: 「${name}: ${m[1]}」 — 「미정」이거나 YYYY-MM-DD 여야 한다`);
+    }
+    return ISO_DATE_RE.test(m[1]) ? m[1] : null;
+  };
+  const published_date = dateLine(PUBLISHED_RE, '발행일');
+  const effective_date = dateLine(EFFECTIVE_RE, '시행일');
+  // ⛔ 효력이 게시보다 먼저 시작될 수 없다 — 변경 고지 조항(시행 7일/30일 전 고지)이
+  //    요구하는 순서이기도 하다. ⚠️ 「같은 날」은 이 판의 사실이라 불변으로 적지 않는다.
+  if (published_date !== null && effective_date !== null && published_date > effective_date) {
+    throw new Error(`${label}: 발행일(${published_date})이 시행일(${effective_date})보다 늦다 — 읽히기 전에 효력이 생길 수 없다`);
   }
   return {
     version: v[1],
     version_note: (v[2] ?? '').trim() || null,
-    effective_date: ISO_DATE_RE.test(raw) ? raw : null,
+    published_date,
+    effective_date,
   };
 }
 
@@ -208,8 +224,8 @@ export function checkMeta(root) {
       continue;
     }
     const head = headComment(raw) ?? '';
-    if (VERSION_RE.test(head) || EFFECTIVE_RE.test(head))
-      errors.push(`${locale}/${kind}: 번역판 머리말에 기계 줄(버전:/시행일:)이 있다 — 메타의 출처는 ko 정본 하나다`);
+    if (VERSION_RE.test(head) || PUBLISHED_RE.test(head) || EFFECTIVE_RE.test(head))
+      errors.push(`${locale}/${kind}: 번역판 머리말에 기계 줄(버전:/발행일:/시행일:)이 있다 — 메타의 출처는 ko 정본 하나다`);
   }
   for (const [f, locale, kind] of policyFiles(root)) {
     const meta = metas[kind];
@@ -231,6 +247,17 @@ export function checkMeta(root) {
         if (diverged.length > 0)
           errors.push(`${locale}/${kind}: 본문 판번호(${diverged.join('·')})가 머리말(${meta.version})과 갈렸다 — 공개되는 쪽만 틀린다`);
       }
+    }
+
+    // ⭐ 발행일 — 시행일과 **같은 모양**으로 묶는다. ⛔ 핀이 없으면 조용히 지나가지 않는다.
+    const publishedPin = required.published_unset?.[locale];
+    if (meta.published_date === null) {
+      if (!publishedPin)
+        errors.push(`${locale}/${kind}: config 에 required.published_unset.${locale} 이 없다 — 발행일 상태를 묶을 핀이 없다`);
+      else if (!body.includes(publishedPin))
+        errors.push(`${locale}/${kind}: 발행일이 미정인데 본문이 그 상태(「${publishedPin}」)를 말하지 않는다`);
+    } else if (!body.includes(meta.published_date.split('-')[0])) {
+      errors.push(`${locale}/${kind}: 본문이 머리말의 발행일(${meta.published_date})을 말하지 않는다`);
     }
 
     if (meta.effective_date === null) {
