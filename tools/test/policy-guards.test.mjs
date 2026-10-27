@@ -35,7 +35,7 @@ test('G1: 모집단은 개방 목록에서 유도된다 — 테스트는 로케�
 
 clean('G2+AC6: 전수 실재 · 고아 파일 0 · locales/ko 없음', checkPopulation);
 clean('G3: 금칙·필수 문자열 config 가 형태를 갖춘다', checkStringsConfig);
-clean('G4+AC1: 제품 이름(잠정 식별자)이 전 로케일에서 일치하고 옛 이름이 0건이다', checkProductName);
+clean('G4+AC1: 제품 이름이 전 로케일에서 일치하고 옛 이름이 0건이다', checkProductName);
 clean('G5+AC1: 벤더 이름이 전 로케일에서 일치하고 옛 벤더가 0건이다', checkVendor);
 clean('G6: 법인명은 처리방침 §5·§6 표에만 산다 — 산문 0건', checkLegalName);
 clean('G7: 메타는 ko 한 벌 — 번역판에 기계 줄이 없고, 판번호와 시행일 상태가 전 로케일 본문과 1:1 이다', checkMeta);
