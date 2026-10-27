@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { PUBLIC_PROSE, checkProseLeaks, checkPublicProse, checkWorkshopName, checkInternalPointers, editableFiles } from '../lib/public-surface.mjs';
+import { PUBLIC_PROSE, checkProseLeaks, checkPublicProse, checkWorkshopName, checkInternalPointers } from '../lib/public-surface.mjs';
 import { coveringEntry, scopeEntries, walkFiles } from '../lib/public-scope.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '../..');
@@ -91,20 +91,18 @@ test('negative: 어느 파일에 심어도 빨갛다 — 면제가 없다', () =
 
 /* ──── 내부 포인터의 꼴 — 분모가 「손으로 고칠 수 있는 자리」 전수다 ──── */
 
-const originOf = (rel) => coveringEntry(scopeEntries(ROOT), rel)?.[1];
-const subject = () => editableFiles(ROOT, walkFiles(ROOT), originOf);
-
-test('⭕ 손으로 고칠 수 있는 자리에 내부 포인터가 0 이다', () => {
-  assert.deepEqual(checkInternalPointers(ROOT, subject()), []);
+test('⭕ 저장소 전수에 내부 포인터가 0 이다 — 생성물까지 든다', () => {
+  assert.deepEqual(checkInternalPointers(ROOT, walkFiles(ROOT)), []);
 });
 
-test('⭐ 분모가 선언에서 유도된다 — 생성물은 밖이고, 그것이 「위반 0」이 아니다', () => {
+test('⭐ 분모가 전수다 — 면제가 스스로 만기를 알리고 걷혔다', () => {
   const all = walkFiles(ROOT);
-  const mine = subject();
-  assert.ok(mine.length > 0 && mine.length < all.length, '분모가 전수와 같거나 비면 유도가 아무것도 안 한다');
-  // ⚠️ 밖으로 뺀 자리에는 **실제로 포인터가 남아 있다** — 고칠 자리가 다른 저장소라서다.
-  const generated = all.filter((rel) => !mine.includes(rel));
-  assert.ok(checkInternalPointers(ROOT, generated).length > 0, '생성물에 포인터가 0 이면 이 면제는 낡았다');
+  // ⚠️ 한때 `origin: platform` 항이 밖이었고, 「그 자리에 포인터가 실제로 남아 있는지」를
+  //    단정해 면제가 영구화되지 않게 해 뒀다. 상류가 그 산문을 이사한 뒤 그 단정이 울었고,
+  //    면제를 지우는 것이 그 빨강의 해소였다. ⇒ 지금 분모에서 빠지는 파일이 0 이다.
+  const generated = all.filter((rel) => coveringEntry(scopeEntries(ROOT), rel)?.[1] === 'platform');
+  assert.notEqual(generated.length, 0, '생성물이 0 이면 이 단정이 아무것도 재지 않는다');
+  assert.deepEqual(checkInternalPointers(ROOT, generated), [], '생성물도 이제 깨끗하다 — 그래서 분모에 든다');
 });
 
 test('negative: 세 모양이 각각 잡힌다 — 심으면 빨갛다', () => {

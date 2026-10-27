@@ -1,5 +1,5 @@
 <!-- 이 파일은 생성물이다 — 손으로 고치지 말 것. 고칠 자리는 이 저장소가 아니라 상류의 생성기다.
-     생성 판: 5937d365ce94 -->
+     생성 판: ec83dbba46dc -->
 
 # Domain Docs
 
@@ -54,17 +54,16 @@ If the concept you need isn't in the glossary yet, that's a signal: either you'r
 
 우선순위의 **내용은 저장소마다 다르다** — 아래는 형태이지 값이 아니다.
 
-- Close-Unfold: *"**ADR 이 스펙을 이깁니다** — ADR 은 스펙보다 나중에 내려진 결정이고,
-  스펙의 일부를 명시적으로 뒤집었습니다."*
-- Moayo: *"정책 값이 필요하면 `docs/policies/` 를, 용어 정의가 필요하면 `GLOSSARY.md` 를 본다.
+- *"**ADR 이 스펙을 이깁니다** — ADR 은 스펙보다 나중에 내려진 결정이고, 스펙의 일부를
+  명시적으로 뒤집었습니다."*
+- *"정책 값이 필요하면 `docs/policies/` 를, 용어 정의가 필요하면 `GLOSSARY.md` 를 본다.
   **둘이 충돌하면 `docs/policies/` 가 이긴다.**"*
 
-> 두 서비스에서 **독립적으로** 같은 형태가 나왔다 (2026-08-26). [#20](https://github.com/Moayo-app/Agent-Platform/issues/20) 의 「두 번째 인스턴스」
-> 시험을 통과한 첫 사례다 — 같은 질문(「문서가 충돌하면 무엇이 이기는가」)에 다른 답을 낸다.
-> 그래서 **형태만** 공유하고 값은 서비스가 정한다.
+> 위 둘은 실재하는 두 저장소에서 **독립적으로** 나온 형태다 — 같은 질문(「문서가 충돌하면
+> 무엇이 이기는가」)에 **다른 답**을 낸다. 그래서 **형태만** 공유하고 값은 서비스가 정한다.
 
 ## Flag ADR conflicts
 
 If your output contradicts an existing ADR, surface it explicitly rather than silently overriding:
 
-> _Contradicts ADR-0007 (event-sourced orders), but worth reopening because…_
+> _Contradicts ADR-<번호> (<그 결정의 요지>), but worth reopening because…_
