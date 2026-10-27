@@ -38,6 +38,40 @@ export function checkProseLeaks(text, label = '공개 산문') {
   return errors;
 }
 
+/**
+ * ⛔⛔ **비공개 작업장의 이름 — 모집단이 저장소 전수다.** 위 `PUBLIC_PROSE` 는 「외부 독자를
+ * 향해 쓴 산문」이라 좁고, 그래서 **세션 부트스트랩이 밖**이었다(축자: 「작업자용이라 밖이다」).
+ *
+ * ⚠️⚠️ **그 면제의 전제가 공개 전환에서 깨진다** — 작업자용 파일이 외부 독자 앞에 놓인다.
+ * 누출 심사(2026-10-27)가 실제로 그 구멍에서 세 줄을 찾았고, 상류 결의 축자가 그 모양을
+ * **단독 기각 사유**로 부른다. ⇒ 이 한 모양만은 **분모를 전수로** 올린다.
+ *
+ * ⛔ **면제가 없다.** 비공개의 존재를 공개 표면이 이름으로 부르면 그 이름이 곧 공격 면이고,
+ * 「개발이 여기서 일어나지 않는다」는 사실은 이름 없이도 전부 선다. ⚠️ 나머지 모양
+ * (`…-hq` · `…-platform` · 내부 티켓)은 **아직 이 분모에 올리지 않는다** — 그 자리들은 결정이
+ * 남아 있고, 안 정한 것을 가드로 굳히면 가드가 결정을 대신하게 된다.
+ */
+export const WORKSHOP_NAME = /[A-Za-z0-9]+_dev\b/;
+
+/** 저장소 전수에서 그 이름을 센다 — 바이너리와 미추적 자리는 분모가 아니다. */
+export function checkWorkshopName(root, files) {
+  const errors = [];
+  for (const rel of files) {
+    if (/\.(png|jpg|jpeg|ico|woff2?|svg|lock)$/.test(rel)) continue;
+    let text;
+    try {
+      text = fs.readFileSync(path.join(root, rel), 'utf8');
+    } catch {
+      continue;
+    }
+    for (const [i, line] of text.split('\n').entries()) {
+      const m = line.match(WORKSHOP_NAME);
+      if (m) errors.push(`${rel}:${i + 1}: 비공개 작업장의 이름 — 「${m[0]}」 (이름 없이 적는다)`);
+    }
+  }
+  return errors;
+}
+
 /** 모집단 전수. root 를 받는 이유는 negative 테스트가 사본에 누설을 심기 위해서다. */
 export function checkPublicProse(root, files = PUBLIC_PROSE) {
   const errors = [];
