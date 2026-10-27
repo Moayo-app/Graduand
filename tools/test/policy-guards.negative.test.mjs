@@ -16,6 +16,8 @@ import {
   checkRefundAbsolutes,
   checkCanon,
   docLocales,
+  parsePolicyMeta,
+  loadStrings,
 } from '../lib/policy.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '../..');
@@ -119,9 +121,17 @@ test('G9 (negative): 우선 조항을 걷어낸 번역판은 운다', () => {
  * 둘이 갈라지면 **공개되는 쪽만 틀린다** — 기계는 새 번호를, 방문자는 옛 번호를 본다.
  * 아래 셋이 그 세 방향을 각각 막는다: 머리말만 올림 · 본문만 올림 · 핀 결손.
  */
+/** 지금 판번호 — ⛔ 테스트에 수를 적지 않는다. 판이 올라가도 이 대조군이 따라 움직인다. */
+const versionOf = (root, kind) =>
+  parsePolicyMeta(fs.readFileSync(path.join(root, `docs/policies/${kind}.md`), 'utf8'), kind).version;
+
+/** 자리만 다른 다른 수 — 「1.0.0」 → 「9.0.0」 처럼 첫 마디만 바꾼다. */
+const bump = (version) => version.replace(/^[0-9]+/, (n) => String(Number(n) + 8));
+
 test('G7 (negative): 머리말 판번호만 올리면 전 로케일 본문이 지목된다', () => {
   const root = cloneRoot();
-  rewrite(root, 'docs/policies/terms.md', (t) => t.replace('버전: 1.0', '버전: 1.1'));
+  const now = versionOf(root, 'terms');
+  rewrite(root, 'docs/policies/terms.md', (t) => t.replace(`버전: ${now}`, `버전: ${bump(now)}`));
   const errors = hits(checkMeta(root), '본문 판번호');
   // ⛔ 수를 적지 않는다 — 분모는 로케일이고, 한 로케일만 울면 나머지는 조용히 통과한 것이다.
   const locales = docLocales(root);
@@ -134,14 +144,37 @@ test('G7 (negative): 머리말 판번호만 올리면 전 로케일 본문이 �
 
 test('G7 (negative): 본문 판번호만 올려도 같은 가드가 운다 — 반대 방향', () => {
   const root = cloneRoot();
-  rewrite(root, 'docs/policies/refund.md', (t) => t.replace('(판 1.0)', '(판 2.0)'));
-  assert.equal(hits(checkMeta(root), 'ko/refund').filter((e) => e.includes('2.0')).length, 1);
+  const now = versionOf(root, 'refund');
+  const label = loadStrings(root).required.version_label.ko;
+  rewrite(root, 'docs/policies/refund.md', (t) => t.replace(`${label} ${now}`, `${label} ${bump(now)}`));
+  assert.equal(hits(checkMeta(root), 'ko/refund').filter((e) => e.includes(bump(now))).length, 1);
 });
 
 test('G7 (negative): 본문에서 판번호를 지우면 「없다」로 지목된다', () => {
   const root = cloneRoot();
-  rewrite(root, 'docs/policies/locales/en/terms.md', (t) => t.replace('(version 1.0)', ''));
+  const now = versionOf(root, 'terms');
+  const label = loadStrings(root).required.version_label.en;
+  rewrite(root, 'docs/policies/locales/en/terms.md', (t) => t.replaceAll(`${label} ${now}`, label));
   assert.equal(hits(checkMeta(root), 'en/terms').filter((e) => e.includes('판번호')).length, 1);
+});
+
+/**
+ * ⭐ 발행일도 시행일과 **같은 모양**으로 묶인다 — 핀이 빠지거나 본문이 그 상태를 말하지
+ * 않으면 빨갛다. ⚠️ 그리고 효력이 게시보다 먼저 시작될 수 없다(변경 고지 조항의 순서다).
+ */
+test('G7 (negative): 발행일 상태를 본문이 말하지 않으면 지목된다', () => {
+  const root = cloneRoot();
+  const pin = loadStrings(root).required.published_unset.ko;
+  rewrite(root, 'docs/policies/privacy.md', (t) => t.replace(pin, '발행일은 적지 않습니다'));
+  assert.equal(hits(checkMeta(root), 'ko/privacy').filter((e) => e.includes('발행일')).length, 1);
+});
+
+test('G7 (negative): 발행일이 시행일보다 늦으면 던진다 — 읽히기 전에 효력이 생길 수 없다', () => {
+  const root = cloneRoot();
+  rewrite(root, 'docs/policies/terms.md', (t) =>
+    t.replace('발행일: 미정', '발행일: 2027-03-02').replace('시행일: 미정', '시행일: 2027-03-01'),
+  );
+  assert.ok(hits(checkMeta(root), '보다 늦다').length > 0, '뒤집힌 날짜가 초록이다');
 });
 
 test('G7 (negative): 로케일의 핀이 config 에서 빠지면 조용히 통과하지 않는다', () => {

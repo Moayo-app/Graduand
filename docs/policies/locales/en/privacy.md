@@ -2,8 +2,8 @@
   en 번역판 — [ISSUE-12]. 정본 = docs/policies/privacy.md (한국어판).
   ⚠️ ko·en 양 벌이 같은 합집합(🇰🇷 ∪ 🇺🇸 13절)을 담는다 — 한쪽에만 담으면 한쪽 독자에게 요건이 빠진다.
   ko 정본이 개정되면 이 판을 재전파하고 아래 정본 해시를 갱신한다 — 가드가 둘의 일치를 잰다.
-  ⛔ 머리말에 「버전:」·「시행일:」 기계 줄을 넣지 않는다 — 메타의 출처는 ko 정본 하나다.
-  정본 해시: sha256:71edf5830de86f9bd57f245a424e4b2eafd0e42a089abb8fde94401079a5d4e8
+  ⛔ 머리말에 「버전:」·「발행일:」·「시행일:」 기계 줄을 넣지 않는다 — 메타의 출처는 ko 정본 하나다.
+  정본 해시: sha256:f4046c84a59cd8187cebea816fd9ab2e38e68ce66e88248fde9bedfb6f4c16b1
 -->
 
 # Privacy Policy
@@ -118,4 +118,6 @@ When the Company changes this policy, it announces the content of the change and
 
 ## 13. Effective date
 
-The effective date of this policy (version 1.0) has not yet been set — on the day payments open, the effective date will be set, stated here, and kept one-to-one with the header.
+The effective date of this policy (version 1.0.0) has not yet been set — on the day payments open, the effective date will be set, stated here, and kept one-to-one with the header.
+
+For this version, the publication date has not yet been set either — the publication date and the effective date are the same day, and that day is the day payments open.
