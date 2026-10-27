@@ -4,9 +4,11 @@
   "type": "module",
   "description": "규칙을 코드로 쥐고, 에이전트가 낸 일을 그 규칙으로 판정한다. ⚠️ 이름은 잠정이다.",
   "scripts": {
-    "test": "node --test \"tools/test/*.test.mjs\""
+    "test": "node --test \"tools/test/*.test.mjs\"",
+    "build": "npm --prefix diagnosis run build && node tools/render-policies.mjs"
   },
   "devDependencies": {
-    "js-yaml": "^4.1.0"
+    "js-yaml": "^4.1.0",
+    "marked": "^18.1.2"
   }
 }
