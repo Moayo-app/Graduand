@@ -63,6 +63,34 @@ export const COVERED = {
   ],
 };
 
+/**
+ * 체크를 **누가 올릴 수 있는가** — 닫힌 어휘 둘. 실물에서는 `integration_id` 의 있고 없음이다.
+ *
+ * ⭐ 이름 → 식별자의 짝이 **여기 하나**다. 선언은 이름만 적는다(벤더가 매긴 숫자는 읽는
+ * 사람에게 아무 말도 하지 않는다). ⚠️ `15368` 은 **실물에서 거둔 값**이고, 벤더가 이 값을
+ * 바꾸면 이 가드는 **빨갛다** — 조용히 통과하지 않는 쪽이 맞다.
+ *
+ * ⚠️ `any` 는 「아무도 안 올린다」가 아니라 **「누구나 올릴 수 있다」**다 — 그 이름의 커밋
+ * 상태를 올릴 수 있는 주체면 우리 워크플로가 아니어도 그 칸을 채운다.
+ */
+export const CHECK_SOURCES = {
+  'github-actions': 15368,
+  any: null,
+};
+
+/**
+ * 실물 한 칸의 출처 **이름** — ⛔ 모르는 식별자에 이름을 주지 않는다. 「정체불명(N)」은 어느
+ * 선언 값과도 같지 않으므로 **초록이 될 수 없고**, 그 숫자가 메시지에 그대로 실려 보인다.
+ */
+const sourceName = (entry) => {
+  const id = entry.integration_id ?? null;
+  const hit = Object.entries(CHECK_SOURCES).find(([, value]) => value === id);
+  return hit ? hit[0] : `정체불명(${id})`;
+};
+
+/** 선언·실물 양쪽을 같은 자구로 적는다 — 두 집합을 그대로 견줄 수 있게. */
+const checkShown = (context, source) => `${context} ← ${source}`;
+
 const sorted = (xs) => [...(xs ?? [])].sort();
 const same = (a, b) => JSON.stringify(sorted(a)) === JSON.stringify(sorted(b));
 const ruleOf = (live, type) => (live.rules ?? []).find((r) => r.type === type);
@@ -134,16 +162,31 @@ export function judge(decl, live) {
 
   const rsc = ruleOf(live, 'required_status_checks');
   if (!rsc) {
-    for (const axis of ['필수 체크', '최신 상태 요구', '생성 때 체크 면제'])
+    for (const axis of ['필수 체크', '체크의 출처', '최신 상태 요구', '생성 때 체크 면제'])
       fail(axis, 'required_status_checks 규칙이 실물에 없다');
   } else {
-    const got = (rsc.parameters?.required_status_checks ?? []).map((c) => c.context);
-    same(decl.required_status_checks, got)
+    const live_ = rsc.parameters?.required_status_checks ?? [];
+    const want = decl.required_status_checks.map((c) => c.context);
+    const got = live_.map((c) => c.context);
+    same(want, got)
       ? pass('필수 체크', got.join(' · '))
       : fail(
           '필수 체크',
-          `선언 「${sorted(decl.required_status_checks).join(' · ')}」 · 실물 「${sorted(got).join(' · ')}」` +
+          `선언 「${sorted(want).join(' · ')}」 · 실물 「${sorted(got).join(' · ')}」` +
             ' — ⚠️ 잡 이름이 곧 context 다. 이름을 바꿨다면 그 PR 은 영구 pending 이다',
+        );
+    // ⭐⭐ **이름과 출처를 두 축으로 가른다** — 「어느 체크인가」와 「누가 그 이름을 올릴 수
+    //    있는가」는 설정 화면에서도 **고칠 자리가 다르다**(목록 ↔ 그 행의 드롭다운). 한 축으로
+    //    뭉치면 어느 쪽이 어긋났는지 말하지 못한다. ⚠️ 이름이 어긋나면 둘 다 운다 — 하나만
+    //    울고 나머지가 조용하면 「나머지는 괜찮다」로 읽힌다.
+    const wantSources = decl.required_status_checks.map((c) => checkShown(c.context, c.source));
+    const gotSources = live_.map((c) => checkShown(c.context, sourceName(c)));
+    same(wantSources, gotSources)
+      ? pass('체크의 출처', gotSources.join(' · '))
+      : fail(
+          '체크의 출처',
+          `선언 「${sorted(wantSources).join(' · ')}」 · 실물 「${sorted(gotSources).join(' · ')}」` +
+            ' — ⚠️ any 는 그 이름의 커밋 상태를 올릴 수 있는 누구나 그 칸을 채운다는 뜻이다',
         );
     // ⭐ 끈 것이 결정이라 선언이 든다 — 켜지면 열린 PR 전부가 리베이스를 요구한다.
     eq('최신 상태 요구', decl.strict_required_status_checks_policy, rsc.parameters?.strict_required_status_checks_policy);

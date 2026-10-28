@@ -12,7 +12,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
 
-import { DECL_PATH, loadDecl, judge, tally, COVERED, UNDECLARED_AXIS } from '../lib/ruleset-drift.mjs';
+import { CHECK_SOURCES, DECL_PATH, loadDecl, judge, tally, COVERED, UNDECLARED_AXIS } from '../lib/ruleset-drift.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '../..');
 const DECL = loadDecl(ROOT);
@@ -42,7 +42,11 @@ const liveFromDecl = () => ({
     {
       type: 'required_status_checks',
       parameters: {
-        required_status_checks: DECL.required_status_checks.map((context) => ({ context })),
+        // ⭐ 출처도 **선언에서** 짓는다 — `any` 는 실물에서 `integration_id` 가 **없는** 꼴이라
+        //   그 경우에만 키를 빼야 진짜 실물과 같은 모양이 된다(두면 null 이 실려 거짓이 된다).
+        required_status_checks: DECL.required_status_checks.map(({ context, source }) =>
+          CHECK_SOURCES[source] === null ? { context } : { context, integration_id: CHECK_SOURCES[source] },
+        ),
         strict_required_status_checks_policy: DECL.strict_required_status_checks_policy,
         do_not_enforce_on_create: DECL.do_not_enforce_on_create,
       },
@@ -78,8 +82,16 @@ test('선언이 이 저장소의 결정을 **적고 있다** — 가드는 선�
   // ⭐ 이 칸은 **결정이 된 뒤에** 선언이 들었다 — 코파일럿 쓰는 계정의 기본값으로 켜져
   //    있었고, 실물을 베껴 적었다면 우연을 결정으로 굳혔을 자리다.
   assert.equal(DECL.require_extra_approval_for_unattributed_changes, false, 'Henry 가 끄기로 정했다');
-  assert.ok(DECL.required_status_checks.includes('타입 검사 + 테스트 + 빌드'), '받은 두 패키지도 required 다');
-  assert.equal(new Set(DECL.required_status_checks).size, DECL.required_status_checks.length, '중복 0');
+  const contexts = DECL.required_status_checks.map((c) => c.context);
+  assert.ok(contexts.includes('타입 검사 + 테스트 + 빌드'), '받은 두 패키지도 required 다');
+  assert.equal(new Set(contexts).size, contexts.length, '중복 0');
+  // ⭐⭐ **행마다 출처가 적혀 있다.** ⛔ 기본값을 두지 않는다 — 두면 적지 않은 행이 조용히
+  //    한쪽으로 읽히고, 그것이 이 축을 만든 바로 그 사고다(실물 한 줄이 Any source 인 동안
+  //    가드가 「위반 0 · 미판정 0」을 냈다).
+  for (const { context, source } of DECL.required_status_checks) {
+    assert.ok(source !== undefined, `${context}: 출처가 적혀 있지 않다 — 적지 않은 칸은 조용해진다`);
+    assert.ok(source in CHECK_SOURCES, `${context}: 모르는 출처 「${source}」 — 닫힌 어휘다`);
+  }
 });
 
 // ── negative — 심은 갈라짐마다 빨간불이 켜지는가 ───────────────────────────────
@@ -104,6 +116,7 @@ test('(negative): 규칙 하나가 사라지면 그 규칙의 축들이 빨갛�
 
   const noRsc = bent((l) => (l.rules = l.rules.filter((r) => r.type !== 'required_status_checks')));
   assert.equal(axis(noRsc, '필수 체크').status, 'violation');
+  assert.equal(axis(noRsc, '체크의 출처').status, 'violation');
   assert.equal(axis(noRsc, '최신 상태 요구').status, 'violation');
 });
 
@@ -117,6 +130,26 @@ test('(negative): 필수 체크의 이름이 바뀌거나 하나 빠지면 빨�
   assert.equal(r.status, 'violation');
   assert.ok(r.detail.includes('영구 pending'), '고칠 때의 함정을 문면이 말한다');
   assert.equal(axis(bent((l) => l.rules[1].parameters.required_status_checks.pop()), '필수 체크').status, 'violation');
+});
+
+test('⚠️⚠️ (negative): 이름은 그대로인데 **출처만** 느슨해지면 빨강 — 이 구멍이 실제로 있었다', () => {
+  // ⭐⭐ 이 단정이 이 축의 요점이다. 실물의 한 줄이 `Any source` 로 서 있는 동안 선언은
+  //    이름만 적고 있었고, 가드는 **「위반 0 · 미판정 0」**을 냈다 — 적지 않은 칸이 조용한
+  //    모양이 선언 **안쪽**에 한 겹 더 있었던 것이다.
+  // ⚠️ `any` 는 「아무도 안 올린다」가 아니라 「누구나 올릴 수 있다」다.
+  const loosened = bent((l) => delete l.rules[1].parameters.required_status_checks[0].integration_id);
+  assert.equal(axis(loosened, '필수 체크').status, 'pass', '이름은 그대로다 — 그래서 저 축만으로는 안 보인다');
+  const r = axis(loosened, '체크의 출처');
+  assert.equal(r.status, 'violation');
+  assert.ok(r.detail.includes('any'), '어느 쪽이 느슨해졌는지 문면이 말한다');
+});
+
+test('(negative): 모르는 식별자는 **이름을 얻지 못한다** — 초록이 될 수 없고 그 숫자가 보인다', () => {
+  // ⛔ 모르는 값을 가까운 이름으로 읽어 주면 그 순간 초록이 거짓이 된다.
+  const unknown = bent((l) => (l.rules[1].parameters.required_status_checks[0].integration_id = 99999));
+  const r = axis(unknown, '체크의 출처');
+  assert.equal(r.status, 'violation');
+  assert.ok(r.detail.includes('99999'), '고치는 사람이 그 숫자를 그대로 본다');
 });
 
 test('(negative): 머지 방식이 줄거나 늘면 빨강 — main 의 역사 모양이 조용히 바뀐다', () => {
