@@ -9,7 +9,7 @@
  * 않는 것은 의존 0 을 지키는 결정이다 — 눈이 머는 자리는 늘리지 않고 실패로 드러낸다.
  */
 
-import type { PaletteAdapter, ReadToken } from './adapter.ts';
+import type { ValueAdapter, ReadToken } from './adapter.ts';
 
 /** `#abc` → `#AABBCC`. hex 가 아니면 공백만 접고 그대로 — 해석은 비교가 아니라 월권이다. */
 function normalizeValue(v: string): string {
@@ -109,8 +109,10 @@ function parseOne(text: string): ParseOutcome {
   return { ok: true, tokens };
 }
 
-export const cssCustomProperties: PaletteAdapter = {
+export const cssCustomProperties: ValueAdapter = {
   id: 'css-custom-properties',
+  // ⭐ Tailwind v4 의 `@theme` 도 CSS 파일 안에 산다 — 꼴이 하나인 것이 그 사실이다.
+  extensions: ['.css'],
   normalize: normalizeValue,
   read(files) {
     const tokens: ReadToken[] = [];

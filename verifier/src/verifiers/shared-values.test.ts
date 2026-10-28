@@ -1,18 +1,30 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { judgeSnapshot } from '../judge.ts';
-import { DeclarationInvalidError } from '../declaration.ts';
+import { DeclarationInvalidError, SHARED_VALUES_KEY } from '../declaration.ts';
 import { AdapterParseError } from '../adapters/adapter.ts';
 import type { RepoSnapshot } from '../snapshot.ts';
 import type { CheckResult } from '../schema.ts';
 import { EVIDENCE_CAP } from './evidence.ts';
+import { axisCheckId, isCheckOf } from './registry.ts';
+import { canonAdapter, SHARED_VALUES_CHECK_ID, SHARED_VALUES_CROSS_CHECK_ID } from './shared-values.ts';
 
 function snap(entries: Record<string, string | null>, extraPaths: string[] = []): RepoSnapshot {
   const paths = [...Object.keys(entries), ...extraPaths].sort();
   return { repo: 'acme/storefront', commit: 'c'.repeat(40), paths, files: new Map(Object.entries(entries)) };
 }
 
-const decl = (palette: object): string => JSON.stringify({ palette });
+/**
+ * 축 하나를 든 선언 — 이름은 기본 `design` 이고, 축이 여럿인 판은 이름을 달아 부른다.
+ * ⭐ 키의 자구는 스키마가 쥔다(`SHARED_VALUES_KEY`) — 테스트가 그것을 베끼면 사본이다.
+ */
+const decl = (axis: object, name = AXIS): string =>
+  JSON.stringify({ [SHARED_VALUES_KEY]: { [name]: axis } });
+
+/** 이 파일의 기본 축 이름과 그 칸들 — 체크 id 를 손으로 적지 않는다(짓는 손은 등록부다). */
+const AXIS = 'design';
+const CI = axisCheckId(SHARED_VALUES_CHECK_ID, AXIS);
+const CROSS = axisCheckId(SHARED_VALUES_CROSS_CHECK_ID, AXIS);
 
 const CANON_REPO = 'acme/design-system';
 const CANON_FILE = 'tokens/tokens.css';
@@ -66,8 +78,18 @@ const THEME_OK = [
   '',
 ].join('\n');
 
-const paletteOf = (j: { checks: CheckResult[] }): CheckResult => j.checks.find((c) => c.id === 'palette')!;
-const crossOf = (j: { checks: CheckResult[] }): CheckResult => j.checks.find((c) => c.id === 'palette-cross')!;
+/**
+ * 그 축의 칸 — ⭐ **이름으로** 묻고 축은 묻지 않는다: 축이 선언됐으면 칸은 `<판정기>:<축>`
+ * 이고, 하나도 선언되지 않았으면 접미 없는 맨 이름이다. 두 자리를 테스트가 따로 적으면
+ * 「축 미선언」 판이 조용히 `undefined` 를 받는다(그 수는 아무것도 단정하지 못한다).
+ */
+const cellOf = (j: { checks: CheckResult[] }, verifier: string): CheckResult => {
+  const found = j.checks.filter((c) => isCheckOf(verifier, c.id));
+  assert.equal(found.length, 1, `${verifier} 칸이 ${found.length} 개다`);
+  return found[0]!;
+};
+const paletteOf = (j: { checks: CheckResult[] }): CheckResult => cellOf(j, SHARED_VALUES_CHECK_ID);
+const crossOf = (j: { checks: CheckResult[] }): CheckResult => cellOf(j, SHARED_VALUES_CROSS_CHECK_ID);
 
 test('소비 저장소 — 코드 == 박제가 서고, 배제와 스코프 밖 읽기를 따로 센다', () => {
   const j = judgeSnapshot(snap({ 'graduand.json': CONSUMER, 'src/theme.css': THEME_OK }));
@@ -339,7 +361,7 @@ test('probe — 정본 포인터의 스코프가 실재와 어긋나면 판정 �
   const consumer = decl({ ...CONSUMER_PALETTE, canon: { repo: CANON_REPO, file: CANON_FILE, scope: '@theme' } });
   assert.throws(
     () => judgeSnapshot(snap({ 'graduand.json': consumer, 'src/theme.css': THEME_OK }), { peers: [canonPeer()] }),
-    (e: unknown) => e instanceof DeclarationInvalidError && e.problems[0]!.includes('palette.canon.scope'),
+    (e: unknown) => e instanceof DeclarationInvalidError && e.problems[0]!.includes(`${SHARED_VALUES_KEY}.${AXIS}.canon.scope`),
   );
 });
 
@@ -382,7 +404,7 @@ test('깨진 선언을 든 정본 저장소 — 교차 축은 수를 내지 않�
   );
 });
 
-// ---- 선언된 갈라짐(`palette.diverged`) — 사유를 단 칸은 교차 축에서 「밖」이다 ----
+// ---- 선언된 갈라짐(`shared.diverged`) — 사유를 단 칸은 교차 축에서 「밖」이다 ----
 
 const DIVERGENCE_REASON = '우리 지면 값은 우리 것이다 — 이 값의 정본은 이 저장소다';
 
@@ -453,7 +475,7 @@ test('AC3 (negative) — 사유 없는 갈라짐 항은 판정 실패다: 사유
       () => judgeSnapshot(snap({ 'graduand.json': noReason, 'src/theme.css': THEME_OK }), { peers: [canonPeer()] }),
       (e: unknown) =>
         e instanceof DeclarationInvalidError &&
-        e.problems.some((p) => p.includes('palette.diverged') && p.includes('--paper')),
+        e.problems.some((p) => p.includes(`${SHARED_VALUES_KEY}.${AXIS}.diverged`) && p.includes('--paper')),
       `사유 ${JSON.stringify(reason)} 를 심었는데 판정이 섰다 — 통과료를 받았다`,
     );
   }
@@ -517,4 +539,152 @@ test('갈라짐 선언은 교차 축의 분모를 늘리지 않는다 — 정본
   assert.equal(cross.counts.canon, 3);
   assert.equal(cross.counts.matched, 3);
   assert.equal(cross.counts.diverged, 0);
+});
+
+// ── 개정 4 — 축이 여럿이고, 그 둘이 **다른 상류**를 가리킨다 ───────────────
+
+const API_REPO = 'acme/contracts';
+const API_FILE = 'api/limits.css';
+const API_CSS = ':root {\n  --page-size: 50;\n  --timeout: 30s;\n}\n';
+
+/** 축 둘을 든 선언 — ⭐ 각자 **다른 저장소**를 정본으로 지목한다. */
+const twoAxes = (apiPinned: Record<string, string>): string =>
+  JSON.stringify({
+    [SHARED_VALUES_KEY]: {
+      [AXIS]: CONSUMER_PALETTE,
+      api: {
+        canon: { repo: API_REPO, file: API_FILE, scope: ':root' },
+        pinned: apiPinned,
+      },
+    },
+  });
+
+function apiPeer(css: string | null = API_CSS): RepoSnapshot {
+  const entries: Record<string, string | null> = {
+    'graduand.json': JSON.stringify({
+      [SHARED_VALUES_KEY]: { contracts: { adapter: 'css-custom-properties', files: [API_FILE], scope: ':root' } },
+    }),
+    [API_FILE]: css,
+  };
+  return { repo: API_REPO, commit: 'b'.repeat(40), paths: Object.keys(entries).sort(), files: new Map(Object.entries(entries)) };
+}
+
+test('축이 둘이면 칸이 넷이다 — 이름이 축을 들고, 두 축이 **다른 정본**에서 읽힌다', () => {
+  const j = judgeSnapshot(snap({ 'graduand.json': twoAxes({ '--page-size': '50', '--timeout': '30s' }), 'src/theme.css': THEME_OK }), {
+    peers: [canonPeer(), apiPeer()],
+  });
+  // ⭐⭐ 축마다 칸 둘 — 저장소가 여럿이고 규율이 갈래로 파편화된 조직이 선언할 자리다.
+  assert.deepEqual(j.checks.map((c) => c.id), [
+    'refs',
+    'shared-values-cross:api',
+    `shared-values-cross:${AXIS}`,
+    'shared-values:api',
+    `shared-values:${AXIS}`,
+    'ui-paths',
+  ]);
+  // 디자인 축은 `acme/design-system` 에서, API 축은 `acme/contracts` 에서 읽혔다.
+  assert.equal(cellOf(j, `${SHARED_VALUES_CROSS_CHECK_ID}:${AXIS}`).status, 'pass');
+  const api = cellOf(j, 'shared-values-cross:api');
+  assert.equal(api.status, 'pass');
+  assert.equal(api.counts.canon, 2);
+  assert.equal(api.counts.matched, 2);
+  // ⭐ API 축은 어댑터를 선언하지 않았다(폴백) — CI 축은 그 자리에서 미판정이고, 그 사실이
+  //   디자인 축의 수를 흐리지 않는다: 축 사이를 접는 산술이 없다.
+  assert.equal(cellOf(j, 'shared-values:api').reason, 'no-adapter');
+  assert.equal(cellOf(j, `${SHARED_VALUES_CHECK_ID}:${AXIS}`).status, 'pass');
+});
+
+test('한 축의 위반이 다른 축의 통과를 가리지 않는다 — 칸은 축마다 따로 선다', () => {
+  const j = judgeSnapshot(snap({ 'graduand.json': twoAxes({ '--page-size': '100' }), 'src/theme.css': THEME_OK }), {
+    peers: [canonPeer(), apiPeer()],
+  });
+  const api = cellOf(j, 'shared-values-cross:api');
+  assert.equal(api.status, 'violation');
+  assert.equal(api.counts.mismatched, 1); // --page-size
+  assert.equal(api.counts.unpinned, 1); // --timeout — 침묵의 갈라짐
+  // 디자인 축은 그대로 통과다 — 두 헌법은 서로의 수를 바꾸지 않는다.
+  assert.equal(cellOf(j, `${SHARED_VALUES_CROSS_CHECK_ID}:${AXIS}`).status, 'pass');
+});
+
+test('정본의 축 둘이 같은 파일을 **다른 어댑터로** 읽으면 판정 실패다 — 읽을 손을 추측하지 않는다', () => {
+  // ⚠️ 선언을 **손으로** 짓는다 — 등록부에 어댑터가 하나뿐이라 서로 다른 아는 이름 둘을
+  //   실물 선언으로는 적을 수 없다(모르는 이름은 선언 검증이 먼저 거부한다). 그래서 이
+  //   갈래는 이음새에서 집행한다: 둘째 어댑터가 출하되는 날 실물 경로가 여기로 온다.
+  const ambiguous = {
+    state: 'valid' as const,
+    ui: null,
+    sharedValues: {
+      a: { adapter: 'css-custom-properties', files: [CANON_FILE], scope: ':root', canon: null, pinned: null, diverged: null },
+      b: { adapter: 'sass-variables', files: [CANON_FILE], scope: ':root', canon: null, pinned: null, diverged: null },
+    },
+    admissions: null,
+    exemptions: null,
+  };
+  assert.throws(
+    () => canonAdapter(ambiguous, { repo: CANON_REPO, file: CANON_FILE, scope: ':root' }, `${SHARED_VALUES_KEY}.${AXIS}`),
+    (e: unknown) => e instanceof DeclarationInvalidError && e.problems[0]!.includes('different adapters'),
+  );
+  // ⭐ 그 파일을 선언한 축이 하나면 모호함이 없다 — 좁히는 것이 먼저다.
+  const narrowed = { ...ambiguous, sharedValues: { ...ambiguous.sharedValues, b: { ...ambiguous.sharedValues.b, files: ['other.css'] } } };
+  assert.equal(
+    canonAdapter(narrowed, { repo: CANON_REPO, file: CANON_FILE, scope: ':root' }, 'x')?.id,
+    'css-custom-properties',
+  );
+});
+
+test('정본의 축이 여럿이어도 **어댑터가 하나면** 모호함이 없다 — 모으는 것은 축이 아니라 읽는 손이다', () => {
+  const manyAxesOneAdapter = JSON.stringify({
+    [SHARED_VALUES_KEY]: {
+      brand: { adapter: 'css-custom-properties', files: [CANON_FILE], scope: ':root' },
+      product: { adapter: 'css-custom-properties', files: ['other.css'], scope: '@theme' },
+    },
+  });
+  const j = judgeSnapshot(snap({ 'graduand.json': CONSUMER, 'src/theme.css': THEME_OK }), {
+    peers: [canonPeer(CANON_CSS, manyAxesOneAdapter)],
+  });
+  assert.equal(crossOf(j).status, 'pass');
+});
+
+test('축 하나의 정본만 시야에 들면 **그 축만** 수를 낸다 — 한 축의 시야가 다른 축을 가리지 않는다', () => {
+  const j = judgeSnapshot(snap({ 'graduand.json': twoAxes({ '--page-size': '50' }), 'src/theme.css': THEME_OK }), {
+    // API 정본은 시야 밖이다 — 디자인 정본만 들어왔다.
+    peers: [canonPeer()],
+  });
+  assert.equal(cellOf(j, `${SHARED_VALUES_CROSS_CHECK_ID}:${AXIS}`).status, 'pass');
+  const api = cellOf(j, 'shared-values-cross:api');
+  // ⛔ 시야 밖은 「위반 0」이 아니라 판정 불가다 — 박제 전부가 이 표면의 「밖」이고 수로 남는다.
+  assert.equal(api.status, 'unjudged');
+  assert.equal(api.reason, 'single-repo-surface');
+  assert.equal(api.counts.excluded, api.counts.pinned);
+});
+
+test('같은 토큰이 다른 축에서 각각 박제돼도 축은 **자기 분모만** 센다', () => {
+  // 두 축이 같은 이름(`--ink`)을 **다른 값**으로 박제한다 — 한 조직이 두 헌법에서 같은
+  // 이름을 쓰는 것은 평상시다. 각 축의 비교는 자기 정본과 자기 박제 사이에서만 선다.
+  const declaration = JSON.stringify({
+    [SHARED_VALUES_KEY]: {
+      // 디자인 축은 자기 정본을 **전부** 박제한다 — 침묵의 갈라짐이 섞이면 이 테스트가
+      // 재려는 것(축 사이의 간섭)이 다른 위반에 묻힌다.
+      [AXIS]: CONSUMER_PALETTE,
+      print: { canon: { repo: API_REPO, file: API_FILE, scope: ':root' }, pinned: { '--ink': '#101014' } },
+    },
+  });
+  const printCanon = apiPeer(':root {\n  --ink: #101014;\n}\n');
+  const j = judgeSnapshot(snap({ 'graduand.json': declaration, 'src/theme.css': THEME_OK }), {
+    peers: [canonPeer(), printCanon],
+  });
+  const design = cellOf(j, `${SHARED_VALUES_CROSS_CHECK_ID}:${AXIS}`);
+  const print = cellOf(j, 'shared-values-cross:print');
+  // ⭐ 둘 다 통과다 — 분모가 섞였다면 둘 중 하나는 반드시 불일치로 섰을 값들이다.
+  assert.equal(design.status, 'pass');
+  assert.equal(print.status, 'pass');
+  // 그리고 분모는 각자의 정본이다 — 디자인 정본은 토큰 셋, print 정본은 하나다.
+  assert.equal(design.counts.canon, 3);
+  assert.equal(design.counts.matched, 3);
+  assert.equal(print.counts.canon, 1);
+  assert.equal(print.counts.matched, 1);
+  // ⭐ print 의 `--ink` 는 디자인 축의 분모에 **들어오지 않았다** — 들어왔다면 값이 다르므로
+  //   디자인 축이 불일치로 섰을 것이다(그것이 이 테스트가 재는 간섭이다).
+  assert.equal(design.counts.mismatched, 0);
+  assert.equal(print.counts.mismatched, 0);
 });

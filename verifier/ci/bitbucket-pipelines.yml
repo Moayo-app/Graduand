@@ -1,0 +1,78 @@
+# 빅버킷 Pipelines 조각 — 고객 저장소가 graduand 를 돌리는 자리.
+#
+# ⚠️⚠️ **이 조각은 앞의 둘과 성질이 다르다 — 사본이 된다.** GitHub 은 Action 을 참조하면 그
+# 저장소가 러너에 놓이고, GitLab 은 `include: remote:` 로 이 저장소의 파일을 **가리킨다** —
+# 둘 다 고객이 우리 파일의 사본을 들지 않는다. 빅버킷 Pipelines 에는 원격 include 가 없고
+# (재사용 단위는 Docker 이미지로 발행하는 pipe 다), 그래서 아래 블록은 고객이 자기
+# `bitbucket-pipelines.yml` 에 **붙여 넣는다**.
+#
+# ⭐ 사본은 갈라진다 — 이 제품이 파는 바로 그 명제다. ⇒ 설계의 전부가 하나다: **사본이 되는
+# 면적을 최소로 줄인다.** 아래에서 고객이 드는 것은 ⑴ 판정기를 가져오는 clone ⑵ 공유
+# 스크립트 둘을 부르는 줄, 그뿐이다 — 루트 목록을 `--root` 로 바꾸는 변환도, 또래를 가져오는
+# 루프도 여기 **없다**(각각 `graduand-ci.sh` · `graduand-peers.sh` 가 쥔다).
+#
+# ⛔ pipe(Docker 이미지)로 내지 않았다 — 레지스트리 발행이 필요하고(사람이 한다), 우리
+# 이미지가 고객 CI 에서 도는 공급망 표면이 생긴다. 지금 받는 둘(토큰 0 · 남의 Action 0)의
+# 성질과 다른 결정이라 여기서 하지 않는다.
+#
+# ──────────────────────────────────────────────────────────────────────────────
+# 붙여 넣는 법 — 저장소 변수(Repository variables)에 둘을 둔다:
+#
+#   GRADUAND_REF    판정기의 판. ⚠️ 비우면 멈춘다(아래 참조).
+#   GRADUAND_ROOTS  판정할 체크아웃 — 한 줄에 하나. 기본은 `.` 하나다.
+#
+# 상류를 함께 보려면 셋째를 둔다:
+#
+#   GRADUAND_PEERS  한 줄에 `<디렉터리> <url> <ref>`
+#
+# ⚠️ **빅버킷은 자기 저장소 하나만 clone 한다.** 상류를 가져오려면 자격(앱 비밀번호 · 저장소
+# 액세스 토큰 · SSH 키)이 필요하고 ⛔ **그 자격은 당신의 것이다 — 우리는 받지 않는다.**
+# url 에 무엇을 적을지는 당신의 CI 가 정한다. 적지 않으면 교차 축(「박제 == 정본」)은
+# `single-repo-surface` 미판정으로 남는다 — ⛔ 그것은 「위반 0」이 아니다.
+#
+# ⚠️ **`GRADUAND_ROOTS` 는 선언이다** — 가져온 디렉터리를 거기 적어야 시야에 든다. 가져오는
+# 것과 **보는 것**은 다른 행위다: 디스크를 훑어 추측하면 추측한 분모 위의 수가 전부 거짓이다.
+# ──────────────────────────────────────────────────────────────────────────────
+
+definitions:
+  steps:
+    - step: &graduand
+        name: graduand
+        # ⚠️ Node ≥23.6 이 TypeScript 소스를 빌드 없이 그대로 도는 첫 판이다. 빅버킷의
+        #    기본 이미지는 그 아래라 **여기서 세운다** — 낮으면 공유 스크립트가 먼저 묻고
+        #    멈춘다(exit 2). ⛔ 돌 수 없는 것이 「위반 0」이 되지 않는다.
+        image: node:24-alpine
+        clone:
+          # 판정이 읽는 것은 추적 파일의 목록과 선언이 지목한 파일의 본문이고, 이력은 한
+          # 건도 읽지 않는다 — 자기 저장소도 얕게 받는다.
+          depth: 1
+        script:
+          - |
+            set -eu
+            : "${GRADUAND_SRC_DIR:=.graduand-src}"
+            : "${GRADUAND_REPO:=https://github.com/Moayo-app/Graduand.git}"
+            # ⚠️⚠️ **기본값을 두지 않는다 — 비면 멈춘다.** `main` 을 기본으로 깔면 판정기가
+            #    당신이 모르는 사이에 바뀌고, 어제 초록이던 커밋이 오늘 빨강이 된다. 그것은
+            #    「정본과 하류가 갈라졌는가」를 파는 도구가 자기 고객에게 저지르는 바로 그
+            #    갈라짐이다. ⇒ 판을 고정하는 것은 **당신의 선언**이다.
+            if [ -z "${GRADUAND_REF:-}" ]; then
+              echo "graduand: GRADUAND_REF 가 비었다 — 판정기의 판을 고정해라." >&2
+              echo "  저장소 변수에 판을 적어라(예: v0.1.0). 고정하지 않으면 판정기가" >&2
+              echo "  당신이 모르는 사이에 바뀌고, 어제 초록이던 커밋이 오늘 빨강이 된다." >&2
+              exit 2
+            fi
+            command -v git >/dev/null 2>&1 || apk add --no-cache git >/dev/null
+            # ⚠️ **부트스트랩의 이 두 줄만 사본이다** — 공유 스크립트를 가져오는 줄이라
+            #    공유 스크립트가 될 수 없다(닭과 달걀). GitLab 템플릿의 같은 자리와 함께
+            #    가드가 문다: 판을 고정하는가 · 얕은 clone 인가.
+            rm -rf "$GRADUAND_SRC_DIR"
+            git clone --quiet --depth 1 --branch "$GRADUAND_REF" "$GRADUAND_REPO" "$GRADUAND_SRC_DIR"
+            # ⭐ 시야를 모으는 손 — GitLab 템플릿이 **같은 파일**을 부른다.
+            "$GRADUAND_SRC_DIR/verifier/ci/graduand-peers.sh"
+            # ⭐ argv 를 짓는 손 — 세 입구가 **같은 파일**을 부른다. ⛔ 종료 코드를 접지
+            #    않는다: 0 통과 · 1 위반 또는 넘긴 만기 · 2 판정 실패.
+            GRADUAND_SRC="$GRADUAND_SRC_DIR/verifier" "$GRADUAND_SRC_DIR/verifier/ci/graduand-ci.sh"
+
+pipelines:
+  default:
+    - step: *graduand

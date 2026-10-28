@@ -18,34 +18,41 @@
  * 판정되는 것은 선언에, 판정되지 않는 것은 밖에.
  */
 
-import { PALETTE_ADAPTERS } from './adapters/adapter.ts';
+import { VALUE_ADAPTERS } from './adapters/adapter.ts';
 import { ENTITLEMENT } from './entitlement.ts';
 import { indexPaths, type PathIndex, type RepoSnapshot } from './snapshot.ts';
 import { VERIFIER_IDS, isVerifierId } from './verifiers/registry.ts';
 
 /** 정본 포인터 — 공유값의 정본이 사는 자리. 이 저장소가 정본 자신이면 선언하지 않는다. */
-export interface PaletteCanon {
+export interface CanonPointer {
   repo: string;
   file: string;
   scope: string;
 }
 
 /**
- * `palette` 선언 — 여섯 키. `adapter`·`files`·`scope` 는 셋이 한 몸이다(어댑터가 무엇을
- * 어느 스코프에서 읽는가). `pinned` 는 공유값의 박제(사본 선언) — CI 축 「코드 == 박제」의
- * 기준이고, 없으면 그 축은 기준이 없어 미판정이다. 박제만 있고 어댑터가 없는 선언은
- * **폴백**이다: 코드를 읽을 수 없어도 선언된 분모는 같은 스키마의 수로 남는다.
+ * 공유값 **축** 하나의 선언 — 여섯 키. `adapter`·`files`·`scope` 는 셋이 한 몸이다(어댑터가
+ * 무엇을 어느 스코프에서 읽는가). `pinned` 는 공유값의 박제(사본 선언) — CI 축 「코드 ==
+ * 박제」의 기준이고, 없으면 그 축은 기준이 없어 미판정이다. 박제만 있고 어댑터가 없는
+ * 선언은 **폴백**이다: 코드를 읽을 수 없어도 선언된 분모는 같은 스키마의 수로 남는다.
  *
  * `canon` 은 박제를 동반한다(아래 검증) — 주소 없는 박제는 「내가 정본이다」를 침묵으로
  * 주장한다. `diverged` 는 그 침묵의 반대편이다: 사유를 달고 「이 값의 정본은 여기다」를
  * **말하는** 자리이고, 같은 토큰을 박제하면서 갈라질 수는 없다(배타).
+ *
+ * ⭐⭐ **개정 4 — 축이 여럿이다.** 앞 판은 이 선언이 **하나**였다(`palette`): 그래서 한
+ * 저장소는 공유값의 정본을 **하나만** 가리킬 수 있었고, 「개발 헌법 · 디자인 헌법」처럼
+ * 규율이 **갈래로** 나뉘어 **서로 다른 상류에** 사는 조직은 선언할 자리가 없었다 — 저장소가
+ * 여럿이고 규율이 파편화된 조직이 평상시의 그 모양이다. ⇒ 축을 **이름으로** 여럿 둔다.
+ * ⭐ 축마다 `canon` 이 따로 서는 것이 그 개정의 요점이다: 디자인 정본은 `acme/design`,
+ * API 정본은 `acme/contracts` 에 있어도 **한 선언**이 둘을 가리킨다.
  */
-export interface PaletteDeclaration {
+export interface SharedValuesAxis {
   /** 아는 어댑터의 id. null = 어댑터 3종 키(adapter·files·scope) 미선언. */
   adapter: string | null;
   files: string[] | null;
   scope: string | null;
-  canon: PaletteCanon | null;
+  canon: CanonPointer | null;
   pinned: Record<string, string> | null;
   /** 선언된 갈라짐 — 토큰 → 사유. 사유는 필수이고 `pinned` 와 토큰 단위로 배타다. */
   diverged: Record<string, string> | null;
@@ -85,8 +92,16 @@ export interface ValidDeclaration {
   state: 'valid';
   /** `ui` 키가 없으면 null — 「선언 없음」. `[]` 는 「UI 없음」 선언이다. */
   ui: string[] | null;
-  /** `palette` 키가 없으면 null — 팔레트 축 전체가 「선언 없음 = 미판정」이다. */
-  palette: PaletteDeclaration | null;
+  /**
+   * `shared-values` 키가 없으면 null — 공유값 축 **전부**가 「선언 없음 = 미판정」이다.
+   * 있으면 **축 이름 → 그 축의 선언**이고, 빈 객체는 받지 않는다(그 선언은 키를 빼는 것이다).
+   *
+   * ⚠️ **이름은 고객이 짓는다** — 우리가 축의 목록을 정하지 않는다. 「디자인 · API · 카피」
+   * 중 무엇이 그 조직의 헌법인지는 그 조직의 사정이고, 우리가 고르면 선언은 우리가 상상한
+   * 조직의 것이 된다. ⛔ 그래서 아는 이름의 닫힌 목록이 **없다** — 판정기 이름과 반대다
+   * (그쪽은 우리가 출하한 것이라 닫혀 있다).
+   */
+  sharedValues: Record<string, SharedValuesAxis> | null;
   /**
    * 편입 기록. 키 부재 = null 이고 `{}` 는 「편입 0」 선언이다 — 둘은 같은 판정을 낳지만
    * (칸 전부가 「밖」) 고객이 적은 것을 지우지 않는다.
@@ -112,11 +127,46 @@ export class DeclarationInvalidError extends Error {
 export const DECLARATION_FILE = 'graduand.json';
 
 /**
+ * 선언의 **바이트** — 들여쓰기와 끝 개행이 이 함수의 일부다.
+ *
+ * ⭐⭐ **선언을 내는 입구가 셋이고 바이트를 짓는 손은 하나다** — 스캐폴드(`scaffold.ts`) ·
+ * 조립의 갈래 둘(`constitution.ts` 의 생성 · 연결). 각자 지으면 「같은 스키마, 같은 내용」이
+ * 단정이 아니라 **우연**이 되고, 그 우연은 손으로 고치는 파일에서 공백 차이로 드러난다.
+ * ⇒ 자리를 **스키마의 주인**에 둔다: 선언의 모양을 아는 모듈이 그 직렬화도 안다.
+ */
+export const declarationJson = (declaration: unknown): string =>
+  `${JSON.stringify(declaration, null, 2)}\n`;
+
+/**
  * 스키마의 키 목록 — **이 파일이 정본이다.** 선언을 안내하는 표면(스캐폴드 안내문)은
  * 이것을 읽어서 적는다: 산문에 박은 사본은 스키마가 움직이는 날 거짓이 된다.
  */
-export const TOP_KEYS = ['ui', 'palette', 'admissions', 'exemptions'] as const;
-export const PALETTE_KEYS = ['adapter', 'files', 'scope', 'canon', 'pinned', 'diverged'] as const;
+export const SHARED_VALUES_KEY = 'shared-values';
+export const TOP_KEYS = ['ui', SHARED_VALUES_KEY, 'admissions', 'exemptions'] as const;
+export const AXIS_KEYS = ['adapter', 'files', 'scope', 'canon', 'pinned', 'diverged'] as const;
+
+/**
+ * 축 이름에 **금지된 것** — 공백과 `:` 뿐이다.
+ *
+ * ⭐⭐ **이것이 우리가 축에 거는 규율의 전부이고, 그 근거는 취향이 아니라 식별자다.** 체크
+ * id 가 `<판정기>:<축>` 이므로(`verifiers/registry.ts`) 축 이름에 `:` 가 들면 그 id 를 되
+ * 가를 수 없고, 공백이 들면 보고의 한 줄에서 수와 이름의 경계가 사라진다. ⛔ 그 둘 말고는
+ * 묻지 않는다 — 한글도 대문자도 받는다: 축의 이름은 **고객의 말**이고, 우리가 영문 소문자
+ * 케밥을 요구하면 그것은 식별자의 요구가 아니라 우리 취향을 선언에 박는 일이다.
+ */
+const AXIS_NAME_FORBIDDEN = /[\s:]/;
+
+/**
+ * 축 이름 하나의 문제 — 없으면 null. ⭐ **묻는 손이 하나다**: 선언 검증과 조립이 각자
+ * 물으면 조립이 검증기가 거부하는 이름을 받아들이고, 그 선언을 고객이 커밋한 뒤에야 빨개진다.
+ */
+export function axisNameProblem(axis: string): string | null {
+  if (axis.trim() === '') return 'an axis name must not be empty';
+  if (AXIS_NAME_FORBIDDEN.test(axis)) {
+    return 'an axis name holds no whitespace and no ":" — the check id is "<verifier>:<axis>", and a colon in the name makes that id unreadable';
+  }
+  return null;
+}
 const ADMISSION_KEYS = ['verifiers'] as const;
 /**
  * 면제 한 줄의 키 — **닫힌 목록이고, 이것이 승인자 필드를 막는 집행이다.** 다른 이름은
@@ -140,6 +190,9 @@ export const EXEMPTION_KEYS = ['reason', 'expires'] as const;
  *   파일**이고(`ENTITLEMENT.file`), 키의 자리는 **환경**이다(커밋되는 비밀은 비밀이 아니다).
  */
 const NO_PLACE: Record<string, string> = {
+  // ⭐ 앞 판의 이름이다 — 오타가 아니라 **옮겨간 키**라서, 「이런 키는 없다」로 끝내면 고객은
+  //    자기 선언이 깨진 이유를 모른다. 간 자리와 **왜 갔는지**를 함께 말한다.
+  palette: `moved: shared values now live under "${SHARED_VALUES_KEY}.<axis>", one axis per canon ("design", "api", …) — a repository can answer to more than one constitution, and a single "palette" could point at only one`,
   coverage: 'is derived from "verifiers" — there is no place to author it: a hand-written coverage can claim "enforced" with zero verifiers',
   enforcement: 'has no axis in this verifier — a field no code reads is a false green, not a grace period',
   [ENTITLEMENT.handleKey]: `belongs in ${ENTITLEMENT.file}, not in this closed schema — a declaration is the denominator of judgment, and billing state is not judged`,
@@ -153,7 +206,7 @@ const unknownKey = (at: string, key: string, known: readonly string[]): string =
 const isPlainObject = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v);
 
-/** 저장소 상대 경로 목록 — `ui` 와 `palette.files` 가 같은 규칙을 쓴다. */
+/** 저장소 상대 경로 목록 — `ui` 와 축의 `files` 가 같은 규칙을 쓴다. */
 function validatePathList(value: unknown, key: string, problems: string[]): string[] | null {
   if (!Array.isArray(value)) {
     problems.push(`"${key}" must be an array of repository-relative paths (got ${typeof value})`);
@@ -185,29 +238,29 @@ const validateUi = (value: unknown, problems: string[]): string[] | null =>
 
 const CANON_KEYS = ['repo', 'file', 'scope'] as const;
 
-function validateCanon(value: unknown, problems: string[]): PaletteCanon | null {
+function validateCanon(value: unknown, at: string, problems: string[]): CanonPointer | null {
   if (!isPlainObject(value)) {
-    problems.push(`"palette.canon" must be an object { repo, file, scope } (got ${Array.isArray(value) ? 'array' : typeof value})`);
+    problems.push(`"${at}" must be an object { repo, file, scope } (got ${Array.isArray(value) ? 'array' : typeof value})`);
     return null;
   }
   const before = problems.length;
   for (const key of Object.keys(value)) {
     if (!(CANON_KEYS as readonly string[]).includes(key)) {
-      problems.push(`"palette.canon.${key}" is not a known key (known: ${CANON_KEYS.join(', ')})`);
+      problems.push(`"${at}.${key}" is not a known key (known: ${CANON_KEYS.join(', ')})`);
     }
   }
   for (const key of CANON_KEYS) {
     const v = value[key];
     if (typeof v !== 'string' || v.trim() === '') {
-      problems.push(`"palette.canon.${key}" must be a non-empty string`);
+      problems.push(`"${at}.${key}" must be a non-empty string`);
     }
   }
-  return problems.length > before ? null : (value as unknown as PaletteCanon);
+  return problems.length > before ? null : (value as unknown as CanonPointer);
 }
 
-function validatePinned(value: unknown, problems: string[]): Record<string, string> | null {
+function validatePinned(value: unknown, at: string, problems: string[]): Record<string, string> | null {
   if (!isPlainObject(value)) {
-    problems.push(`"palette.pinned" must be an object of { token: value } (got ${Array.isArray(value) ? 'array' : typeof value})`);
+    problems.push(`"${at}" must be an object of { token: value } (got ${Array.isArray(value) ? 'array' : typeof value})`);
     return null;
   }
   const before = problems.length;
@@ -215,12 +268,12 @@ function validatePinned(value: unknown, problems: string[]): Record<string, stri
   if (entries.length === 0) {
     // 공집합 박제는 「공유값 없음」이 아니라 선언의 공백이다 — 공유값이 없으면 키를 빼는
     // 것이 그 선언이고, 빈 박제는 CI 축을 분모 0 의 거짓 초록으로 만든다.
-    problems.push('"palette.pinned" must not be empty — pin the shared values, or drop the key');
+    problems.push(`"${at}" must not be empty — pin the shared values, or drop the key`);
     return null;
   }
   for (const [token, v] of entries) {
     if (token.trim() === '' || typeof v !== 'string' || v.trim() === '') {
-      problems.push(`"palette.pinned" entries must be non-empty string values ("${token}")`);
+      problems.push(`"${at}" entries must be non-empty string values ("${token}")`);
     }
   }
   return problems.length > before ? null : (value as Record<string, string>);
@@ -231,21 +284,21 @@ function validatePinned(value: unknown, problems: string[]): Record<string, stri
  * 통과료이고, 아무 문장이나 적어도 아무도 틀렸다고 말할 수 없다. 사유 문장은 판정의
  * `evidence` 를 타고 칸마다 찍힌다(새 필드 0 — 평평한 원시값만 싣는 그 자리다).
  */
-function validateDiverged(value: unknown, problems: string[]): Record<string, string> | null {
+function validateDiverged(value: unknown, at: string, problems: string[]): Record<string, string> | null {
   if (!isPlainObject(value)) {
-    problems.push(`"palette.diverged" must be an object of { token: reason } (got ${Array.isArray(value) ? 'array' : typeof value})`);
+    problems.push(`"${at}" must be an object of { token: reason } (got ${Array.isArray(value) ? 'array' : typeof value})`);
     return null;
   }
   const before = problems.length;
   const entries = Object.entries(value);
   if (entries.length === 0) {
     // 빈 갈라짐은 「갈라진 것이 없다」가 아니라 선언의 공백이다 — 없으면 키를 뺀다.
-    problems.push('"palette.diverged" must not be empty — name the diverged tokens with their reasons, or drop the key');
+    problems.push(`"${at}" must not be empty — name the diverged tokens with their reasons, or drop the key`);
     return null;
   }
   for (const [token, reason] of entries) {
     if (token.trim() === '' || typeof reason !== 'string' || reason.trim() === '') {
-      problems.push(`"palette.diverged" entries must carry a non-empty reason ("${token}") — a divergence without a reason is drift`);
+      problems.push(`"${at}" entries must carry a non-empty reason ("${token}") — a divergence without a reason is drift`);
     }
   }
   return problems.length > before ? null : (value as Record<string, string>);
@@ -350,67 +403,96 @@ function validateExemptions(value: unknown, problems: string[]): Record<string, 
   return problems.length > before ? null : exemptions;
 }
 
-function validatePalette(value: unknown, problems: string[]): PaletteDeclaration | null {
+/**
+ * 축 **전부** — 키는 축 이름, 값은 그 축의 선언. ⛔ 빈 객체는 받지 않는다: 「축이 없다」의
+ * 선언은 키를 빼는 것이고, 빈 객체는 분모 0 을 침묵으로 주장한다(`pinned`·`diverged` 와
+ * 같은 규율이다).
+ */
+function validateAxes(value: unknown, problems: string[]): Record<string, SharedValuesAxis> | null {
   if (!isPlainObject(value)) {
-    problems.push(`"palette" must be an object (got ${Array.isArray(value) ? 'array' : typeof value})`);
+    problems.push(`"${SHARED_VALUES_KEY}" must be an object keyed by axis name (got ${Array.isArray(value) ? 'array' : typeof value})`);
+    return null;
+  }
+  const before = problems.length;
+  const entries = Object.entries(value);
+  if (entries.length === 0) {
+    problems.push(`"${SHARED_VALUES_KEY}" declares no axis — name at least one (e.g. "design"), or drop the key`);
+    return null;
+  }
+  const axes: Record<string, SharedValuesAxis> = {};
+  for (const [axis, raw] of entries) {
+    const named = axisNameProblem(axis);
+    if (named !== null) {
+      problems.push(`"${SHARED_VALUES_KEY}" key ${JSON.stringify(axis)} is not usable — ${named}`);
+      continue;
+    }
+    const parsed = validateAxis(raw, `${SHARED_VALUES_KEY}.${axis}`, problems);
+    if (parsed !== null) axes[axis] = parsed;
+  }
+  return problems.length > before ? null : axes;
+}
+
+function validateAxis(value: unknown, at: string, problems: string[]): SharedValuesAxis | null {
+  if (!isPlainObject(value)) {
+    problems.push(`"${at}" must be an object (got ${Array.isArray(value) ? 'array' : typeof value})`);
     return null;
   }
   const before = problems.length;
   for (const key of Object.keys(value)) {
-    if (!(PALETTE_KEYS as readonly string[]).includes(key)) {
-      problems.push(`"palette.${key}" is not a known key (known: ${PALETTE_KEYS.join(', ')})`);
+    if (!(AXIS_KEYS as readonly string[]).includes(key)) {
+      problems.push(`"${at}.${key}" is not a known key (known: ${AXIS_KEYS.join(', ')})`);
     }
   }
   if (Object.keys(value).length === 0) {
-    problems.push('"palette" declares nothing — declare the adapter trio (adapter · files · scope), pinned values, or drop the key');
+    problems.push(`"${at}" declares nothing — declare the adapter trio (adapter · files · scope), pinned values, or drop the axis`);
   }
 
   // adapter · files · scope 는 셋이 한 몸이다 — 어댑터 없는 파일 목록은 읽는 손이 없고,
   // 파일·스코프 없는 어댑터는 읽을 자리가 없다. 반쪽 선언은 미판정으로 새지 않고 실패한다.
   const trio = ['adapter', 'files', 'scope'].filter((k) => k in value);
   if (trio.length > 0 && trio.length < 3) {
-    problems.push(`"palette.adapter", "palette.files", "palette.scope" are declared together or not at all (found only: ${trio.join(', ')})`);
+    problems.push(`"${at}.adapter", "${at}.files", "${at}.scope" are declared together or not at all (found only: ${trio.join(', ')})`);
   }
 
   let adapter: string | null = null;
   if ('adapter' in value) {
-    const known = PALETTE_ADAPTERS.map((a) => a.id);
+    const known = VALUE_ADAPTERS.map((a) => a.id);
     if (typeof value.adapter !== 'string' || !known.includes(value.adapter)) {
-      problems.push(`"palette.adapter" (${JSON.stringify(value.adapter)}) is not a known adapter (known: ${known.join(', ')})`);
+      problems.push(`"${at}.adapter" (${JSON.stringify(value.adapter)}) is not a known adapter (known: ${known.join(', ')})`);
     } else {
       adapter = value.adapter;
     }
   }
 
-  const files = 'files' in value ? validatePathList(value.files, 'palette.files', problems) : null;
+  const files = 'files' in value ? validatePathList(value.files, `${at}.files`, problems) : null;
   if (files !== null && files.length === 0) {
-    problems.push('"palette.files" must name at least one file — an adapter with nothing to read reads nothing');
+    problems.push(`"${at}.files" must name at least one file — an adapter with nothing to read reads nothing`);
   }
 
   let scope: string | null = null;
   if ('scope' in value) {
     if (typeof value.scope !== 'string' || value.scope.trim() === '') {
-      problems.push('"palette.scope" must be a non-empty string (e.g. ":root" or "@theme")');
+      problems.push(`"${at}.scope" must be a non-empty string (e.g. ":root" or "@theme")`);
     } else {
       scope = value.scope;
     }
   }
 
-  const canon = 'canon' in value ? validateCanon(value.canon, problems) : null;
-  const pinned = 'pinned' in value ? validatePinned(value.pinned, problems) : null;
-  const diverged = 'diverged' in value ? validateDiverged(value.diverged, problems) : null;
+  const canon = 'canon' in value ? validateCanon(value.canon, `${at}.canon`, problems) : null;
+  const pinned = 'pinned' in value ? validatePinned(value.pinned, `${at}.pinned`, problems) : null;
+  const diverged = 'diverged' in value ? validateDiverged(value.diverged, `${at}.diverged`, problems) : null;
 
   // 박제는 정본의 주소를 동반한다 — adapter·files·scope 트리오와 같은 급의 동반이다.
   // 주소 없는 박제는 「내가 정본이다」를 **침묵으로** 주장하고 아무도 묻지 않는다.
   if ('pinned' in value && !('canon' in value)) {
-    problems.push('"palette.pinned" is declared with "palette.canon" or not at all — a pin without the canon address claims to be the canon in silence');
+    problems.push(`"${at}.pinned" is declared with "${at}.canon" or not at all — a pin without the canon address claims to be the canon in silence`);
   }
 
   // 박제하면서 갈라질 수 없다 — 한 토큰이 두 칸을 동시에 주장한다.
   if (pinned !== null && diverged !== null) {
     for (const token of Object.keys(diverged)) {
       if (token in pinned) {
-        problems.push(`"${token}" is both pinned and diverged — a token is pinned or diverged, not both`);
+        problems.push(`"${token}" is both pinned and diverged in "${at}" — a token is pinned or diverged, not both`);
       }
     }
   }
@@ -447,25 +529,45 @@ export function declarationOf(
 }
 
 /**
- * 호스트(워크스페이스 · GitHub API)가 본문을 실어야 하는 선언 경로 — `palette.files`.
+ * 호스트(워크스페이스 · GitHub API)가 본문을 실어야 하는 선언 경로 — **축 전부의** `files`.
  * 선언이 없거나 깨졌으면 빈 목록이다: 깨진 선언은 판정 층이 요란하게 멈추므로,
  * 로더가 그 앞에서 추측으로 더 읽을 이유가 없다.
  */
-export function declaredPaletteFiles(text: string | null): string[] {
+export function declaredAxisFiles(text: string | null): string[] {
   const result = validateDeclaration(text);
-  if (result.state !== 'valid' || result.palette === null) return [];
-  return result.palette.files ?? [];
+  if (result.state !== 'valid' || result.sharedValues === null) return [];
+  // 축이 여럿이면 실을 것도 여럿이다 — 합집합이고 중복은 한 번만 싣는다(같은 파일을 두 축이
+  // 읽는 것은 정당하다: 한 파일에 `:root` 와 `@theme` 가 같이 사는 것이 평상시다).
+  const files = new Set<string>();
+  for (const axis of Object.values(result.sharedValues)) {
+    for (const file of axis.files ?? []) files.add(file);
+  }
+  return [...files].sort();
+}
+
+/** 축 이름과 그 축이 지목한 정본 — 둘이 한 몸이다(어느 헌법의 정본인지가 주소의 일부다). */
+export interface DeclaredCanon {
+  axis: string;
+  canon: CanonPointer;
 }
 
 /**
- * 이 선언이 지목한 정본 포인터 — `palette.canon`. 교차 축은 **다른 체크아웃의** 이 파일을
- * 읽어야 하는데, 그 지목은 남의 선언에 적혀 있어 로더가 자기 선언만 보고는 알 수 없다.
- * 선언이 없거나 깨졌으면 null 이다(`declaredPaletteFiles` 와 같은 규율).
+ * 이 선언이 지목한 정본 포인터 **전부** — 축마다 하나다. 교차 축은 **다른 체크아웃의** 이
+ * 파일을 읽어야 하는데, 그 지목은 남의 선언에 적혀 있어 로더가 자기 선언만 보고는 알 수 없다.
+ * 선언이 없거나 깨졌으면 빈 목록이다(`declaredAxisFiles` 와 같은 규율).
+ *
+ * ⭐⭐ **여럿이 서로 다른 저장소를 가리킬 수 있다** — 그것이 개정 4 의 요점이다: 디자인
+ * 정본과 API 정본이 다른 상류에 사는 조직이 한 선언으로 둘을 가리킨다. ⇒ 읽는 쪽(로더)은
+ * 체크아웃 **하나가 아니라 목록**을 준비한다. 축 이름 순으로 돌려준다 — 같은 선언이 같은
+ * 순서를 내야 로더가 가는 순서도 결정적이다.
  */
-export function declaredCanon(text: string | null): PaletteCanon | null {
+export function declaredCanons(text: string | null): DeclaredCanon[] {
   const result = validateDeclaration(text);
-  if (result.state !== 'valid' || result.palette === null) return null;
-  return result.palette.canon;
+  if (result.state !== 'valid' || result.sharedValues === null) return [];
+  return Object.entries(result.sharedValues)
+    .filter(([, axis]) => axis.canon !== null)
+    .map(([axis, declared]) => ({ axis, canon: declared.canon! }))
+    .sort((a, b) => (a.axis < b.axis ? -1 : a.axis > b.axis ? 1 : 0));
 }
 
 /**
@@ -493,7 +595,7 @@ export function validateDeclaration(text: string | null): DeclarationResult {
   }
 
   const ui = 'ui' in raw ? validateUi(raw.ui, problems) : null;
-  const palette = 'palette' in raw ? validatePalette(raw.palette, problems) : null;
+  const sharedValues = SHARED_VALUES_KEY in raw ? validateAxes(raw[SHARED_VALUES_KEY], problems) : null;
   const admissions = 'admissions' in raw ? validateAdmissions(raw.admissions, problems) : null;
   const exemptions = 'exemptions' in raw ? validateExemptions(raw.exemptions, problems) : null;
 
@@ -508,5 +610,5 @@ export function validateDeclaration(text: string | null): DeclarationResult {
   }
 
   if (problems.length > 0) return { state: 'invalid', problems };
-  return { state: 'valid', ui, palette, admissions, exemptions };
+  return { state: 'valid', ui, sharedValues, admissions, exemptions };
 }

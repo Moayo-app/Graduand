@@ -13,11 +13,11 @@ import {
   SCAFFOLD_JSON,
   formatInitOutcome,
   initDeclaration,
-  initExitCode,
-  type InitOutcome,
+  writeExitCode,
+  type DeclarationWrite,
   type ScaffoldIo,
 } from './scaffold.ts';
-import { DECLARATION_FILE, PALETTE_KEYS, TOP_KEYS, validateDeclaration } from './declaration.ts';
+import { DECLARATION_FILE, AXIS_KEYS, TOP_KEYS, validateDeclaration } from './declaration.ts';
 import { VERIFIER_IDS } from './verifiers/registry.ts';
 import { judgeSnapshot } from './judge.ts';
 import type { RepoSnapshot } from './snapshot.ts';
@@ -50,7 +50,7 @@ test('스캐폴드는 지금 스키마의 검증을 통과한다', () => {
   assert.deepEqual(result.state === 'valid' ? result.admissions : null, {});
   // 나머지 셋은 **미선언**이다 — 빈 값이 아니라 키 부재여야 미판정으로 남는다.
   assert.equal(result.state === 'valid' ? result.ui : 'x', null);
-  assert.equal(result.state === 'valid' ? result.palette : 'x', null);
+  assert.equal(result.state === 'valid' ? result.sharedValues : 'x', null);
   assert.equal(result.state === 'valid' ? result.exemptions : 'x', null);
 });
 
@@ -88,7 +88,7 @@ test('init — 선언이 없으면 스캐폴드를 그 바이트 그대로 쓴�
   const outcome = initDeclaration('repo', io);
   assert.deepEqual(outcome, { kind: 'written', path: `repo/${DECLARATION_FILE}` });
   assert.deepEqual(io.written, [{ path: `repo/${DECLARATION_FILE}`, text: SCAFFOLD_JSON }]);
-  assert.equal(initExitCode(outcome), 0);
+  assert.equal(writeExitCode(outcome), 0);
 });
 
 test('init — 선언이 이미 있으면 덮어쓰지 않고 그 사실을 말한다 (쓰기 0 건)', () => {
@@ -96,7 +96,7 @@ test('init — 선언이 이미 있으면 덮어쓰지 않고 그 사실을 말�
   const outcome = initDeclaration('repo', io);
   assert.equal(outcome.kind, 'already-declared');
   assert.deepEqual(io.written, []); // ⛔ 한 글자도 쓰지 않았다
-  assert.equal(initExitCode(outcome), 2); // 한 일이 없으면 초록으로 끝나지 않는다
+  assert.equal(writeExitCode(outcome), 2); // 한 일이 없으면 초록으로 끝나지 않는다
 
   const said = formatInitOutcome(outcome);
   assert.deepEqual(said.stdout, []);
@@ -110,12 +110,12 @@ test('init — 쓰지 못하면 썼다고 말하지 않는다', () => {
   };
   const outcome = initDeclaration('repo', io);
   assert.equal(outcome.kind, 'write-failed');
-  assert.equal(initExitCode(outcome), 2);
+  assert.equal(writeExitCode(outcome), 2);
   assert.ok(formatInitOutcome(outcome).stderr.some((l) => l.includes('EACCES')));
 });
 
 test('init 이 말하는 것 — 쓴 자리 · 커밋하지 않았다는 사실 · 빈 분모가 정당하다는 사실', () => {
-  const said = formatInitOutcome({ kind: 'written', path: `repo/${DECLARATION_FILE}` } satisfies InitOutcome);
+  const said = formatInitOutcome({ kind: 'written', path: `repo/${DECLARATION_FILE}` } satisfies DeclarationWrite);
   const text = said.stdout.join('\n');
   assert.deepEqual(said.stderr, []);
   assert.ok(text.includes(`repo/${DECLARATION_FILE}`));
@@ -127,8 +127,8 @@ test('안내문은 스키마에서 읽는다 — 산문에 박은 사본이 0 �
   // ⚠️ 키 목록·판정기 목록의 정본은 `declaration.ts` 와 등록부다. 안내문이 사본을 들면
   // 스키마가 움직이는 날 거짓이 되므로, 전수가 그 목록에서 나왔는지 여기서 받는다.
   const text = formatInitOutcome({ kind: 'written', path: DECLARATION_FILE }).stdout.join('\n');
-  for (const key of [...TOP_KEYS, ...PALETTE_KEYS, ...VERIFIER_IDS]) {
+  for (const key of [...TOP_KEYS, ...AXIS_KEYS, ...VERIFIER_IDS]) {
     assert.ok(text.includes(key), `안내문이 ${key} 를 말하지 않는다`);
   }
-  assert.ok(text.includes(String(TOP_KEYS.length)) && text.includes(String(PALETTE_KEYS.length)));
+  assert.ok(text.includes(String(TOP_KEYS.length)) && text.includes(String(AXIS_KEYS.length)));
 });

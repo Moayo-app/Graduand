@@ -130,16 +130,22 @@ test('자격 AC5 — 자격 인자가 다르면 수가 달라진다: 시야처�
  */
 
 import { readdirSync, readFileSync } from 'node:fs';
-import { buildReport } from './report.ts';
+import { buildReport, type CheckVM, type ReportVM } from './report.ts';
 import { ko } from './strings-ko.ts';
 import { en } from './strings-en.ts';
 import { CATALOG, LOCALES, type Strings } from './strings.ts';
+
+/** 두 절을 가로질러 센다 — 이 파일이 묻는 것은 자격이지 절의 가름이 아니다. */
+const allChecks = (vm: ReportVM): CheckVM[] => [...vm.measured.checks, ...(vm.unmeasured?.checks ?? [])];
 import {
   DETAIL_REASONS,
   ENTITLEMENT,
+  FREE_VERIFIER_IDS,
+  PAID_VERIFIER_IDS,
   describeEntitlement,
   describeExpiry,
   entitlementNotice,
+  isCheckOf,
   utcDateOf,
   type EntitlementDetail,
   type EntitlementNotice,
@@ -246,8 +252,8 @@ test('만기 고지 AC2 (페이지) — 만기 당일은 「남은 날 0」이�
     assert.equal(expiry.onDate, ON_DATE, `${locale}: 센 기준일이 봉투의 날짜가 아니다`);
 
     // ⭕ 수는 그대로 나온다 — 만기가 든 자격은 **막는** 자격이 아니다.
-    assert.ok(vm.checks.length > 0);
-    for (const check of vm.checks) assert.notEqual(check.countsLine, '', `${locale}: 만기가 수를 막았다`);
+    assert.ok(allChecks(vm).length > 0);
+    for (const check of allChecks(vm)) assert.notEqual(check.countsLine, '', `${locale}: 만기가 수를 막았다`);
 
     // ⭐ 그리고 그 사실이 **화면에 닿는다** — 사실이 맞아도 문장이 삼키면 고객은 듣지 못한다.
     //   남은 날이 다른 자격 · 넘긴 자격과 **줄이 달라지는지**로 센다(자구를 여기 적지 않는다).
@@ -263,11 +269,28 @@ test('만기 고지 AC3 (페이지) — 넘긴 뒤의 화면에 「미판정 —
     const vm = await pageReport({ state: 'absent', detail: 'past-expiry', expires: '2026-09-01' }, CATALOG[locale]);
 
     // 칸마다의 사유 문장 — 화면이 아는 사유의 그 표에서, 이 로케일의 벌로 온다.
-    assert.ok(vm.checks.length > 0);
-    for (const check of vm.checks) {
+    // ⚠️⚠️ **분모가 선언을 분모로 쓰는 축이다.** 전에는 칸 **전부**를 돌았고 그것이 참이던
+    //   이유는 자격이 전부를 막았기 때문이다 — 그 가름이 축마다로 내려오면서(`judge.ts`)
+    //   무료 축은 넘긴 만기와 무관하게 수를 낸다. ⛔ 걷어낸 단정은 0 이다: 아래 ⭕ 가
+    //   그 무료 축을 **반대 방향으로** 문다.
+    assert.ok(allChecks(vm).length > 0);
+    const chosen = (ids: readonly string[]): CheckVM[] =>
+      allChecks(vm).filter((check) => ids.some((id) => isCheckOf(id, check.id)));
+
+    const paid = chosen(PAID_VERIFIER_IDS);
+    assert.ok(paid.length > 0, `${locale}: 선언 구동 칸이 화면에 0 이다 — 이 단정이 비었다`);
+    for (const check of paid) {
       assert.equal(check.status, 'unjudged');
       assert.match(check.reasonLine ?? '', /no-entitlement/, `${locale}: 칸의 사유가 「자격 없음」이 아니다`);
       assert.equal(check.countsLine, '', `${locale}: 수가 나왔다 — 막는 척이다`);
+    }
+
+    // ⭕ **무료 축은 넘긴 만기에도 수를 낸다** — 화면이 「참조 판정은 선언 없이도 수가
+    //   나옵니다」로 팔고 있고, 이 줄이 그 문장의 기계 쪽이다.
+    const free = chosen(FREE_VERIFIER_IDS);
+    assert.ok(free.length > 0, `${locale}: 무료 칸이 화면에 0 이다 — 이 단정이 비었다`);
+    for (const check of free) {
+      assert.doesNotMatch(check.reasonLine ?? '', /no-entitlement/, `${locale}: 무료 축이 자격에 막혔다`);
     }
 
     // 그리고 **같은 화면**에 만기일과 전환 경로가 있다 — 한 보고 안이다.

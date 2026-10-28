@@ -1,0 +1,150 @@
+<!--
+  원페이지의 **본문** — 블록들과 조건부 둘(활성화 배너 · 결과)이다. ⛔ 블록의 수를 여기
+  적지 않는다(손으로 센 수는 블록이 늘면 낡는다) — 순서의 정본은 가드의 열거다. 크롬(head · GNB ·
+  히어로 · 푸터)은 `chrome.html` 한 벌이 든다.
+
+  ⭐ 자리의 꼴 셋 — `{{키}}` 는 산문(이스케이프 + 인라인 강조), `{{plain:키}}` 는 속성과
+    `<title>`(이스케이프만), `{{raw:키}}` 는 **생성기가 지은 마크업**이다. 카탈로그의 키는
+    raw 로 설 수 없고, 모르는 자리도 쓰이지 않는 키도 생성기가 **던진다**.
+
+  ⭐⭐ **해시를 둘이 나눠 쓴다** — 보고서 요약과 페이지 닻이다. 가르는 규칙은 요약의 모양이
+    정하므로 그 모양을 아는 판정기 모듈이 든다(`looksLikeFragment`).
+
+  ⚠️ 이 주석은 발행본에 **남지 않는다** — 생성기가 벗긴다(발행본은 공개 배달 범위다).
+-->
+  <main>
+    <p id="activated-banner" class="activated" hidden>{{activated}}</p>
+
+    <!--
+      ⭐⭐ **비공개 카드가 먼저다.** 고객 다수가 비공개 저장소이고, 그쪽의 입구는 이 한 줄
+        하나다 — 그런데 공개 입구가 위에 있으면 **다수가 자기 자리를 두 번째로** 본다.
+      ⭐ 그리고 개정 3 이후 두 길의 **산출이 같다** — 요약으로 들어온 보고도 격자까지 그린다.
+        그 전에는 비공개 쪽 화면이 관할 수 한 줄만큼 가난했고, 그때는 순서를 바꿀 근거가
+        약했다(더 가난한 화면을 먼저 보일 수는 없다).
+      ⛔ 공개 입구를 걷지 않는다 — 설치 없이 제품이 무슨 말을 하는지 보는 유일한 자리다.
+    -->
+    <section class="entry" aria-label="{{plain:entry.label}}">
+      <div class="entry-card">
+        <h2>{{entry.privateTitle}}</h2>
+        <p>{{entry.privateBody}}</p>
+        <pre class="command"><code>npx graduand --open</code></pre>
+        <p class="note">{{entry.privateNote}}</p>
+      </div>
+      <div class="entry-card">
+        <h2>{{entry.publicTitle}}</h2>
+        <p>{{entry.publicBody}}</p>
+        <form id="diagnose-form">
+          <label for="repo-input">{{entry.inputLabel}}</label>
+          <input id="repo-input" name="repo" type="text" inputmode="url" autocomplete="off"
+            autocapitalize="off" spellcheck="false" placeholder="{{plain:entry.inputPlaceholder}}" required>
+          <button type="submit" id="diagnose-button">{{entry.submit}}</button>
+        </form>
+        <p id="entry-error" class="field-error" role="alert" hidden></p>
+        <p id="entry-status" class="field-status" role="status" hidden></p>
+      </div>
+    </section>
+
+    <section id="result" aria-live="polite"></section>
+
+    <section id="scaffold" class="scaffold" aria-label="{{plain:scaffold.label}}">
+      <h2>{{scaffold.title}}</h2>
+      <p>{{scaffold.body}}</p>
+      <pre id="scaffold-snippet" class="snippet" aria-label="{{plain:scaffold.snippetLabel}}"></pre>
+      <button type="button" id="scaffold-copy">{{scaffold.copy}}</button>
+      <p id="scaffold-status" class="field-status" role="status" hidden></p>
+      <p class="note">{{scaffold.emptyNote}}</p>
+      <p class="note">{{scaffold.canonNote}}</p>
+      <p class="note">{{scaffold.workingCopyNote}}</p>
+      <pre class="command"><code>npx graduand init</code></pre>
+    </section>
+
+    <!--
+      기능 — ⭐⭐ **가격 바로 위다.** 「무엇을 받나」와 「얼마인가」가 붙어 서야 하고, 그 앞의
+        블록 셋(입구 · 결과 · 스캐폴드)은 **한 번 돌려 본 사람의 길**이라 그 사이에 광고를
+        끼우면 결과와 다음 걸음이 갈라진다.
+      ⭐ 카드마다 자리 둘(제목 · 본문)이고 **수는 카탈로그의 열거가 든다** — 여기 카드가
+        늘거나 줄면 생성기가 「모르는 자리」/「쓰이지 않는 키」로 던진다.
+      ⛔ `<pre class="command">` 를 두지 않는다 — 광고된 명령은 가드가 **뽑아서 실제로
+        돌리므로**, 설명을 위한 조각을 여기 두면 그것도 돌려야 할 명령이 된다.
+    -->
+    <section id="features" class="features" aria-labelledby="features-title">
+      <h2 id="features-title">{{features.title}}</h2>
+      <p class="features-lede">{{features.lede}}</p>
+      <ul class="feature-list" aria-label="{{plain:features.label}}">
+        <li class="feature">
+          <h3>{{features.item0.title}}</h3>
+          <p>{{features.item0.body}}</p>
+        </li>
+        <li class="feature">
+          <h3>{{features.item1.title}}</h3>
+          <p>{{features.item1.body}}</p>
+        </li>
+        <li class="feature">
+          <h3>{{features.item2.title}}</h3>
+          <p>{{features.item2.body}}</p>
+        </li>
+        <li class="feature">
+          <h3>{{features.item3.title}}</h3>
+          <p>{{features.item3.body}}</p>
+        </li>
+        <li class="feature">
+          <h3>{{features.item4.title}}</h3>
+          <p>{{features.item4.body}}</p>
+        </li>
+        <li class="feature">
+          <h3>{{features.item5.title}}</h3>
+          <p>{{features.item5.body}}</p>
+        </li>
+        <li class="feature">
+          <h3>{{features.item6.title}}</h3>
+          <p>{{features.item6.body}}</p>
+        </li>
+      </ul>
+    </section>
+
+    <section id="cta" class="cta" aria-label="{{plain:cta.label}}">
+      <h2>{{cta.title}}</h2>
+      <p class="boundary">{{cta.boundary}}</p>
+      <p class="price">{{cta.price}} <span class="price-note">{{cta.priceNote}}</span></p>
+      <p class="tax">{{cta.tax}}</p>
+      <p class="note">{{cta.choiceNote}}</p>
+      <a class="checkout-link" href="/checkout/" target="_blank" rel="noopener noreferrer">{{cta.start}}</a>
+    </section>
+
+    <!--
+      활성화 안내 — ⭐ 가격 **뒤**다: 산 사람이 읽는 자리라 입구 **앞**에 세우지 않는다.
+      ⭕ **고지가 걷혔다** — 조건 셋이 차례로 풀렸다(못 산다 → 사도 못 묻는다 → 핸들을 받아
+        오는 걸음이 없다). 조건 없는 「아직 서지 않았다」를 두지 않는다.
+      ⛔ 핸들 파일 · 핸들 키 · 환경변수의 **이름 셋을 적지 않는다**: 상류에서 결정된 적이
+        없고, 적으면 미확정을 확정처럼 말한다. 가드가 발행본에서 그 셋을 0 으로 센다.
+      ⭐ 이름은 제 `<h2>` 가 진다(`aria-labelledby`) — 보이는 제목과 같은 말을 속성에 한 번
+        더 적으면 그것도 사본이다.
+    -->
+    <section class="activation" aria-labelledby="activation-title">
+      <h2 id="activation-title">{{activation.title}}</h2>
+      <p>{{activation.body}}</p>
+      <p class="note">{{activation.naming}}</p>
+    </section>
+
+    <!--
+      FAQ — ⭐⭐ **정책을 답하지 않고 가리킨다.** 환불 · 약관 · 개인정보 · 라이선스 증서는
+        정본이 따로 있고(푸터의 법률 컬럼), 여기서 답하면 **금칙 가드가 없는 자리에서 정책을
+        말하는** 것이 된다 — 선언 없는 파일이 조용히 두 번째 정본이 되는 그 자리다.
+      ⚠️ 한 문항의 답은 **세 줄까지**다 — 넘으면 `/` 에 앉지 않는다. 가드가 발행본에서 센다.
+      ⛔ 문항 **수**는 가드에 적지 않는다 — 중복 판정이 바뀌면 수가 움직인다.
+    -->
+    <section id="faq" class="faq" aria-labelledby="faq-title">
+      <h2 id="faq-title">{{faq.title}}</h2>
+      <div class="faq-item">
+        <h3>{{faq.knivesQ}}</h3>
+        <p>{{faq.knivesA1}}</p>
+        <p>{{faq.knivesA2}}</p>
+      </div>
+      <div class="faq-item">
+        <h3>{{faq.freeQ}}</h3>
+        <p>{{faq.freeA1}}</p>
+        <p>{{faq.freeA2}}</p>
+        <p>{{faq.freeA3}}</p>
+      </div>
+    </section>
+  </main>

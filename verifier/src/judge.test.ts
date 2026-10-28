@@ -16,7 +16,7 @@ test('체크는 id 순으로 정렬되고 스키마 식별 필드를 싣는다',
   assert.equal(j.v, SCHEMA_VERSION);
   assert.equal(j.repo, 'acme/widgets');
   assert.equal(j.commit, 'd'.repeat(40));
-  assert.deepEqual(j.checks.map((c) => c.id), ['palette', 'palette-cross', 'refs', 'ui-paths']);
+  assert.deepEqual(j.checks.map((c) => c.id), ['refs', 'shared-values', 'shared-values-cross', 'ui-paths']);
 });
 
 test('도는 판정기의 정본은 등록부다 — 하드코딩된 배열이 아니다', () => {

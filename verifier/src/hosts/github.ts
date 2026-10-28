@@ -12,7 +12,7 @@
  */
 
 import { needsContent, RateLimitedError, RepoUnreadableError, type RepoSnapshot } from '../snapshot.ts';
-import { declaredPaletteFiles, DECLARATION_FILE } from '../declaration.ts';
+import { declaredAxisFiles, DECLARATION_FILE } from '../declaration.ts';
 import { fromBase64, utf8Decode } from '../bytes.ts';
 
 export interface GithubLoadOptions {
@@ -22,6 +22,15 @@ export interface GithubLoadOptions {
   ref?: string;
   /** 테스트와 호스트 관찰을 위해 주입 가능. 기본은 전역 fetch. */
   fetch?: typeof fetch;
+  /**
+   * 본문을 더 실을 경로 — ⭐ 워크스페이스 로더의 같은 이름과 **같은 성질**이다: 「내 파일
+   * 하나가 남의 정본이다」를 이 저장소의 선언만 보고는 알 수 없다(지목은 **남의 선언**에
+   * 적혀 있다). 교차 축이 브라우저에서 서려면 정본 저장소를 이 인자로 열어야 한다.
+   *
+   * ⛔ 추측으로 늘지 않는다 — 실리는 것은 지목된 경로뿐이고, tree 에 없는 경로는 실리지
+   * 않는다. 무인증 한도 아래에서 스타일시트 전부를 두드리지 않는 그 규율 그대로다.
+   */
+  alsoContent?: readonly string[];
 }
 
 export interface GithubLoad {
@@ -116,13 +125,16 @@ export async function loadGithubSnapshot(options: GithubLoadOptions): Promise<Gi
     }
   };
 
-  // 선언 파일을 먼저 읽는다 — 어댑터가 읽을 파일(palette.files)은 선언이 지목한다.
+  // 선언 파일을 먼저 읽는다 — 어댑터가 읽을 파일(축 전부의 `files`)은 선언이 지목한다.
   // 선언된 파일만 더 싣는 것은 비용이 아니라 한도 규율이다: 무인증 한도 아래에서
   // 저장소의 스타일시트 전부를 두드리는 로더는 큰 저장소를 전부 잘림으로 만든다.
   const declEntry = blobs.find((e) => e.path === DECLARATION_FILE);
   if (declEntry) await loadBlob(declEntry.path, declEntry.sha);
   const declText = files.get(DECLARATION_FILE);
-  const declared = new Set(typeof declText === 'string' ? declaredPaletteFiles(declText) : []);
+  const declared = new Set([
+    ...(typeof declText === 'string' ? declaredAxisFiles(declText) : []),
+    ...(options.alsoContent ?? []),
+  ]);
 
   for (const entry of blobs) {
     if (files.has(entry.path)) continue;

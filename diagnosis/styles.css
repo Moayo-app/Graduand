@@ -39,20 +39,88 @@ body {
 
 .mono { font-family: var(--mono); }
 
-header.masthead, main, footer {
+.gnb-in, .masthead, main, footer {
   max-width: 46rem;
   margin-inline: auto;
   padding-inline: 16px;
 }
 
-/* ── 머리 ── */
-header.masthead { padding-top: 3.5rem; }
-.brand {
-  margin: 0;
-  letter-spacing: 0.08em;
-  color: var(--ink-heavy);
-  font-size: 0.9rem;
+/* 화면에서만 감춘다 — 이름은 보조기술에 남는다. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
+
+/* ── GNB — 항목 둘(브랜드 락업 · 로케일 셀렉터). 내비 링크도 1차 행동도 없다. ── */
+.gnb { border-bottom: 1px solid var(--ink-clear); }
+.gnb-in {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-block: 0.6rem;
+}
+.brand-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap-min);
+  color: var(--ink-burnt);
+  text-decoration: none;
+}
+.brand-link:focus-visible { outline: 2px solid var(--ink-dense); outline-offset: 4px; }
+/* 락업은 `currentColor` 로 먹을 따른다 — 색 리터럴이 발행본에 박히지 않는다. */
+.lockup { display: block; height: 1.15rem; width: auto; }
+.foot-brand .lockup { height: 1.3rem; }
+
+/* 셀렉터 — `<details>` 가 닫혀 있을 때 목록을 숨기는 것은 브라우저 몫이다(스크립트 0). */
+.locale-pick { position: relative; }
+.locale-pick > summary {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap-min);
+  padding: 0 0.7rem;
+  border: 1px solid var(--ink-light);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--ink-dense);
+  font-size: 0.85rem;
+  cursor: pointer;
+  list-style: none;
+}
+.locale-pick > summary::-webkit-details-marker { display: none; }
+.locale-pick > summary:focus-visible { outline: 2px solid var(--ink-dense); outline-offset: 2px; }
+.locale-pick > .locale-list {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.3rem);
+  z-index: 2;
+  min-width: 9rem;
+  padding: 0.3rem;
+  border: 1px solid var(--ink-light);
+  border-radius: 8px;
+  background: var(--card);
+  box-shadow: 0 8px 24px rgb(26 29 46 / 10%);
+}
+.locale-list { list-style: none; margin: 0; padding: 0; }
+.locale-pick .locale-list a {
+  display: flex;
+  align-items: center;
+  min-height: var(--tap-min);
+  padding: 0 0.6rem;
+  border-radius: 6px;
+}
+.locale-list a { color: var(--ink-dense); text-decoration: none; }
+.locale-list a:hover { background: var(--ink-clear); }
+.locale-list a[aria-current="page"] { color: var(--ink-burnt); font-weight: 700; }
+
+/* ── 머리 ── */
+.masthead { padding-top: 3rem; }
 h1 {
   margin: 0.3rem 0 0.8rem;
   font-size: 1.9rem;
@@ -175,7 +243,9 @@ pre.snippet {
 .report-meta dt { color: var(--ink-heavy); font-size: 0.88rem; }
 .report-meta dd { margin: 0; font-size: 0.92rem; overflow-wrap: anywhere; }
 
-.warn { color: var(--state-unjudged); font-weight: 600; font-size: 0.92rem; }
+/* ⭐ 측정 조건이지 판정 결과가 아니다 — 「커밋이 더럽다」는 어느 규칙에도 걸리지 않았다.
+   담채 셋은 판정 전용이라 이 줄은 **먹 괘선**으로 선다. */
+.warn { color: var(--ink-burnt); font-weight: 600; font-size: 0.92rem; }
 .notice {
   border-left: 3px solid var(--ink-heavy);
   padding-left: 0.8rem;
@@ -188,8 +258,10 @@ pre.snippet {
  * 명령의 줄들과 달리 글리프와 들여쓰기로 모양을 만들지 않으므로(터미널이 아니다) 공백을
  * 살릴 일이 없고, 줄마다 한 문장이 선다. ⛔ 꾸밈이 문구를 바꾸지 않는다: 색과 여백뿐이다.
  */
+/* ⭐ 주어가 **고객의 자격**이지 우리 출하 상태가 아니다 — `.activated` 가 같은 사유로 이미
+   담채 밖이었다. 둘이 같은 주어를 두고 갈라져 있던 것을 여기서 맞춘다. */
 .entitlement {
-  border-left: 3px solid var(--state-unjudged);
+  border-left: 3px solid var(--ink-burnt);
   padding-left: 0.8rem;
   margin: 0.6rem 0;
 }
@@ -235,11 +307,69 @@ pre.snippet {
   border-radius: 999px;
   white-space: nowrap;
 }
+/* ⭐⭐ 상태의 **꼴** — 담채가 꺼져도 셋이 갈린다. 색 하나로만 가르면 색을 못 보는 사람에게는
+   「판정 불가 ≠ 위반 0」이 서지 않는다. 도형은 render.ts 가 짓고 여기는 자리만 준다. */
+.glyph {
+  width: 0.8em;
+  height: 0.8em;
+  margin-inline-end: 0.35em;
+  vertical-align: -0.08em;
+}
+
 .badge-pass { color: var(--state-pass); }
 .badge-violation { color: #fff; background: var(--state-violation); border-color: var(--state-violation); }
 .badge-unjudged { color: var(--state-unjudged); }
 
 .reason { margin: 0.5rem 0 0; color: var(--state-unjudged); font-size: 0.9rem; }
+
+/* ── 두 절 — ⭐ 「색이 다르다」가 아니라 **같은 칸이 아니다**. ───────────────────────────── */
+.report-part { margin-top: 1.4rem; }
+.part-h {
+  margin: 0 0 0.6rem;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  color: var(--ink-dense);
+}
+/* ⚠️ **점선이다** — 재지 않은 칸은 테두리가 닫히지 않는다. 그 꼴 자체가 「여기 아직 아무것도
+   없다」를 말하고, 색이 꺼져도 남는다. */
+.report-unmeasured {
+  border: 1px dashed var(--state-unjudged);
+  border-radius: 6px;
+  padding: 0.9rem 1rem 1rem;
+}
+
+/* ── 선언 0 에서 보이는 것 — ⛔ 판정이 아니다. ──────────────────────────────────────────
+   ⭐⭐ **꼴이 세 번째다.** 재어진 절은 테두리가 없고, 재지 않은 절은 **점선**으로 닫히지
+   않는다. 이 절은 **왼쪽 선 하나**다 — 「칸이 아니다」를 말하는 꼴이고, 담채가 꺼져도 남는다.
+   ⛔ 상태색(`--state-*`)을 쓰지 않는다: 쓰면 색만 보는 눈에 세 번째 상태처럼 읽힌다. */
+.report-undeclared {
+  border-left: 3px solid var(--ink-light);
+  padding: 0.2rem 0 0.4rem 1rem;
+}
+.report-undeclared > .notice { margin: 0.3rem 0 0; font-size: 0.88rem; color: var(--ink-dense); }
+.copy { margin-top: 0.8rem; }
+/* ⭐ 갈라진 쪽은 **꼴로도** 갈린다 — 왼쪽에 점선 한 줄. ⛔ 상태색을 쓰지 않는다(쓰면 색만
+   보는 눈에 네 번째 상태처럼 읽힌다): 가르는 것은 선의 **종류**다. */
+.copy-diverged {
+  border-left: 2px dashed var(--ink-light);
+  padding-left: 0.7rem;
+}
+.copy-head {
+  margin: 0.3rem 0 0;
+  font-size: 0.85rem;
+  /* 손잡이는 **한 줄**이다 — 줄바꿈하면 블록 전문처럼 읽힌다(싣는 것은 첫 줄 하나다). */
+  white-space: pre;
+  overflow-x: auto;
+}
+
+/* ⭐ 접는다, 자르지 않는다 — ⛔ 스크롤 상자를 쓰지 않는다(상자 안은 인쇄에도 검색에도 안
+   걸리고, 「더 있다」가 스크롤바로만 남는다). */
+.evidence-fold { margin-top: 0.5rem; }
+.evidence-fold > summary {
+  cursor: pointer;
+  color: var(--ink-dense);
+  font-size: 0.85rem;
+}
 .counts { margin: 0.5rem 0 0; color: var(--ink-dense); font-size: 0.88rem; }
 
 ul.evidence {
@@ -256,6 +386,34 @@ ul.evidence li { white-space: pre; padding: 0.1rem 0; }
 .omitted { margin: 0.4rem 0 0; color: var(--ink-heavy); font-size: 0.85rem; }
 .totals { margin: 0.4rem 0 0; font-weight: 700; }
 
+/* ── 기능 ── */
+.features {
+  margin-top: 3rem;
+  border-top: 1px solid var(--ink-light);
+  padding-top: 2rem;
+}
+.features h2 { margin: 0 0 0.6rem; font-size: 1.2rem; }
+.features-lede { margin: 0 0 1.4rem; color: var(--ink-dense); }
+.feature-list {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+@media (min-width: 720px) {
+  .feature-list { grid-template-columns: 1fr 1fr; }
+}
+.feature {
+  background: var(--card);
+  border: 1px solid var(--ink-light);
+  border-radius: 10px;
+  padding: 1.1rem 1.2rem 1.2rem;
+}
+.feature h3 { margin: 0 0 0.4rem; font-size: 1rem; color: var(--ink-burnt); }
+.feature p { margin: 0; color: var(--ink-dense); font-size: 0.93rem; }
+
 /* ── CTA ── */
 .cta {
   margin-top: 3rem;
@@ -268,10 +426,22 @@ ul.evidence li { white-space: pre; padding: 0.1rem 0; }
 .price-note { font-size: 0.95rem; font-weight: 400; color: var(--ink-heavy); }
 .tax { margin: 0.2rem 0 0.9rem; color: var(--ink-heavy); font-size: 0.88rem; }
 
-/* 스텁 고지 — 입구 **바로 위**에 선다. 상태를 숨기지 않는 것이 이 블록의 존재 이유라,
-   접히지도 흐려지지도 않는다(`.note` 보다 진하게 둔다). */
-.stub-notice {
-  border-left: 3px solid var(--state-unjudged);
+/*
+ * 「아직 서지 않았다」의 고지 — 자리가 둘이고 **괘선은 먹이다.**
+ *
+ * ⭐⭐ **담채를 빌리지 않는다.** 전에는 이 괘선이 `--state-unjudged` 였다 — 그러면 같은
+ * 노랑이 「당신 저장소의 축이 미판정이다」와 「우리가 아직 못 출하했다」를 동시에 뜻한다:
+ * **주어가 다른 두 문장이 한 색**이다. 넷째 담채를 만드는 길도 ⛔ 다(램프 밖 예외가 둘이
+ * 된다). ⇒ 먹 램프 안으로 되돌린다. 먹 괘선은 중립이라 「상태」가 아니라 **「사실」**로
+ * 읽히고, 「접히지도 흐려지지도 않는다」는 **가장 진한 먹**이 그대로 충족한다.
+ *
+ * ⚠️ **선택자가 하나로 줄었다** — 꾸밈이 줄어서가 아니라 **말이 하나 없어져서**다.
+ * `.stub-notice` 는 **눌리는 것**이 일을 안 한다는 말이었는데, 구독 입구가 리다이렉트 선언을
+ * 지나 실제로 열리면서 그 말이 가리킬 것이 없어졌다. 남은 `.ink-notice` 는 **그 자리가 아직
+ * 서지 않았다**는 말이다 — 주어가 다르므로 둘째 말이 다시 서는 날 선택자도 함께 돌아온다.
+ */
+.ink-notice {
+  border-left: 3px solid var(--ink-burnt);
   padding: 0.1rem 0 0.1rem 0.8rem;
   margin: 0 0 1.1rem;
   color: var(--ink-dense);
@@ -303,7 +473,24 @@ ul.evidence li { white-space: pre; padding: 0.1rem 0; }
   font-weight: 600;
 }
 
-/* ── 푸터 ── */
+/* ── 활성화 안내 · FAQ ── */
+.activation, .faq {
+  margin-top: 2.6rem;
+  border-top: 1px solid var(--ink-clear);
+  padding-top: 1.6rem;
+}
+.activation h2, .faq h2 { margin: 0 0 0.8rem; font-size: 1.2rem; }
+.activation p { margin: 0 0 0.7rem; color: var(--ink-dense); }
+.activation .note { margin: 0; }
+
+/* 문항 하나 — 물음이 먼저 서고 답이 **세 줄까지** 따라온다. */
+.faq-item { margin-bottom: 1.4rem; }
+.faq-item:last-child { margin-bottom: 0; }
+.faq-item h3 { margin: 0 0 0.4rem; font-size: 1rem; color: var(--ink-burnt); }
+.faq-item p { margin: 0 0 0.5rem; color: var(--ink-dense); font-size: 0.95rem; }
+.faq-item p:last-child { margin-bottom: 0; }
+
+/* ── 푸터 — 블록 일곱: 브랜드 · 회사 · 제품 · 법률 · 언어 · 법정 게시 · 저작권 ── */
 footer {
   margin-top: 3.5rem;
   padding-top: 1.5rem;
@@ -312,8 +499,21 @@ footer {
   font-size: 0.88rem;
   color: var(--ink-heavy);
 }
-.policies { display: flex; flex-wrap: wrap; gap: 1.2rem; margin-bottom: 0.8rem; }
-.policy-link { color: var(--ink-heavy); text-decoration: underline; text-underline-offset: 3px; }
+.foot-cols { display: grid; gap: 1.6rem; grid-template-columns: 1fr; }
+@media (min-width: 720px) {
+  .foot-cols { grid-template-columns: 1.2fr 0.9fr 0.9fr 1.4fr; gap: 1.8rem; }
+}
+.foot-brand { margin: 0; color: var(--ink-burnt); }
+.foot-h { margin: 0 0 0.4rem; font-size: 0.85rem; font-weight: 700; color: var(--ink-dense); }
+.foot-col ul { list-style: none; margin: 0; padding: 0; }
+.foot-col a {
+  display: inline-block;
+  padding-block: 0.3rem;
+  color: var(--ink-heavy);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.policy-link { color: var(--ink-heavy); }
 /* privacy 링크는 대비되게 — 묻히지 않는다. */
 .policy-link.privacy {
   color: var(--ink-burnt);
@@ -321,19 +521,99 @@ footer {
   border-bottom: 2px solid var(--ink-burnt);
   text-decoration: none;
 }
-.portal-link { color: var(--ink-dense); text-decoration: underline; text-underline-offset: 3px; }
-.renewal { margin: 0.6rem 0 0; }
+.portal-link { color: var(--ink-dense); }
+.foot-col .note { margin: 0.6rem 0 0; }
 
-/* 사업자 신원정보(법정 게시) + 저작권 표시 — 물러나 있되 언제나 보인다. */
-.publisher { margin-top: 1.6rem; }
-.company { margin: 0; font-weight: 700; color: var(--ink-dense); }
-.registration {
-  display: grid;
-  grid-template-columns: max-content 1fr;
-  gap: 0.1rem 0.7rem;
-  margin: 0.4rem 0 0;
+.foot-langs { margin-top: 1.8rem; }
+.foot-langs .locale-list { display: flex; flex-wrap: wrap; gap: 0.2rem 1.2rem; }
+.foot-langs .locale-list a { display: inline-block; padding-block: 0.3rem; }
+
+/* 사업자 신원정보(법정 게시) — 물러나 있되 언제나 보인다. 행은 라벨 + 값 한 쌍이다. */
+.publisher {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.3rem;
+  margin-top: 1.6rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--ink-clear);
   font-size: 0.82rem;
 }
-.registration dt { color: var(--ink-heavy); }
-.registration dd { margin: 0; }
+.publisher-row { display: inline-flex; gap: 0.45rem; }
+.publisher-label { color: var(--ink-heavy); }
+.publisher-value { color: var(--ink-dense); }
+.publisher-mail { color: var(--ink-dense); text-underline-offset: 3px; }
 .copyright { margin: 0.9rem 0 0; font-size: 0.82rem; }
+
+/* ───────────────────────────────────────────────────────────────
+   둘째 문서 — 헌법 관리 · 관측 결과.
+   ⭐ 토큰은 하나도 새로 만들지 않는다 — 램프 안에서 쓴다(담채 셋은 판정 전용이고,
+   격자의 칸은 **판정 결과**라 그 자리에서 담채를 쓴다 — `src/tokens.test.ts` 가 센다).
+   ─────────────────────────────────────────────────────────────── */
+.hold, .observe {
+  margin-top: 2.5rem;
+  background: var(--card);
+  border: 1px solid var(--ink-light);
+  border-radius: 10px;
+  padding: 1.4rem 1.4rem 1.5rem;
+}
+.hold > h2, .observe > h2 { margin: 0 0 0.6rem; font-size: 1.15rem; }
+.hold > p, .observe > p { margin: 0 0 0.9rem; color: var(--ink-dense); font-size: 0.95rem; }
+
+/* 입구 둘 — 생성과 연결. 좁은 화면에서는 한 줄씩 선다. */
+.hold-forms { display: grid; gap: 1rem; margin-bottom: 1rem; }
+@media (min-width: 720px) {
+  .hold-forms { grid-template-columns: 1fr 1fr; }
+}
+.hold-card {
+  display: grid;
+  gap: 0.5rem;
+  background: var(--base);
+  border: 1px solid var(--ink-light);
+  border-radius: 8px;
+  padding: 1.1rem 1.1rem 1.25rem;
+}
+.hold-card h3 { margin: 0; font-size: 1rem; }
+.hold-card p { margin: 0 0 0.3rem; color: var(--ink-dense); font-size: 0.9rem; }
+.hold-card label, form#observe-form label { font-size: 0.85rem; color: var(--ink-heavy); }
+
+/* 입력 칸의 꼴 — ⭐ 선택자가 **선언된 칸들**을 함께 받는다(id 마다 베끼지 않는다). */
+.hold-card input, .hold-card select, .hold-card textarea, input#observe-input {
+  min-height: var(--tap-min);
+  padding: 0.5rem 0.8rem;
+  border: 1px solid var(--ink-light);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink-burnt);
+  font-family: var(--mono);
+  font-size: 0.95rem;
+}
+.hold-card textarea { min-height: calc(var(--tap-min) * 1.4); resize: vertical; line-height: 1.5; }
+.hold-card input:focus-visible,
+.hold-card select:focus-visible,
+.hold-card textarea:focus-visible,
+input#observe-input:focus-visible {
+  outline: 2px solid var(--ink-dense);
+  outline-offset: 1px;
+}
+form#observe-form { display: grid; gap: 0.6rem; }
+
+/* 조립 결과 — 조각과 그 버튼은 한 쌍으로만 선다(한쪽만 보이는 자리가 없다). */
+.composed p { margin: 0 0 0.5rem; font-size: 0.95rem; }
+.composed .problems, .composed .evidence { margin: 0.2rem 0 0.9rem; padding-left: 1.1rem; }
+.composed .problems li, .composed .evidence li { font-size: 0.85rem; color: var(--ink-dense); }
+
+/* ── 격자 — 규칙 × 표면. 칸의 상태는 **판정 결과**라 괘선이 담채를 쓴다. ── */
+.grid { margin-top: 1.2rem; }
+.grid .shape { margin: 0 0 0.8rem; color: var(--ink-heavy); font-size: 0.85rem; }
+.grid-row {
+  margin: 0 0 0.6rem;
+  padding: 0.7rem 0.9rem;
+  background: var(--base);
+  border: 1px solid var(--ink-light);
+  border-left: 3px solid var(--ink-light);
+  border-radius: 8px;
+}
+.grid-pass { border-left-color: var(--state-pass); }
+.grid-violation { border-left-color: var(--state-violation); }
+.grid-unjudged { border-left-color: var(--state-unjudged); }
+.canon-line { margin: 0 0 1rem; color: var(--ink-dense); font-size: 0.95rem; }
