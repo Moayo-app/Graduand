@@ -245,6 +245,70 @@ test('발행 — `private` 가 걷혔고, 증서의 Change Date 가 **박혀 있
 });
 
 /**
+ * ⭐⭐ **날짜의 꼴을 묻는 것과 그 날짜가 무엇의 것인지 묻는 것은 다른 질문이다.**
+ *
+ * 위 단정은 Change Date 가 `UNSET` 이 아니고 ISO 꼴인지만 물었다. 그 분모로는 **전 판의
+ * 값이 그대로 남은 판**도 초록이다 — 그리고 실제로 그런 일이 있었다: `1.0.0` 이 나간 증서가
+ * 「stamp is for version **0.1.0**」이라고 적고 있었고, 그 줄이 작업장 · 받는 쪽 루트 사본 ·
+ * **npm 에 실린 타르볼** 셋에 다 실렸다(2026-10-28 실측). ⭕ 날짜는 맞았고 **판 이름이**
+ * 틀렸다 — 그래서 어느 가드도 울지 않았다.
+ *
+ * ⇒ 두 끈을 맨다: ⑴ 스탬프가 **이 판**을 가리키는가 ⑵ Change Date 가 그 스탬프의 발행일에서
+ * **유도되는가**. ⭐ ⑵ 의 식은 우리가 고른 것이 아니라 증서의 축자다 — 「publication date
+ * **plus four years**」. ⛔ 그래서 가드가 날짜를 리터럴로 들지 않는다: 들면 발행본과 가드가
+ * **같이** 낡고, 그것은 낡음을 잡는 게 아니라 **고정하는** 것이다.
+ */
+const STAMP = /stamp is for version (\S+), published (\d{4}-\d{2}-\d{2})\./;
+const CHANGE_DATE = /Change Date:\s+(\d{4}-\d{2}-\d{2})\./;
+
+/**
+ * 발행일 + 4년. ⭐ 문자로 더한다 — `Date` 로 가면 시간대가 하루를 옮길 수 있고, 증서의
+ * 날짜는 벽시계 날짜다. ⬜ 2096-02-29 는 이 식에서 없는 날이 된다(2100 이 윤년이 아니다) —
+ * 재지 않았고, 그날의 사람이 볼 일이다.
+ */
+const plusFourYears = (iso: string): string => {
+  const [year, rest] = [iso.slice(0, 4), iso.slice(4)];
+  return `${Number(year) + 4}${rest}`;
+};
+
+/**
+ * 증서와 판을 받아 **어긋난 것을 센다** — ⭐ 순수해서 **심어 볼 수 있다**(아래 음성 통제).
+ * ⛔ 모듈로 내보내지 않는다: 공개 표면은 닫힌 목록이고(AC6) 이 질문은 **발행 가드의 것**이다.
+ */
+function stampProblems(license: string, version: string): string[] {
+  const stamp = STAMP.exec(license);
+  if (stamp === null) return ['증서가 「이 스탬프는 어느 판의 것인가」를 적지 않았다'];
+  const [, stamped, published] = stamp as unknown as [string, string, string];
+
+  const problems: string[] = [];
+  if (stamped !== version) {
+    problems.push(`스탬프가 ${stamped} 를 가리키는데 이 판은 ${version} 이다`);
+  }
+  const changeDate = CHANGE_DATE.exec(license);
+  if (changeDate === null) problems.push('Change Date 가 ISO 날짜로 서지 않았다');
+  else if (changeDate[1] !== plusFourYears(published)) {
+    problems.push(`Change Date 가 ${changeDate[1]} 인데 ${published} + 4년은 ${plusFourYears(published)} 다`);
+  }
+  return problems;
+}
+
+test('발행 — 증서의 스탬프가 **이 판**을 가리키고, Change Date 가 그 발행일에서 난다', () => {
+  const license = readFileSync(join(PKG_ROOT, 'LICENSE'), 'utf8');
+  assert.deepEqual(stampProblems(license, manifest.version as string), []);
+
+  // ⭐⭐ **음성 통제 둘 — 분모가 비어 있지 않다는 증거다.** 심은 위반이 빨개지지 않으면
+  //   위의 초록은 「재서 괜찮다」가 아니라 「아무것도 재지 않았다」다.
+  const wrongVersion = license.replace('stamp is for version 1.0.0', 'stamp is for version 0.1.0');
+  assert.notDeepEqual(stampProblems(wrongVersion, manifest.version as string), []);
+
+  const staleDate = license.replace(/Change Date:\s+\d{4}-\d{2}-\d{2}\./, 'Change Date:          2029-10-28.');
+  assert.notDeepEqual(stampProblems(staleDate, manifest.version as string), []);
+
+  // ⛔ 그리고 **스탬프가 아예 없는 증서**도 통과가 아니다 — 적지 않은 것은 「맞다」가 아니다.
+  assert.notDeepEqual(stampProblems(license.replace(STAMP, 'no stamp here.'), manifest.version as string), []);
+});
+
+/**
  * ⭐⭐ **npm 이 우리 선언을 고쳐 쓰는 자리가 이 파일 밖에 있었다.**
  *
  * 이 파일의 규율은 「선언이 실물과 1:1 인가」인데, 여기서 **실물**은 로컬에서 포장한
