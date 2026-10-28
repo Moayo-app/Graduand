@@ -3,7 +3,7 @@
   ⚠️ ko·en 양 벌이 같은 합집합(🇰🇷 ∪ 🇺🇸 13절)을 담는다 — 한쪽에만 담으면 한쪽 독자에게 요건이 빠진다.
   ko 정본이 개정되면 이 판을 재전파하고 아래 정본 해시를 갱신한다 — 가드가 둘의 일치를 잰다.
   ⛔ 머리말에 「버전:」·「발행일:」·「시행일:」 기계 줄을 넣지 않는다 — 메타의 출처는 ko 정본 하나다.
-  정본 해시: sha256:4e925bdec0839e2c42c21d70643f3d7fce13ae7f88e88f52232cf481a8f17ebf
+  정본 해시: sha256:a670c502f075b06e7425adf6d14d1168498387e0a1a88ce014760c8b26573b45
 -->
 
 # Privacy Policy
@@ -20,7 +20,7 @@ Moayo Inc. (the "Company") processes personal data in providing graduand (the "S
 | Representative | Jihyun Kim |
 | Business registration number | 642-88-03702 |
 | Address | 3F V1434, 6 Teheran-ro 79-gil, Gangnam-gu, Seoul, Republic of Korea (Samseong-dong, JS Tower) |
-| Contact | an email address — to be stated on the day the domain is settled |
+| Contact | privacy@graduand.dev |
 
 **The structure of this Service narrows the processing.** The Service creates no accounts, the diagnosis involves no sign-in and no tokens, and the judgment runs in the customer's CI environment. The Company's infrastructure does not read the customer's repositories, and **repository names and judgment contents are not transmitted to the Company's servers in any mode.** Every section below stands on that.
 
@@ -38,7 +38,7 @@ The items the Company processes, or is scheduled to process when the Service tak
 
 | Category | Items | How collected | Retention period |
 |---|---|---|---|
-| Contact information | Inquiry email address and the content of the inquiry | The inquiry channel (not yet set — this row is settled once the domain is settled) | Not yet set — stated on the day the channel stands |
+| Contact information | Inquiry email address and the content of the inquiry | The inquiry channel (privacy@graduand.dev) | Destroyed without delay once the purpose of handling the inquiry is achieved. Where a record falls under **records of consumer complaints or dispute handling**, it is kept for **3 years** under the Act on Consumer Protection in Electronic Commerce and then destroyed |
 | Contact information | Items used to deliver the subscription benefit (not yet set — stated on the day the delivery mechanism is settled) | The subscription activation notice from the Seller | Not yet set — same as above |
 
 **Information collected at checkout** (email address, payment method, business verification details) is collected and processed by the Seller under the Seller's own privacy policy, and is provided directly from the customer's browser to the Seller — it does not pass through the Company. Payment method details do not reach the Company. Sections 5 and 6 state that entrustment and the overseas transfer.
@@ -54,6 +54,38 @@ The items the Company processes, or is scheduled to process when the Service tak
 ## 3. Processing and retention periods
 
 Retention periods are stated per item in the table in Section 2. When a retention period ends or the purpose of processing is achieved, the data is destroyed without delay (Section 7). If records that a law orders to be preserved arise, their items, basis and periods will be specified in Section 2 and kept separately.
+
+### 3.1 Transaction records preserved under the law
+
+As a mail-order business, the Company preserves transaction records for the periods set by the Act on Consumer Protection in Electronic Commerce.
+
+| Record | Retention period |
+|---|---|
+| Records of contracts or withdrawal of subscription | 5 years |
+| Records of payment and of the supply of goods and services | 5 years |
+| Records of consumer complaints or dispute handling | 3 years |
+
+These records are used **only for the purpose of preservation**, and cannot be deleted on request for the duration of the period (Section 9), because a law orders them preserved. Once the period ends they are destroyed by the method in Section 7.
+
+⚠️ **The items collected at checkout do not pass through the Company** (Section 2) — the Seller collects them as merchant of record, and the contract of sale stands between the buyer and the Seller. ⭕ **The preservation duty above is nonetheless the Company's**: the Company is a registered mail-order business and publishes that registration number on every screen of the Service, and the duty that comes with that standing is not moved by the commercial arrangement with the Seller.
+
+**The items preserved** are **limited** to the following, out of the Seller's order records.
+
+| Group | Items |
+|---|---|
+| The other party | The buyer's email address |
+| What was supplied | Product name · billing interval (monthly or annual) · quantity (number of repositories) |
+| Payment | Subtotal, discount, tax and total, with the currency · payment status · refunded amount |
+| Evidence | Invoice number · receipt number |
+| Time | Time of the transaction |
+
+⛔ **The Seller's order and subscription identifiers are not received.** The handle that points at such a record is the **evidence number** (invoice or receipt); preservation has no reason to hold the Seller's internal identifiers as well.
+
+⛔ **The billing address and the tax identification number are not received either.** What preservation requires is the **fact** of the contract, the payment and the supply; those two are items the Seller uses to issue invoices. ⛔ Payment instrument details never reach the Company by any route (Section 2).
+
+⚠️ All three are items that **could** be received and are not — they are present in the Seller's order records. This is written down because "not stated because it does not exist" and "exists and is not taken" are different statements.
+
+**How they are obtained**: the items above are obtained through the order-lookup features the Seller provides (its dashboard and API) and then preserved. The Seller's terms state no obligation to provide records, so if that access closes, the Company will arrange another way to continue preservation and state it here.
 
 ## 4. Provision to third parties, and categories of third parties
 
@@ -109,7 +141,7 @@ You may at any time demand **access** (including requests for disclosure), **cor
 
 | Role | Name | Contact |
 |---|---|---|
-| Privacy officer (Chief Privacy Officer) | Jihyun Kim (CEO) | an email address — to be stated on the day the domain is settled |
+| Privacy officer (Chief Privacy Officer) | Jihyun Kim (CEO) | privacy@graduand.dev |
 
 As a corporation operated by one person, the representative serves as the privacy officer as provided by law. Requests for access are received and handled, and inquiries, complaints and requests for remedy concerning personal data are received, at the contact above; the Company answers and handles them without delay — at the latest within 14 days of receipt.
 
