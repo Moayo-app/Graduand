@@ -199,14 +199,23 @@ test('발행 AC4 — bin 으로 설치되는 그 파일이 **실제로 돈다**:
   }
 });
 
-test('발행 — `private` 가 아직 서 있고, 걷는 조건이 **적혀 있다**', () => {
-  // ⛔ 지금 걷지 않는다 — 걷는 것은 코드 이사와 공개 전환 **뒤**다(둘 다 사람 몫이고
-  // 아직 열려 있다). 실수로 걷히면 이 단정이 그 PR 에서 빨갛다.
-  assert.equal(manifest.private, true, 'private 가 걷혔다 — 코드 이사·공개 전환 뒤인지 본문이 밝혀야 한다');
+test('발행 — `private` 가 걷혔고, 증서의 Change Date 가 **박혀 있다**', () => {
+  // ⚠️⚠️ **이 단정이 뒤집혔다.** 전에는 「private 가 **아직** 서 있는가」를 물었고, 그 조건
+  //    (코드 이사 · 공개 전환)이 둘 다 끝나면서 묻는 것이 바뀌었다. ⛔ 단정을 지운 것이
+  //    아니라 **분모를 옮겼다**: 되살아나는 것도 사고이므로 여전히 센다.
+  assert.equal(manifest.private, undefined, 'private 가 되살아났다 — 되돌렸다면 그 사유가 본문에 있어야 한다');
 
-  // 그리고 그 조건이 **산문으로 남아 있다** — 조건을 기억에 두면 그 기억이 갈라진다.
+  // ⛔⛔ **Change Date 가 비어 있으면 발행하지 않는다.** 비워 두면 효력이 「Change Date 또는
+  //    그 판의 최초 배포 4주년 중 **먼저** 오는 날」의 뒤쪽으로 넘어가고, 그 순간 이 판의
+  //    유료층 보호가 증서의 기본값에 맡겨진다. ⭐ 박는 값은 고르는 것이 아니다 — 증서가
+  //    축자로 「publication date **plus four years**」라고 적는다.
+  const license = readFileSync(join(PKG_ROOT, 'LICENSE'), 'utf8');
+  assert.doesNotMatch(license, /Change Date:\s+UNSET/, 'Change Date 가 UNSET 이다 — 박지 않은 판은 발행하지 않는다');
+  assert.match(license, /Change Date:\s+\d{4}-\d{2}-\d{2}\./, 'Change Date 가 ISO 날짜로 서지 않았다');
+
+  // 그리고 조건의 **산문은 남는다** — 다음 판이 같은 길을 가고, 조건을 기억에 두면 갈라진다.
   const readme = readFileSync(join(PKG_ROOT, 'README.md'), 'utf8');
-  for (const must of ['private', '공개 전환']) {
+  for (const must of ['Change Date', '공개 전환']) {
     assert.ok(readme.includes(must), `README 가 발행 조건의 「${must}」를 적지 않았다`);
   }
 });
