@@ -3,7 +3,14 @@
     "최소 빌드 — tsc 하나로 끝난다 (번들러 없음 · 런타임 의존성 0).",
     "타입만 지우고 상대 .ts import 를 .js 로 고쳐 쓴다(rewriteRelativeImportExtensions).",
     "rootDir 이 저장소 루트라서 산출은 dist/diagnosis/src/ 와 dist/verifier/src/ 로 내려앉는다 —",
-    "판정기 모듈이 페이지 안으로 복사되는 게 아니라 같은 소스에서 함께 산출된다."
+    "판정기 모듈이 페이지 안으로 복사되는 게 아니라 같은 소스에서 함께 산출된다.",
+    "",
+    "⚠️ removeComments — 주석은 **저장소에 남고 배포본에는 가지 않는다.** 실측: 원페이지 한",
+    "번의 적재가 37파일 gzip 134 KB 인데 그중 82 KB 가 주석이었다(61%). 읽지 않을 사람에게",
+    "설계 산문을 내려보내는 자리다. ⛔ 소스에서 걷는 것이 아니다 — 기록은 그대로다.",
+    "⭐ 그리고 가드 하나가 정확해진다: boundary.test.ts 가 소스 주석을 금칙 분모에서 빼는",
+    "근거로 「주석은 화면에 가지 않는다」를 적는데, 그 말이 이제 글자 그대로 참이다",
+    "(그 전에는 렌더만 안 될 뿐 /diagnosis/src/*.js 로 서빙됐다)."
   ],
   "compilerOptions": {
     "target": "esnext",
@@ -18,7 +25,8 @@
     "verbatimModuleSyntax": true,
     "skipLibCheck": true,
     "rootDir": "..",
-    "outDir": "dist"
+    "outDir": "dist",
+    "removeComments": true
   },
   "//include": [
     "페이지 스크립트가 **문서마다 하나**다 — 둘째 문서가 원페이지의 스크립트를 받으면 없는",
