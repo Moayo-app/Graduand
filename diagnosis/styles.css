@@ -74,7 +74,16 @@ body {
   text-decoration: none;
 }
 .brand-link:focus-visible { outline: 2px solid var(--ink-dense); outline-offset: 4px; }
-/* 락업은 `currentColor` 로 먹을 따른다 — 색 리터럴이 발행본에 박히지 않는다. */
+/* 락업은 `currentColor` 로 먹을 따른다 — 색 리터럴이 발행본에 박히지 않는다.
+   ⚠️ **이 치수를 한 번 키웠다가 되돌렸다**(2026-10-28 — 심볼은 그대로 두기로 했다). 재면서
+   안 것 둘을 남긴다 — 다시 재지 않게:
+   ⛔ **심볼만 키우는 길은 여기 없다.** 락업 한 장 안에서 심볼과 워드마크의 비율은 BI 정본의
+   씨값에서 **유도된** 것이고(기준 정사각 = 워드마크 cap height), 가드가 인라인 도형을 마스터
+   자산과 대조한다(`generate.test.ts` 의 `lockupShapes`). 비율을 바꾸려면 씨값을 움직여
+   재생성하는 BI 결정이 먼저다 — CSS 가 할 일이 아니다. ⇒ 키를 올리면 워드마크도 같이 커진다.
+   ⭕ **세로 정렬은 이미 맞다** — 실측(발행본): 심볼과 워드마크의 중심이 둘 다 viewBox 의
+   y=50 이고 렌더 픽셀 차가 **0.000px** 이다. 어긋나 보이는 것은 자리가 아니라 **광학적
+   무게**다(선 마크 대 솔리드 타입) — 자리를 옮기면 맞는 것을 틀리게 만들고 가드가 운다. */
 .lockup { display: block; height: 1.15rem; width: auto; }
 .foot-brand .lockup { height: 1.3rem; }
 
@@ -514,13 +523,20 @@ footer {
   text-underline-offset: 3px;
 }
 .policy-link { color: var(--ink-heavy); }
-/* privacy 링크는 대비되게 — 묻히지 않는다. */
-.policy-link.privacy {
-  color: var(--ink-burnt);
-  font-weight: 700;
-  border-bottom: 2px solid var(--ink-burnt);
-  text-decoration: none;
-}
+/* ⚠️⚠️ **개인정보 링크의 구분을 걷었다** (2026-10-28) — 세 번에 걸쳐서다: 처음 셋(진한 먹 ·
+   굵기 700 · 2px 실선 괘선) → 굵기를 걷고 → 괘선을 1px 로 내리고 → **먹까지 나머지 둘과
+   같게**. 그래서 이 자리에 규칙이 없다.
+   ⚠️⚠️ **앞 판의 사유가 틀렸고 여기서 정정한다.** 그 주석은 이 구분을 「🇰🇷 개인정보 보호법
+   §30④ 가 전제한다」고 적었다 — **과하게 끌어쓴 것이다.** 그 조문과 시행령이 무는 것은
+   **공개의 방법**이다: 처리방침을 정보주체가 **쉽게 확인할 수 있도록 지속적으로 게재**하고
+   수립·변경 시 **고지**하는 것, 그리고 수집 항목·이용 목적·보유 기간을 알아보기 쉽게
+   제시하는 쪽. ⛔ **푸터 링크를 눈에 띄게 하라는 조문은 없다** — 글자 크기·색으로 구분하라는
+   말은 지침·관행이지 법의 요구가 아니다.
+   ⇒ **이 변경은 조문을 깨지 않는다.** 잃는 것은 **발견성**이고 그것은 디자인 판단이다.
+   ⭕ 법이 무는 쪽(그 링크가 푸터에 **보이는 링크로 지속 게재**되는 것)은 그대로이고, 거기엔
+   실제로 가드가 있다(`boundary.test.ts` 의 AC4 가 로케일마다 그 링크의 실재를 센다).
+   ⇒ 되살리려면 `.policy-link.privacy` 를 다시 세우고 `chrome.html` 의 그 `<a>` 에 `privacy`
+   클래스를 돌려놓는다(둘은 한 쌍이다). 중간 지점 둘: 먹만 `--ink-dense` 로, 또는 괘선만. */
 .portal-link { color: var(--ink-dense); }
 .foot-col .note { margin: 0.6rem 0 0; }
 

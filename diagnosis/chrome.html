@@ -134,7 +134,11 @@
         <h2 class="foot-h" aria-hidden="true">{{footer.legalHeading}}</h2>
         <ul>
           <li><a class="policy-link" href="{{plain:localeRoot}}policies/terms.html">{{footer.terms}}</a></li>
-          <li><a class="policy-link privacy" href="{{plain:localeRoot}}policies/privacy.html">{{footer.privacy}}</a></li>
+          <!-- ⚠️ `privacy` 클래스가 걷혔다 — 그것을 받던 규칙이 없어졌기 때문이다
+               (`styles.css` 의 그 자리가 사유와, 앞 판의 **틀린 법 주장에 대한 정정**을 든다).
+               ⛔ 규칙 없는 클래스를 남기지 않는다: 「선언했는데 집행되지 않음」이 이 제품이
+               파는 바로 그 결함이다. -->
+          <li><a class="policy-link" href="{{plain:localeRoot}}policies/privacy.html">{{footer.privacy}}</a></li>
           <li><a class="policy-link" href="{{plain:localeRoot}}policies/refunds.html">{{footer.refunds}}</a></li>
         </ul>
       </nav>
