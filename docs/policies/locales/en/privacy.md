@@ -3,7 +3,7 @@
   ⚠️ ko·en 양 벌이 같은 합집합(🇰🇷 ∪ 🇺🇸 13절)을 담는다 — 한쪽에만 담으면 한쪽 독자에게 요건이 빠진다.
   ko 정본이 개정되면 이 판을 재전파하고 아래 정본 해시를 갱신한다 — 가드가 둘의 일치를 잰다.
   ⛔ 머리말에 「버전:」·「발행일:」·「시행일:」 기계 줄을 넣지 않는다 — 메타의 출처는 ko 정본 하나다.
-  정본 해시: sha256:f47ac11fbb2c7be37151336da205eb2e723826091199d8cb7788ff6356d17134
+  정본 해시: sha256:a670c502f075b06e7425adf6d14d1168498387e0a1a88ce014760c8b26573b45
 -->
 
 # Privacy Policy
@@ -64,8 +64,6 @@ As a mail-order business, the Company preserves transaction records for the peri
 | Records of contracts or withdrawal of subscription | 5 years |
 | Records of payment and of the supply of goods and services | 5 years |
 | Records of consumer complaints or dispute handling | 3 years |
-
-These records are used only for the purpose of preservation, and are destroyed by the method in Section 7 once the period ends.
 
 These records are used **only for the purpose of preservation**, and cannot be deleted on request for the duration of the period (Section 9), because a law orders them preserved. Once the period ends they are destroyed by the method in Section 7.
 
