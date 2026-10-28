@@ -50,18 +50,28 @@ export type ScopeProbe =
   | { kind: 'unreadable'; message: string };
 
 /**
- * 그 파일에서 어댑터가 본 **스코프들** — 조립의 셋째 칸을 추측하지 않게 하는 자리다.
+ * 고른 **파일들**에서 어댑터가 본 **스코프들** — 조립의 셋째 칸을 추측하지 않게 하는 자리다.
  *
  * ⭐ 수를 함께 낸다 — 같은 파일에 `:root` 와 `.dark` 가 같이 사는 것이 팔레트의 평상시이고,
  * 「어느 쪽이 공유값의 자리인가」는 **읽힌 수**가 가장 잘 말한다. ⛔ 우리가 고르지는 않는다:
  * 고르는 것은 고객이고, 이 함수는 사실만 낸다.
  *
+ * ⭐⭐ **파일이 여럿이다** — 축 하나가 드는 `files` 가 목록이고 `scope` 는 **하나**이기
+ * 때문이다(스키마). 고른 파일 전부를 **한 번에** 읽어 스코프마다 수를 합친다: 파일마다
+ * 따로 물으면 화면이 그 교집합·합집합을 자기 손으로 짓게 되고, 그러면 「어느 스코프를
+ * 선언할 수 있는가」를 아는 손이 둘이 된다. ⚠️ 선언의 검증이 묻는 것도 **합**이다 —
+ * 고른 파일들에서 그 스코프의 토큰이 하나라도 읽히면 참인 선언이다.
+ *
  * ⚠️ 파싱 실패를 **토큰 0 으로 접지 않는다** — 어댑터 계약의 성질 3 이 여기서도 그대로다.
+ *   파일 하나가 못 읽히면 **그 묶음 전부가** 읽히지 않은 것이다(눈이 먼 입력 위의 수는 거짓).
  */
-export function scopesIn(adapterId: string, file: string, text: string): ScopeProbe {
+export function scopesIn(
+  adapterId: string,
+  files: readonly { readonly path: string; readonly text: string }[],
+): ScopeProbe {
   const adapter: ValueAdapter | null = adapterById(adapterId);
   if (adapter === null) return { kind: 'unreadable', message: `unknown adapter: ${adapterId}` };
-  const result = adapter.read([{ path: file, text }]);
+  const result = adapter.read(files.map((file) => ({ path: file.path, text: file.text })));
   if (!result.ok) return { kind: 'unreadable', message: result.message };
 
   const counted = new Map<string, number>();

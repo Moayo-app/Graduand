@@ -13,12 +13,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { DEFAULT_OUT, renderAll, TEMPLATE_FILE } from './generate.ts';
-import {
-  FIRST_PUBLISHED,
-  FIRST_PUBLISHED_EVIDENCE,
-  POLICY_EFFECTIVE,
-  POLICY_EFFECTIVE_EVIDENCE,
-} from './publisher.ts';
+import { FIRST_PUBLISHED, FIRST_PUBLISHED_EVIDENCE } from './publisher.ts';
 import {
   CHECKOUT_PATH,
   PORTAL_PATH,
@@ -117,16 +112,6 @@ const cutoverSlots: readonly {
     name: 'FIRST_PUBLISHED_EVIDENCE',
     stands: FIRST_PUBLISHED_EVIDENCE !== null,
     why: '그 해를 사실로 만드는 기록 — 연도만 적을 수 있게 두면 다음 사람이 그럴듯한 해를 적고 아무것도 빨개지지 않는다',
-  },
-  {
-    name: 'POLICY_EFFECTIVE',
-    stands: POLICY_EFFECTIVE !== null,
-    why: '부착이 구독 입구를 **실제로 연다** — 푸터의 약속(「시행일이 박히기 전에는 받지 않는다」)이 그 순간 효력을 갖는다',
-  },
-  {
-    name: 'POLICY_EFFECTIVE_EVIDENCE',
-    stands: POLICY_EFFECTIVE_EVIDENCE !== null,
-    why: '그 날을 사실로 만드는 기록 — 정책 산문의 판이고, 날짜만 적는 길을 막는 규율이 연도와 같다',
   },
 ];
 
@@ -382,11 +367,6 @@ const stampedLiterals: readonly { readonly name: string; readonly shape: RegExp;
     shape: /^(null|\d{4})$/,
     why: '부착된 해 — 과거의 사실이라 시계에서 뽑으면 그해의 현재 연도가 되어 매년 거짓이 된다',
   },
-  {
-    name: 'POLICY_EFFECTIVE',
-    shape: /^(null|'\d{4}-\d{2}-\d{2}')$/,
-    why: '사람이 고른 날 — 시계에서 뽑으면 배포한 날이 된다. 꼴이 로케일 불변이어야 두 벌이 같은 바이트를 받는다',
-  },
 ];
 
 test('AC6 (negative) — 그날 박는 칸이 리터럴이고, 그 자리에 시계가 없다', () => {
@@ -412,7 +392,6 @@ const stampedPairs: readonly {
   readonly evidence: string | null;
 }[] = [
   { name: '최초 발행 연도', value: FIRST_PUBLISHED, evidence: FIRST_PUBLISHED_EVIDENCE },
-  { name: '정책 시행일', value: POLICY_EFFECTIVE, evidence: POLICY_EFFECTIVE_EVIDENCE },
 ];
 
 test('AC7 (negative) — 값과 근거가 함께 서거나 함께 비어 있다', () => {

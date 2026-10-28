@@ -15,6 +15,13 @@ import type { ComposeOutcome, UnpinnedToken } from '../../verifier/src/index.ts'
 import type { Strings } from './strings.ts';
 
 export interface ComposedVM {
+  /**
+   * 카드의 머리 — ⭐⭐ **「어느 저장소의 선언인가」**다. 한 벌만 나올 때는 화면 위의 주소가
+   * 그 답이었지만, 1+N 벌이 한 화면에 서면 그 답이 사라진다 — 주소 없는 조각을 내려받아
+   * **엉뚱한 저장소에 커밋하는** 자리가 거기다. ⛔ 정본과 연결을 한 문장으로 접지 않는다:
+   * 둘은 **다른 것을 적은** 선언이고, 섞이면 「자기가 정본인데 자기를 박제한」 선언이 난다.
+   */
+  head: string;
   /** 조립의 사실을 말하는 줄들 — 박제 수 · 박제하지 않은 것 · 편입 기록이 비었다는 사실. */
   lines: string[];
   /** 박제하지 않은 정본 토큰 — 토큰 · 자리 · 사유. ⛔ 조용히 빠지지 않는다. */
@@ -34,10 +41,13 @@ export function buildComposed(
   outcome: ComposeOutcome,
   intent: 'canon' | 'link',
   strings: Strings,
+  repo: string,
 ): ComposedVM {
   const { result } = strings.constitution;
+  const head = intent === 'canon' ? result.cardCanon(repo) : result.cardLink(repo);
   if (outcome.kind === 'refused') {
     return {
+      head,
       lines: [],
       unpinned: [],
       json: null,
@@ -59,6 +69,7 @@ export function buildComposed(
   if (outcome.unpinned.length > 0) lines.push(result.unpinned(outcome.unpinned.length));
   lines.push(result.admissionsEmpty);
   return {
+    head,
     lines,
     unpinned: outcome.unpinned.map((token) => ({
       token: token.token,

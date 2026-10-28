@@ -222,7 +222,11 @@ function runtimeLeaves(strings: Strings): Leaf[] {
   //   ⇒ 깨우지 않으면 위의 패리티·빈 문구·번역·강조 가드가 그 절에 대해 **아무 말도 하지
   //   않는다**: 실제로 그 자리에 마크다운 별표가 출하돼 있었고 어느 가드도 울지 않았다(#117).
   COMPOSED.forEach(({ outcome, intent }, at) => {
-    const vm = buildComposed(outcome, intent, strings);
+    // ⭐ 저장소 이름을 **인자로** 받는다 — 카드의 머리가 「어느 저장소의 선언인가」라서
+    //   그 잎도 함수다(`result.cardCanon` · `cardLink`). ⛔ 깨우지 않으면 두 벌 중 한쪽의
+    //   머리가 번역되지 않아도 초록이다.
+    const vm = buildComposed(outcome, intent, strings, 'acme/web');
+    push(`composed[${at}].head`, vm.head);
     push(`composed[${at}].lines`, vm.lines);
     push(`composed[${at}].unpinnedWhy`, vm.unpinned.map((token) => token.why));
     if (vm.refusedHead !== null) push(`composed[${at}].refusedHead`, vm.refusedHead);
@@ -247,12 +251,6 @@ function slotLeaves(strings: Strings): Leaf[] {
   const { leaves, push } = collect();
   push('page', strings.page);
   push('entry', strings.entry);
-  // ⭐⭐ **시행일이 박힌 뒤의 푸터 줄은 함수로 산다** — 객체를 훑는 것만으로는 깨어나지
-  //   않으므로 여기서 깨운다. ⛔ 깨우지 않으면 위의 패리티·빈 문구·번역 가드가 그 줄에
-  //   대해 **아무 말도 하지 않는다**: 번역을 잊어도 초록이고, 날이 박히는 날 영문 푸터에
-  //   한글 한 줄이 선다. ⚠️ 인자는 **픽스처**다(이 파일의 시계에서 뽑는다) — 시행일은
-  //   사람이 고르는 값이고, 그 결정을 테스트가 자처하지 않는다.
-  push('page.footer.effectiveOn', strings.page.footer.effectiveOn(NOW.toISOString().slice(0, 10)));
   return leaves;
 }
 

@@ -115,6 +115,10 @@ export const en: Strings = {
           body: 'A cell nobody looked at is never counted as a pass. A check that could not run carries its reason. The three counts are never folded into one indicator — one folded number hides *what was left out*.',
         },
         {
+          title: 'It puts drifted values back in line with the canon',
+          body: 'Judgment shows the drift and stops there. `graduand deliver` does what comes next: it rewrites the files of the downstream repository with the values read from the canon. It carries only the tokens that repository *pinned*, so the sending side never widens the denominator, and a place where a reason moved the basis is left alone. It writes and does not commit. And nothing is pushed from the canon downstream: the canon address is written in the downstream declaration, so the side that pulls is your own CI. Here too there is no place where our infrastructure reads or writes your repository.',
+        },
+        {
           title: 'It drops into your CI as it is',
           body: 'Entrances for GitHub Actions, GitLab CI and Bitbucket Pipelines all stand today. A violation turns that job red. Judgment finishes inside your own CI, and there is no place where our infrastructure reads your repository.',
         },
@@ -162,7 +166,9 @@ export const en: Strings = {
       knivesA1:
         'Holding *stands*. The prior decision that blocked it is closed (*the page composes, the command writes*), and the place to link or create a constitution is the link in the Product column below. ⛔ That page neither writes nor commits. The page hands you a string; writing the file is done by the command on your own machine.',
       knivesA2:
-        'Promotion has *not stood up yet*. Its shape is settled, though: among the observed drifts, *a person picks* what goes upstream (the machine names candidates and invents no criterion). When it stands it takes your declaration as its basis, so it asks about entitlement.',
+        'Fixing *half stands*. Putting values back in line with the canon runs as a command (`graduand deliver` — the feature above is that place). Moving the basis itself, *promotion*, has not stood up yet.',
+      knivesA3:
+        'What divides the two is *who decides*. Putting values back has nothing to choose: the canon is the basis, and the side that disagrees is brought to it. Promotion is the *judgment* that "the downstream is right and the canon is stale", and we do not make it for you. Only its shape is settled: among the observed drifts, *a person picks* what goes upstream (the machine names candidates and invents no criterion). When it stands it takes your declaration as its basis, so it asks about entitlement.',
       freeQ: 'How much is visible for free?',
       freeA1:
         'Right now everything runs. This in-browser diagnosis has no place that asks for entitlement yet, so it blocks nothing.',
@@ -177,11 +183,6 @@ export const en: Strings = {
       terms: 'Terms of service',
       refunds: 'Refund policy',
       portal: 'Cancel a subscription — customer portal',
-      renewal:
-        'A subscription renews automatically at the end of each billing period — the details of renewal, and cancelling, are handled in the customer portal.',
-      effective:
-        'The three policies have no effective date yet. No paid subscription is taken before that date is set.',
-      effectiveOn: (date) => `The three policies take effect on ${date}.`,
       companyHeading: 'Company',
       newWindow: 'opens in a new window',
       contact: 'Contact us',
@@ -213,35 +214,75 @@ export const en: Strings = {
 
     hold: {
       label: 'Constitution',
-      title: 'Add a constitution — link or create',
+      title: 'Add a constitution — composed as one set',
       body:
-        '"Making a constitution" is *two* acts. One repository authors the norms (create), and every repository that receives them carries a declaration (link). Below, ① choose what you are declaring, ② name the constitution, ③ read a repository and ④ pick the file and the scope, and one declaration (`graduand.json`) is composed.',
+        'One constitution stands across *several* repositories. One repository authors the norms (the canon), and every repository that receives them carries a declaration (a link). Below, ① name the constitution, ② read the canon repository and pick its files and scope, ③ add the linked repositories, and the declarations (`graduand.json`) for *every* repository that answers to this constitution are composed at once.',
       writeNote:
         '⛔ This page *neither writes nor commits*. It hands you a string, and writing the file belongs to the command that runs on your own machine. The composer is *one and the same*, so both entrances produce identical bytes.',
 
-      kindLabel: '① What are you declaring',
-      kindCanon: 'Create — this repository is the canon',
-      kindLink: 'Link — the canon is another repository',
-      canonNote:
-        'The declaration of the repository that authors the norms. It states no pins and no canon address: *the canon does not pin its own values*. Below, read your repository and pick which file and which scope hold those values.',
-      linkNote:
-        'Point at the canon and write the pinned values *read from that repository*. Read the canon repository below. ⛔ Nothing is copied by hand: copying the same value into N repositories by hand is the production line of that drift, and this product measures it.',
+      tabsLabel: 'Where you compose it',
+      tabWeb: 'Compose on the web',
+      tabCli: 'Compose in the terminal',
 
-      axisLabel: '② Name of this constitution — the shared-value axis',
+      axisLabel: '① Name of this constitution — the shared-value axis',
       axisPlaceholder: 'design',
       axisNote:
-        'One repository can answer to *several* constitutions. Each axis carries its own canon, so a development constitution and a design constitution may live in different upstreams while one declaration points at both. ⛔ The name is *yours to choose*: only whitespace and `:` are refused, because a judged cell is named `verifier:axis`.',
+        'One repository can answer to *several* constitutions. Each axis carries its own canon, so a development constitution and a design constitution may live in different upstreams while one declaration points at both. ⛔ The name is *yours to choose*: only whitespace and `:` are refused, because a judged cell is named `verifier:axis`. ⭐ The one name you write here goes verbatim into every declaration composed below.',
 
-      repoLabel: '③ Repository to read',
+      canonHeading: '② The canon declaration — this repository is the canon',
+      canonNote:
+        'The declaration of the repository that authors the norms. It states no pins and no canon address: *the canon does not pin its own values*. ⭐ There is exactly *one* canon repository, because one axis points at one canon — and a constitution with two canons is a constitution with none. ⭐ Repository, file and scope are all taken as *addresses*, so *a private repository can be declared here too* — you can write the declaration of a repository we cannot read.',
+
+      repoLabel: 'Canon repository',
       repoPlaceholder: 'owner/name or a github.com address',
-      read: 'Read the repository',
-      fileLabel: '④ File — only shapes this adapter reads are listed',
-      scopeLabel: '④ Scope — only what was *actually read* in that file is listed',
-      compose: 'Compose the declaration',
+      read: 'Read it to check (public repositories)',
+      readNote:
+        '⭕ This *checks*, it does not pick. Pressing it reads the repository and asks whether the file you wrote exists and whether that scope reads *any* value at all. ⛔ A private repository cannot be read from this browser — composing stands without pressing it. What remains then is not "it is true" but *"we did not ask"*, and those are not the same place.',
+      fileLabel: 'Canon file',
+      filePlaceholder: 'tokens/colors.css',
+      fileNote:
+        'A path *relative to the repository root*. ⛔ Absolute paths and `~` are refused. One axis may carry several files — if you need that declaration, `--file` repeats in the terminal tab.',
+      scopeLabel: 'Scope',
+      scopePlaceholder: ':root',
+      scopeNote:
+        'Where the adapter reads values — for CSS custom properties, a selector such as `:root` or `@theme`. There is exactly *one* scope, because one axis carries one scope.',
+
+      linkHeading: '③ The link declarations — the canon is another repository',
+      linkNote:
+        'Each one points at the canon and carries the pinned values *read from that repository*. ⛔ Nothing is copied by hand: copying the same value into N repositories by hand is the production line of that drift, and this product measures it. ⭐ A repository that already has a declaration gets its *whole declaration plus one axis*. ⭐ The canon declaration need not be committed yet — the pins are read against the *canon declaration composed just above*. ⚠️ Pins can only be written by *reading* the canon, though: if the canon is private this page cannot produce link declarations, and that work belongs to `graduand link` in the terminal tab — on your machine both checkouts are in hand.',
+      linkRepoLabel: 'Linked repository',
+      linkRepoPlaceholder: 'owner/name or a github.com address',
+      linkAdd: 'Add',
+      linkRemove: 'Remove',
+      linkEmpty:
+        'No linked repository yet. Composing now yields the canon declaration alone — which is a usable result too.',
+
+      compose: 'Compose',
+
+      resultLabel: 'Composed declarations',
       snippetLabel: 'Composed declaration',
-      copy: 'Copy',
+      copy: 'Copy to clipboard',
+      download: 'Download JSON',
       nextNote:
-        'Commit this snippet as `graduand.json` at your repository root, and the diagnosis at the root reads that repository and reports. If the declaration points at a canon, it reads that too and judges "pins == canon".',
+        'Commit each snippet as `graduand.json` at that repository root, and the diagnosis at the root reads the repository and reports. If the declaration points at a canon, it reads that too and judges "pins == canon".',
+
+      cliTitle: 'Compose the same thing in the terminal',
+      cliBody:
+        'With the checkouts in hand, the command *writes the declaration itself*. The composer is the *same single function* this page uses, so both entrances produce identical bytes. ⛔ It does not commit: writing a file and putting it in the history are different acts, and the second one is yours.',
+      cliExampleNote:
+        'The values below are an *example* — constitution `design`, canon repository `acme/design`, file `tokens.css`, scope `:root`. Swap in your own names and addresses.',
+      cliCanonStep: 'In the canon checkout — write "this is the canon"',
+      cliCanonNote:
+        '`--file` *repeats* (several files). The composer does not believe the declaration, it *reads*: if a declared file does not exist, or that scope reads no value at all, it refuses instead of writing. ⛔ It never overwrites an existing declaration — it prints the composed document on stdout and moving it is yours.',
+      cliLinkStep: 'In the linked checkout — write "the canon is over there and the values are these"',
+      cliLinkNote:
+        'Several `--root` flags are the heart of this step. The first is the repository being written and the rest are *sight* — the pins are read from the canon checkout, never taken by hand. ⛔ If the canon is not in sight it refuses rather than writing an empty pin: a pin read from nowhere is an invented basis.',
+      cliRulesStep: 'Ask what stands as the denominator',
+      cliRulesNote:
+        'It prints *what the declaration put up as the denominator* — admitted rules and the verifiers they chose, the canon address of each shared-value axis, exemptions and their expiry. ⛔ It does not judge: there is no red here, because asking for the denominator violates nothing.',
+      cliJudgeStep: 'Judge',
+      cliJudgeNote:
+        'The answer is *pass · violation · unjudged*, and nothing else. A cell nobody looked at is not counted as a pass. To measure the cross axis ("pins == canon") here too, show the canon checkout with `--root` as well — sight of a single repository cannot, in principle, see drift between repositories.',
     },
 
     result: {
@@ -250,6 +291,8 @@ export const en: Strings = {
         'Zero values were read in this file — pick another file, or check whether this one really holds the shared values.',
       scopeOption: (scope, tokens) => `${scope} — ${tokens} value(s)`,
       axis: (axis) => `Axis "${axis}" — the judged cells stand as "verifier:${axis}".`,
+      cardCanon: (repo) => `${repo} — canon declaration (graduand.json)`,
+      cardLink: (repo) => `${repo} — link declaration (graduand.json)`,
       added:
         'One axis was added to the declaration this repository already holds — the snippet below is the whole file (the other axes, the UI paths and the admissions are written back exactly as declared).',
       pinned: (count) => `Pinned ${count} value(s) read from the canon — nothing was copied by hand.`,

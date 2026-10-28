@@ -226,6 +226,9 @@ export function renderObservation(vm: ObservationVM): HTMLElement {
  */
 export function renderComposed(vm: ComposedVM): HTMLElement {
   const root = el('article', 'composed');
+  // ⭐ 머리가 **거부에도 선다** — 「어느 저장소에서 조립이 서지 않았는가」가 사유보다 먼저
+  //   답해야 하는 질문이다(1+N 벌 중 한 벌만 거부될 수 있다).
+  root.append(el('h3', 'card-h', vm.head));
   if (vm.refusedHead !== null) {
     root.append(el('p', 'warn', vm.refusedHead));
     const list = el('ul', 'problems mono');

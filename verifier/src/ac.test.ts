@@ -2449,14 +2449,16 @@ test('탐색 — 고를 수 있는 경로는 **어댑터가** 말하고, 스코�
     assert.ok(!candidates.includes('app/main.ts'), '읽지 못하는 꼴이 후보에 들었다');
   }
 
-  const probe = api.scopesIn('css-custom-properties', 'app/theme.css', snapshot.files.get('app/theme.css')!);
+  const probe = api.scopesIn('css-custom-properties', [
+    { path: 'app/theme.css', text: snapshot.files.get('app/theme.css')! },
+  ]);
   assert.ok(probe.kind === 'read', JSON.stringify(probe));
   // 읽힌 수 내림차순 — 「어느 쪽이 공유값의 자리인가」를 수가 말한다(우리가 고르지 않는다).
   assert.deepEqual(probe.scopes.map((entry) => entry.scope), [':root', '.dark']);
   assert.equal(probe.scopes[0]!.tokens, Object.keys(CANON_TOKENS).length);
 
   // ⛔ 못 읽은 것은 「토큰 0」이 아니다 — 모르는 어댑터도 같은 자리다.
-  assert.equal(api.scopesIn('nope', 'a.css', ':root{}').kind, 'unreadable');
+  assert.equal(api.scopesIn('nope', [{ path: 'a.css', text: ':root{}' }]).kind, 'unreadable');
 });
 
 // ── 선언 0 에서 보이는 사실 (#113) ─────────────────────────────────────────
