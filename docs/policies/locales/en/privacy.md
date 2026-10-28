@@ -3,7 +3,7 @@
   ⚠️ ko·en 양 벌이 같은 합집합(🇰🇷 ∪ 🇺🇸 13절)을 담는다 — 한쪽에만 담으면 한쪽 독자에게 요건이 빠진다.
   ko 정본이 개정되면 이 판을 재전파하고 아래 정본 해시를 갱신한다 — 가드가 둘의 일치를 잰다.
   ⛔ 머리말에 「버전:」·「발행일:」·「시행일:」 기계 줄을 넣지 않는다 — 메타의 출처는 ko 정본 하나다.
-  정본 해시: sha256:efe16b7832d9c26a0910521467b2da2dbe1e0100ddd93380320239825f9d0c80
+  정본 해시: sha256:3edc8edb56daa2b1ef7bde1df41211cef35477238617bd0f2f6e7cc2190a613c
 -->
 
 # Privacy Policy
@@ -54,6 +54,20 @@ The items the Company processes, or is scheduled to process when the Service tak
 ## 3. Processing and retention periods
 
 Retention periods are stated per item in the table in Section 2. When a retention period ends or the purpose of processing is achieved, the data is destroyed without delay (Section 7). If records that a law orders to be preserved arise, their items, basis and periods will be specified in Section 2 and kept separately.
+
+### 3.1 Transaction records preserved under the law
+
+As a mail-order business, the Company preserves transaction records for the periods set by the Act on Consumer Protection in Electronic Commerce.
+
+| Record | Retention period |
+|---|---|
+| Records of contracts or withdrawal of subscription | 5 years |
+| Records of payment and of the supply of goods and services | 5 years |
+| Records of consumer complaints or dispute handling | 3 years |
+
+These records are used only for the purpose of preservation, and are destroyed by the method in Section 7 once the period ends.
+
+⚠️ **The items collected at checkout do not pass through the Company** (Section 2) — where the payment and contract records among the above are held, and who preserves them, follows the processing relationship in Sections 5 and 6. **That concrete arrangement is not yet stated here**; it will be stated on the day it is settled with the Seller. The discipline of Section 2 — empty cells are not filled with guesses — applies here too.
 
 ## 4. Provision to third parties, and categories of third parties
 
