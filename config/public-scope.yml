@@ -142,6 +142,11 @@ entries:
     license: Apache-2.0
     group: "저장소 운영"
     basis: "루트 가드의 고정 — `npm ci` 가 읽는다"
+  - path: tools/check-published-links.mjs
+    origin: local
+    license: Apache-2.0
+    group: "사이트 배선"
+    basis: "발행본이 가리키는 링크가 발행본 안에 실재하는지 묻는 자리 — 빌드의 마지막 걸음이고, 올리기 전에 답이 나온다(판정은 순수하고 트리를 받는다)"
   - path: tools/lib/
     origin: local
     license: Apache-2.0
