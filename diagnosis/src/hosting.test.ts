@@ -21,6 +21,7 @@ import {
 } from './publisher.ts';
 import {
   CHECKOUT_PATH,
+  PORTAL_PATH,
   CHECKOUT_SITE,
   COMPANY_PATH,
   COMPANY_SITE,
@@ -253,6 +254,8 @@ const redirectReasons: Readonly<Record<string, string>> = {
     '푸터의 회사 링크가 나가는 문 — 절대 주소를 발행본에 박지 않고, 남의 자리라 302 다',
   [CHECKOUT_PATH]:
     '구독 입구가 나가는 문 — 같은 규율이고, 벤더가 링크를 다시 내면 주소가 바뀌므로 302 다',
+  [PORTAL_PATH]:
+    '해지 입구가 나가는 문 — 구독 입구와 같은 규율이고 방향이 반대다. 가입한 길로 그만둘 수 있어야 한다',
 };
 
 /** 선언 → 실제로 쓰이는 규칙 줄들. 발행되는 바이트에서 거둔다 — 선언을 두 번 세지 않는다. */

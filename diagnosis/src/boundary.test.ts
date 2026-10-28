@@ -240,6 +240,12 @@ const exemptions: readonly Exemption[] = [
     why: '회사 사이트의 주소가 사는 상수 하나 — 리다이렉트 선언의 **목적지**이고 발행본에는 박히지 않는다(화면은 상대 경로를 가리킨다). 나가는 자리를 한 줄로 모아야 그 목록이 곧 측정 지점이 된다',
   },
   {
+    file: 'src/site.ts',
+    region: /export const PORTAL_SITE = '[^']*';/g,
+    patterns: ['company'],
+    why: '벤더 고객 포털 주소가 사는 상수 하나 — 그 주소의 조직 슬러그가 사명을 품지만, 그것은 **창구가 공개로 내건 판매자 이름**이지 내부 자산이 아니다. 리다이렉트 선언의 목적지이고 발행본에는 박히지 않는다',
+  },
+  {
     file: 'src/publisher.ts',
     region: /export const PUBLISHER = \{[\s\S]*?\n\} as const;/g,
     patterns: ['company'],
@@ -393,6 +399,11 @@ const originExemptions: readonly { readonly file: string; readonly region: RegEx
     file: 'src/site.ts',
     region: /export const CHECKOUT_SITE = '[^']*';/g,
     why: '밖으로 나가는 주소가 맞다 — ⭐ `COMPANY_SITE` 와 **같은 꼴**이고 사유가 한 겹 더 세다: 벤더는 링크를 다시 낸다. 리다이렉트 규칙만 이 값을 쓰고 발행본의 `href` 는 상대 경로로 남는다 — 벤더가 움직여도 발행본은 한 바이트도 움직이지 않는다',
+  },
+  {
+    file: 'src/site.ts',
+    region: /export const PORTAL_SITE = '[^']*';/g,
+    why: '밖으로 나가는 주소가 맞다 — ⭐ `CHECKOUT_SITE` 와 **같은 꼴이고 방향이 반대**다: 사는 문이 아니라 그만두는 문이고, 그 문도 벤더가 옮긴다. 화면은 상대 경로만 가리킨다',
   },
   {
     file: 'src/render.ts',
