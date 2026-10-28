@@ -50,6 +50,7 @@ import {
   documentUrl,
   localeRootPath,
   OG_IMAGE_FILE,
+  REDIRECTS,
   REDIRECTS_FILE,
   robotsTxt,
   ROBOTS_FILE,
@@ -242,6 +243,19 @@ const SIBLING_LOCALES = DOCUMENTS.flatMap((doc) =>
 const SIBLING_DOCUMENTS = DOCUMENTS.flatMap((from) =>
   DOCUMENTS.map((to) => bareOf(siblingDocumentPath(from, to))),
 );
+/**
+ * 밖으로 나가는 **지정된 리다이렉트** 전수 — ⭐⭐ `REDIRECTS` 에서 유도한다.
+ *
+ * ⚠️⚠️ **여기가 손으로 적혀 있어서 404 가 하나 섰다.** 전에는 `(checkout|portal|company)` 를
+ * 축자로 적었고, 그것은 **선언을 베낀 사본**이었다: 푸터가 해지 입구를 가리키는데 선언에는
+ * 그 행이 없었는데도 이 표가 「지정된 리다이렉트」라고 답했다 — 사본과 선언이 갈라져도
+ * 양쪽 다 자기 기준으로는 옳다. 사이트가 공개된 뒤 **해지하려고 누른 고객이 404** 를 받고
+ * 나서야 보였다. ⇒ 분모를 선언에서 받는다: 선언 없는 경로를 화면이 가리키면 그 참조는
+ * 「성질이 선언되지 않은 참조」가 되고 빨갛다.
+ * ⛔ 루트(`/`)는 이 집합에 없다 — 화면이 가리키는 자리가 아니라 **들어오는** 자리다.
+ */
+const REDIRECT_TARGETS = REDIRECTS.map(({ from }) => bareOf(from)).filter((path) => path !== '');
+
 /** 정책 3종 × 문서 깊이. */
 const POLICY_REFS = DOCUMENTS.flatMap((doc) =>
   POLICY_NAMES.map((name) => bareOf(`${localeRootPath(doc)}policies/${name}.html`)),
@@ -268,9 +282,9 @@ const assetClasses: readonly {
   },
   {
     id: 'redirect',
-    match: /^(checkout|portal|company)\/$/,
+    match: exactly(REDIRECT_TARGETS),
     rooted: true,
-    why: '밖으로 나가는 지정된 리다이렉트 — 로케일 불변이고, 벤더·회사 주소를 발행본에 박지 않는다',
+    why: '밖으로 나가는 지정된 리다이렉트 — 로케일 불변이고, 벤더·회사 주소를 발행본에 박지 않는다. 집합은 선언(REDIRECTS)이 낸다',
   },
   {
     id: 'policies',
@@ -298,8 +312,8 @@ const assetClasses: readonly {
  */
 const nonFileTargets: readonly { readonly match: RegExp; readonly why: string }[] = [
   {
-    match: /^(checkout|portal|company)\/$/,
-    why: '지정된 리다이렉트 자리 — 파일이 아니고, 그 선언은 호스팅 쪽이 든다. 벤더·회사 주소는 발행된 화면에 박지 않는다',
+    match: exactly(REDIRECT_TARGETS),
+    why: '지정된 리다이렉트 자리 — 파일이 아니고, 그 선언은 호스팅 쪽이 든다. 벤더·회사 주소는 발행된 화면에 박지 않는다. 집합은 선언(REDIRECTS)이 낸다',
   },
   {
     match: exactly([...SIBLING_DOCUMENTS, ...LOCALE_ROOTS]),

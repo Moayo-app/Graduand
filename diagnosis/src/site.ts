@@ -44,6 +44,7 @@ export const DEFAULT_LOCALE: Locale = 'en';
 export const ROOT_PATH = '/';
 export const COMPANY_PATH = '/company/';
 export const CHECKOUT_PATH = '/checkout/';
+export const PORTAL_PATH = '/portal/';
 
 /**
  * 발행되는 문서 — ⭐⭐ **닫힌 목록이고 첫 자리가 원페이지다**(루트가 보내는 자리이자
@@ -202,6 +203,26 @@ export const COMPANY_SITE = 'https://moayo.app/';
 export const CHECKOUT_SITE = 'https://buy.polar.sh/polar_cl_CqkLk5OhhfCnMs31sIrL8HnQBFjat2BrFLkoK2ZRqgR';
 
 /**
+ * 구독을 **그만두는 자리** — 벤더의 고객 포털이다.
+ *
+ * ⭐⭐ **이 자리는 화면에만 있고 선언에 없었다.** 푸터의 제품 컬럼이 이 경로를 가리키는데
+ * 리다이렉트 선언에는 그 행이 없었고, 사이트가 공개된 뒤 **해지하려고 누른 고객이 우리 404**
+ * 를 받았다. ⛔ 그동안 가드가 초록이던 사유가 결함이다 — 참조의 성질을 가르는 표가 세 경로를
+ * **손으로 적고** 있었다: 선언을 베낀 사본이라 둘이 갈라져도 양쪽 다 자기 기준으로 옳다.
+ * ⇒ 그 표를 `REDIRECTS` 에서 **유도한다**(`generate.test.ts`) — 이제 선언 없는 경로를
+ * 화면이 가리키면 빨갛다.
+ *
+ * ⭐ `CHECKOUT_SITE` 와 **같은 규율**이고 방향이 반대다: 화면은 `PORTAL_PATH` 를 가리키고
+ * 벤더 주소는 이 한 줄에만 산다. ⚠️ 값은 **재서 들어왔다** — 조직 슬러그를 창구의 체크아웃
+ * 화면이 말했고, 그 주소가 200 을 내며 구매 조회 화면을 여는 것까지 확인했다. ⛔ 보고
+ * 옮기지 않는다: 잘린 체크아웃 주소가 발행까지 간 적이 있다(위 상수의 경고).
+ *
+ * ⭐ **로케일이 없다** — 벤더의 화면이라 우리가 고르지 않는다. 그래서 푸터의 그 줄이 문서·
+ * 로케일 불변의 루트 절대 경로이고, 두 문서가 같은 줄을 든다.
+ */
+export const PORTAL_SITE = 'https://polar.sh/moayo-inc/portal';
+
+/**
  * 리다이렉트 선언 — ⭐⭐ **밖으로 나가는 모든 것이 지나는 한 문**이다.
  *
  * ⛔ 사유를 **값으로 적지 않는다** — 이 파일은 발행되는 화면 코드라 한글 리터럴이 금칙이다
@@ -230,6 +251,11 @@ export const REDIRECTS: readonly {
   //    발행본은 상대 경로만 든다. ⚠️ **302 인 이유**도 같고 한 겹 더 있다: 벤더가 링크를
   //    다시 내면 주소가 바뀌는데, 301 을 캐시한 방문자는 **죽은 문**을 계속 받는다.
   { from: CHECKOUT_PATH, to: CHECKOUT_SITE, status: '302' },
+  // ⑷ 해지 입구 → 벤더의 고객 포털. ⭐ ⑶ 과 **같은 규율**이고 **방향이 반대**다 — 사는 문이
+  //    아니라 그만두는 문이다. ⚠️ 그 문이 열려 있는 것은 친절이 아니라 **조건**이다: 가입한
+  //    것과 같은 길로 해지할 수 있어야 한다고 적은 법역이 있고, 푸터의 갱신 고지가 이 줄을
+  //    가리킨다. **302 인 이유**는 ⑶ 과 같다 — 벤더가 포털을 옮기면 주소가 바뀐다.
+  { from: PORTAL_PATH, to: PORTAL_SITE, status: '302' },
 ];
 
 export function redirectsFile(): string {
