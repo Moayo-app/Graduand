@@ -151,7 +151,7 @@ export const en: Strings = {
     activation: {
       title: 'What you do in the repository after you subscribe',
       body:
-        'Three things. Put the key you get when you subscribe into your environment, run the *activation command* once in your repository, and it writes a handle file. Commit that file, and put the key into your CI secrets. *The key is never committed*: a secret that is committed is not a secret.',
+        'Three things. Put the key you get when you subscribe into your environment, run `graduand activate` once in your repository, and it writes a handle file. Commit that file, and put the key into your CI secrets. *The key is never committed*: a secret that is committed is not a secret.',
       naming:
         'This screen does not write the names of that file and that key. The command tells you, right where you need them. Writing them here would add one more copy, and that copy parts from the command the day a name moves.',
     },

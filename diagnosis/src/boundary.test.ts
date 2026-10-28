@@ -889,6 +889,44 @@ test('AC5 — 페이지가 광고하는 명령이 전부 CLI 에서 돈다: exit
   }
 });
 
+/**
+ * ⭐⭐ **산문이 이름으로 부르는 하위 명령도 참이어야 한다 — 다만 돌려서는 지킬 수 없다.**
+ *
+ * 명령 틀(`<pre><code>`)의 것은 AC5 가 **뽑아서 돌려** 지킨다. 그런데 활성화는 그 길로
+ * 지킬 수 없다: 키 없이 돌면 `exit 2` 이고, 그 2 는 결함이 아니라 **「키를 넣어라」는 참된
+ * 거절**이다. 틀에 넣으면 그 참된 거절이 AC5 를 빨갛게 만든다.
+ *
+ * ⇒ 그 한 줄은 산문에 **인라인**으로 선다(`<code>` 이고 `<pre>` 가 아니라 추출기가 집지
+ * 않는다). 그리고 여기서 **이름만** 실물과 대조한다.
+ *
+ * ⛔ **이름을 이 테스트에 적지 않는다** — 화면에서 거두고 CLI 의 `--help` 에 묻는다. 양쪽
+ * 다 사본이 아니라 정본이고, 이름이 움직이면 둘 중 하나가 먼저 운다. 적어 두면 사본이
+ * 셋이 되고, 그 셋이 갈라지는 날이 이 제품이 파는 결함 그대로다.
+ */
+test('AC5 (둘째 축) — 산문이 이름으로 부르는 하위 명령이 CLI 에 실재한다', () => {
+  const named = Object.entries(pageDocuments()).map(([name, html]) => ({
+    name,
+    found: [...html.matchAll(/<code[^>]*>graduand ([a-z][a-z-]*)<\/code>/g)].map((m) => m[1]!),
+  }));
+
+  // ⭐ 분모를 먼저 센다 — 표기가 바뀌어 하나도 못 거두면 「위반 0」이 「아무것도 안 봤다」다.
+  const canon = named[0]!;
+  assert.ok(canon.found.length > 0, `${canon.name}: 산문이 이름으로 부르는 명령을 찾지 못했다 — 표기가 바뀌었다면 이 추출기가 함께 움직인다`);
+  // ⭐ 명령은 번역되지 않는다 — 명령 틀과 같은 규율이다.
+  for (const other of named.slice(1))
+    assert.deepEqual(other.found, canon.found, `${other.name}: 산문이 부르는 명령이 정본과 다르다`);
+
+  const verifierRoot = join(ROOT, '..', 'verifier');
+  const said = spawnSync(process.execPath, [join(verifierRoot, 'src', 'cli.ts'), '--help'], { encoding: 'utf8' });
+  assert.equal(said.status, 0, `--help 가 실패했다: ${said.stderr}`);
+  for (const sub of canon.found)
+    assert.match(
+      said.stdout,
+      new RegExp(`^\\s*graduand ${sub}\\b`, 'm'),
+      `화면이 「graduand ${sub}」 를 부르는데 CLI 의 usage 에 그 하위 명령이 없다`,
+    );
+});
+
 /** 광고된 명령을 돌릴 최소 저장소 — 추적 파일 하나와 커밋 하나. */
 function gitFixture(files: Record<string, string>): string {
   const root = mkdtempSync(join(tmpdir(), 'graduand-advertised-'));
