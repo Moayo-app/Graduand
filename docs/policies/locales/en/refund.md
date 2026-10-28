@@ -4,7 +4,7 @@
   (금칙의 정본은 config/policy-strings.yml).
   ko 정본이 개정되면 이 판을 재전파하고 아래 정본 해시를 갱신한다 — 가드가 둘의 일치를 잰다.
   ⛔ 머리말에 「버전:」·「발행일:」·「시행일:」 기계 줄을 넣지 않는다 — 메타의 출처는 ko 정본 하나다.
-  정본 해시: sha256:09d8fd3c285c95952734dbecd63a205405f0dc590ef792691ffee8d393c4cd60
+  정본 해시: sha256:35c03483641508c7a5703fbea9dfb40b4a86c25d0a845547b7434686ca2b9d98
 -->
 
 # Refund Policy
@@ -21,7 +21,7 @@ This policy applies to paid subscriptions of customers that are corporations or 
 
 ## 2. Yearly subscriptions
 
-If you request it **within 14 days** of the payment date, we refund the whole payment — **no questions asked about the reason.**
+If you request it **within 14 days** of the payment date, we refund the whole payment — **no questions asked about the reason.** Because the whole payment is returned, **the subscription also ends at that point** — there is no next renewal, and the paid scope closes as described in section 7.
 
 After the 14 days have passed, we do not prorate and refund the remaining period; cancellation stops the next renewal — the paid scope remains available until the end of the period already paid for (Terms, Article 7).
 
@@ -55,6 +55,8 @@ Once a refund is applied, the paid scope bought by that payment closes. The rule
 
 ## Addendum
 
-This policy (version 1.0.0) takes effect on 28 October 2026.
+This policy (version 1.1.0) takes effect on 28 October 2026.
 
 This version was published on 28 October 2026 — for this version the publication date and the effective date are the same day.
+
+What changed from the previous version: section 2 now states the consequence that **a full refund ends the subscription**. The previous version stated only the amount refunded and not what happens to the subscription, so it could be read as leaving the subscription alive after the whole payment had been returned. This is not a change that disadvantages the customer, so it takes effect on the same day it is published.
