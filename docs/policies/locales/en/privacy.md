@@ -3,7 +3,7 @@
   ⚠️ ko·en 양 벌이 같은 합집합(🇰🇷 ∪ 🇺🇸 13절)을 담는다 — 한쪽에만 담으면 한쪽 독자에게 요건이 빠진다.
   ko 정본이 개정되면 이 판을 재전파하고 아래 정본 해시를 갱신한다 — 가드가 둘의 일치를 잰다.
   ⛔ 머리말에 「버전:」·「발행일:」·「시행일:」 기계 줄을 넣지 않는다 — 메타의 출처는 ko 정본 하나다.
-  정본 해시: sha256:3edc8edb56daa2b1ef7bde1df41211cef35477238617bd0f2f6e7cc2190a613c
+  정본 해시: sha256:90b73a21b0fa9b98ca0b4fc960b21ae64265d41d79bc8d1817ca79706e45ce80
 -->
 
 # Privacy Policy
@@ -67,7 +67,9 @@ As a mail-order business, the Company preserves transaction records for the peri
 
 These records are used only for the purpose of preservation, and are destroyed by the method in Section 7 once the period ends.
 
-⚠️ **The items collected at checkout do not pass through the Company** (Section 2) — where the payment and contract records among the above are held, and who preserves them, follows the processing relationship in Sections 5 and 6. **That concrete arrangement is not yet stated here**; it will be stated on the day it is settled with the Seller. The discipline of Section 2 — empty cells are not filled with guesses — applies here too.
+⚠️ **The items collected at checkout do not pass through the Company** (Section 2). The Seller's buyer terms state that the Seller acts as **merchant of record and authorized reseller**, and that the buyer purchases the product **from the Seller** — the contract of sale stands between the buyer and the **Seller**, while the Company licenses the product as the **Supplier**.
+
+⬜ **For that reason, this policy does not assert here who preserves the payment and contract records among the above.** The Seller's terms state neither a retention period nor a record-keeping obligation, and that attribution has to be settled in the relationship with the Seller. It will be stated here on the day it is settled — the discipline of Section 2, that empty cells are not filled with guesses, applies here too.
 
 ## 4. Provision to third parties, and categories of third parties
 
