@@ -46,15 +46,26 @@ export function checkProseLeaks(text, label = '공개 산문') {
  * 누출 심사(2026-10-27)가 실제로 그 구멍에서 세 줄을 찾았고, 상류 결의 축자가 그 모양을
  * **단독 기각 사유**로 부른다. ⇒ 이 한 모양만은 **분모를 전수로** 올린다.
  *
- * ⛔ **면제가 없다.** 비공개의 존재를 공개 표면이 이름으로 부르면 그 이름이 곧 공격 면이고,
- * 「개발이 여기서 일어나지 않는다」는 사실은 이름 없이도 전부 선다. ⚠️ 나머지 모양
+ * ⛔ **모양에는 면제가 없다** (~~면제가 없다~~ 에 단서). 비공개의 존재를 공개 표면이 이름으로
+ * 부르면 그 이름이 곧 공격 면이고, 「개발이 여기서 일어나지 않는다」는 사실은 이름 없이도
+ * 전부 선다. ⭕ 풀리는 것은 **선언이 토큰으로 적고 사유를 함께 적은 것**뿐이다(`except` 축) —
+ * 정규식은 그대로다. ⚠️ 그 구분이 이 단서의 전부다: 토큰을 푸는 것은 「평범한 낱말이 물렸다」의
+ * 해소이고, 모양을 느슨하게 하는 것은 **금칙을 삼키는** 일이다. ⚠️ 나머지 모양
  * (`…-hq` · `…-platform` · 내부 티켓)은 **아직 이 분모에 올리지 않는다** — 그 자리들은 결정이
  * 남아 있고, 안 정한 것을 가드로 굳히면 가드가 결정을 대신하게 된다.
  */
 export const WORKSHOP_NAME = /[A-Za-z0-9]+_dev\b/;
 
-/** 저장소 전수에서 그 이름을 센다 — 바이너리와 미추적 자리는 분모가 아니다. */
-export function checkWorkshopName(root, files) {
+/**
+ * 저장소 전수에서 그 이름을 센다 — 바이너리와 미추적 자리는 분모가 아니다.
+ *
+ * ⭕ `exempt` — **모양이 문 평범한 낱말**을 토큰 단위로 푼다. ⚠️ 위 「면제가 없다」는 이제
+ * 「**모양에는** 면제가 없다」로 읽는다: 정규식은 그대로이고, 풀리는 것은 선언이 토큰으로
+ * 적고 사유를 함께 적은 것뿐이다. 그 목록의 정본은 `config/public-scope.yml` 이고
+ * (`proseExemptions`), 부르는 쪽이 넘긴다 — 이 모듈이 선언을 또 읽으면 분모가 둘이 된다.
+ */
+export function checkWorkshopName(root, files, exempt = []) {
+  const allowed = new Set(exempt);
   const errors = [];
   for (const rel of files) {
     if (/\.(png|jpg|jpeg|ico|woff2?|svg|lock)$/.test(rel)) continue;
@@ -66,7 +77,7 @@ export function checkWorkshopName(root, files) {
     }
     for (const [i, line] of text.split('\n').entries()) {
       const m = line.match(WORKSHOP_NAME);
-      if (m) errors.push(`${rel}:${i + 1}: 비공개 작업장의 이름 — 「${m[0]}」 (이름 없이 적는다)`);
+      if (m && !allowed.has(m[0])) errors.push(`${rel}:${i + 1}: 비공개 작업장의 이름 — 「${m[0]}」 (이름 없이 적는다)`);
     }
   }
   return errors;

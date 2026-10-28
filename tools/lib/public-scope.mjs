@@ -201,17 +201,42 @@ export function workshopFiles(root) {
  * ⚠️ 분모가 선언에서 온다 — `local`·`platform` 산문은 내부 포인터를 당연히 들고, 같은
  * 잣대로 재면 이 가드가 저장소 전체를 빨갛게 하고 뜻을 잃는다. 재지 않는 자리는
  * 「위반 0」이 아니라 **이 가드의 모집단 밖**이다. */
+/**
+ * 금칙의 **면제 토큰** — 선언에서 유도한다. ⭐ 목록의 정본이 `config/public-scope.yml` 이므로
+ * 면제의 정본도 거기다: 코드에 토큰을 박으면 금칙과 면제가 **다른 파일에** 살게 되고, 그 둘은
+ * 갈라진다(이 제품이 파는 바로 그 결함).
+ *
+ * ⚠️ 면제는 **정확히 그 토큰**만 푼다 — 모양(정규식)은 건드리지 않는다. 모양을 느슨하게 하면
+ * 면제가 금칙을 삼키고, 그때부터 진짜 저장소 이름이 같은 구멍으로 나간다.
+ */
+export function proseExemptions(root) {
+  const { forbidden_prose: forbidden } = loadScope(root);
+  if (!Array.isArray(forbidden)) return [];
+  return forbidden.flatMap(({ except }) =>
+    (Array.isArray(except) ? except : []).map(({ token, why }) => {
+      if (!token || !why) throw new Error(`${SCOPE_PATH}: 면제 항에 token 과 why 가 둘 다 있어야 한다 — 사유 없는 면제는 조용한 구멍이다`);
+      return token;
+    }),
+  );
+}
+
+/** ⛔ 바이너리는 산문의 분모가 아니다 — utf8 로 읽은 잡음이 금칙에 걸리면 그 빨강은 아무것도
+ *  뜻하지 않는다. 같은 배제를 공개 표면 가드가 이미 한다(사본이 아니라 같은 판단이다). */
+const BINARY = /\.(png|jpg|jpeg|ico|woff2?|lock)$/;
+
 export function checkWorkshopProse(root) {
   const { forbidden_prose: forbidden } = loadScope(root);
   if (!Array.isArray(forbidden) || forbidden.length === 0) throw new Error(`${SCOPE_PATH}: forbidden_prose 가 비었다 — 금칙의 정본이 이 파일이다`);
   const errors = [];
   for (const file of workshopFiles(root)) {
+    if (BINARY.test(file)) continue;
     const text = read(root, file);
-    for (const { pattern, why } of forbidden) {
+    for (const { pattern, why, except } of forbidden) {
       const re = new RegExp(pattern);
+      const exempt = new Set((Array.isArray(except) ? except : []).map(({ token }) => token));
       for (const [i, line] of text.split('\n').entries()) {
         const m = line.match(re);
-        if (m) errors.push(`${file}:${i + 1}: 내부 표기 「${m[0]}」 — ${why} (AC3)`);
+        if (m && !exempt.has(m[0])) errors.push(`${file}:${i + 1}: 내부 표기 「${m[0]}」 — ${why} (AC3)`);
       }
     }
   }

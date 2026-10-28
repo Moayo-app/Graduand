@@ -7,7 +7,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { PUBLIC_PROSE, checkProseLeaks, checkPublicProse, checkWorkshopName, checkInternalPointers } from '../lib/public-surface.mjs';
-import { coveringEntry, scopeEntries, walkFiles } from '../lib/public-scope.mjs';
+import { coveringEntry, proseExemptions, scopeEntries, walkFiles } from '../lib/public-scope.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '../..');
 
@@ -53,7 +53,37 @@ test('negative: 사본에 누설을 심으면 양성 경로가 빨갛다 — 심
 /* ──── 비공개 작업장의 이름 — 분모가 저장소 전수인 한 모양 ──── */
 
 test('⭕ 저장소 전수에 비공개 작업장의 이름이 0 이다', () => {
-  assert.deepEqual(checkWorkshopName(ROOT, walkFiles(ROOT)), []);
+  assert.deepEqual(checkWorkshopName(ROOT, walkFiles(ROOT), proseExemptions(ROOT)), []);
+});
+
+/**
+ * ⭐⭐ **면제가 스스로 만기를 알린다.** 이 저장소는 이미 한 번 면제를 그렇게 걷었다 — 면제를
+ * 두면서 「그 자리가 실제로 그대로인지」까지 단정해 뒀고, 상류가 고치자 그 단정이 빨개져
+ * 면제가 걷혔다. 같은 장치를 토큰 면제에 둔다: 토큰이 트리에서 사라지면 여기가 빨갛다.
+ */
+test('⭐ 면제가 낡지 않았다 — 푼 토큰이 실제로 트리에 있다', () => {
+  const exempt = proseExemptions(ROOT);
+  assert.ok(exempt.length > 0, '면제가 0 이면 아래 단정이 아무것도 재지 않는다');
+  for (const token of exempt) {
+    const found = walkFiles(ROOT).some((rel) => {
+      if (/\.(png|jpg|jpeg|ico|woff2?|svg|lock)$/.test(rel)) return false;
+      try {
+        return fs.readFileSync(path.join(ROOT, rel), 'utf8').includes(token);
+      } catch {
+        return false;
+      }
+    });
+    assert.ok(found, `면제 「${token}」 가 트리에 없다 — 낡은 면제는 조용한 구멍이다. 선언에서 지워라`);
+  }
+});
+
+test('negative: 면제는 그 토큰만 푼다 — 같은 모양의 다른 이름은 그대로 빨갛다', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'graduand-exempt-'));
+  const exempt = proseExemptions(ROOT);
+  fs.writeFileSync(path.join(root, 'a.md'), `"${exempt[0]}": false\n`);
+  assert.deepEqual(checkWorkshopName(root, ['a.md'], exempt), [], '푼 토큰은 초록이다');
+  fs.writeFileSync(path.join(root, 'b.md'), `작업장은 ${PLANTED} 다.\n`);
+  assert.equal(checkWorkshopName(root, ['b.md'], exempt).length, 1, '면제가 모양을 삼키지 않는다');
 });
 
 test('⭐ 분모가 전수다 — 세션 부트스트랩도 든다(그 면제가 공개 전환에서 깨졌다)', () => {
