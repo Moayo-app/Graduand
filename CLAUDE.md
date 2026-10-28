@@ -116,13 +116,18 @@
 
 **브랜치:** `feat/issue-<N>-<slug>` · `docs/…` · `chore/…`, **base = `main`**.
 
-- **`main` 직접 push 금지** — ruleset 이 집행한다. 반드시 PR 이고, 필수 체크는
-  **「공유 블록 드리프트」** (`.github/workflows/agent-platform.yml`) — `docs/agents/*.md` 는
-  전부 생성물이라 **손으로 고치면 빨강이다.** 고칠 곳은 플랫폼 템플릿이다. **측정 명령 셋** — 루트
+- **`main` 직접 push 금지** — ruleset 이 집행한다. 반드시 PR 이고, 필수 체크는 **둘**이다
+  (선언은 `config/ruleset.json`). **측정 명령 둘** — 루트
   `npm test`(정책 가드 + 공개 범위 가드, `.github/workflows/policy-guards.yml`)와 받은 두
   패키지 각자의 `npm test` · `npm run typecheck` · `npm run build`(「타입 검사 + 테스트 +
   빌드」, `.github/workflows/ci.yml`). ⚠️ 두 패키지는 **각자 선다** — 루트 `package.json` 은
   `tools/` 가드의 자리이고 워크스페이스가 아니다(`cd verifier && npm ci` 로 들어간다).
+- ⬜ **셋째 체크가 빠졌다** — 「공유 블록 드리프트」는 이 저장소의 공개 전환과 함께 설 수 없게
+  됐다: **공개 저장소는 비공개 저장소의 액션을 `uses:` 로 부를 수 없다**(GitHub 규약). 그 잡은
+  액션을 내려받는 첫 단계에서 죽는다. ⇒ `docs/agents/*.md` 는 여전히 **전부 생성물이고 손으로
+  고치지 않는다**(고칠 곳은 상류의 생성기다) — 다만 그 규율을 **여기서는 기계가 재지 않는다.**
+  손 수정은 다음 재생성에서 사라지지만, 사라지기 전까지 조용하다. 사유와 걷은 자리는
+  `config/ruleset.json` 의 「주_필수_체크」가 갖는다.
 - **PR 본문에 `Closes #<N>`.** ⚠️ 커밋 제목에 `fix` 와 `#<N>` 을 같이 두지 않는다 — GitHub 이
   종료 키워드로 읽는다. 참조는 본문에 `Refs #<N>`.
 - 커밋 메시지 끝: `Co-Authored-By: Claude <실제 작업 모델> <noreply@anthropic.com>` —
