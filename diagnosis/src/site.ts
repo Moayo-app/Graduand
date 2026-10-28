@@ -191,8 +191,15 @@ export const COMPANY_SITE = 'https://moayo.app/';
  *
  * ⛔ 질의를 붙이지 않는다 — 수량도 식별자도 링크가 잠그지 않는다(`checkout.test.ts` 의
  * AC2·AC3 이 그 둘을 각각 문다). 고르는 자리는 **창구의 화면**이다.
+ *
+ * ⚠️⚠️ **이 값은 창구의 복사 버튼에서 와야 한다 — 보고 옮기지 않는다.** 한 번 그렇게 들어와
+ * 발행까지 갔다: 입력칸이 화면에서 **잘려 보여** 뒤 21자가 모자란 채 선언에 박혔고, 가드는
+ * 전부 초록이었다(자구가 맞는지는 벤더만 안다). 사이트가 공개된 뒤 구독 버튼이 벤더의 404 로
+ * 갔고, 그제야 보였다. ⭕ 고친 자리는 **이 한 줄**이었다 — 발행본에 이 주소가 0 건이라는
+ * 설계가 그 복구를 한 줄로 만들었다. ⛔ 가드가 이것을 막을 수는 없다: 테스트는 네트워크를
+ * 타지 않고, 「맞는 주소인가」는 **재야** 아는 것이다. 바꾸는 날 사람이 눌러서 연다.
  */
-export const CHECKOUT_SITE = 'https://buy.polar.sh/polar_cl_CqkLk5OhhfCnMs31sIrL8H';
+export const CHECKOUT_SITE = 'https://buy.polar.sh/polar_cl_CqkLk5OhhfCnMs31sIrL8HnQBFjat2BrFLkoK2ZRqgR';
 
 /**
  * 리다이렉트 선언 — ⭐⭐ **밖으로 나가는 모든 것이 지나는 한 문**이다.
