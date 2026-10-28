@@ -3,7 +3,7 @@
   ⚠️ ko·en 양 벌이 같은 합집합(🇰🇷 ∪ 🇺🇸 13절)을 담는다 — 한쪽에만 담으면 한쪽 독자에게 요건이 빠진다.
   ko 정본이 개정되면 이 판을 재전파하고 아래 정본 해시를 갱신한다 — 가드가 둘의 일치를 잰다.
   ⛔ 머리말에 「버전:」·「발행일:」·「시행일:」 기계 줄을 넣지 않는다 — 메타의 출처는 ko 정본 하나다.
-  정본 해시: sha256:18cf18cb6daa659e27b3eef39184473243c70b8896a2b31034ef0b264a7c631b
+  정본 해시: sha256:f47ac11fbb2c7be37151336da205eb2e723826091199d8cb7788ff6356d17134
 -->
 
 # Privacy Policy
@@ -75,13 +75,17 @@ These records are used **only for the purpose of preservation**, and cannot be d
 
 | Group | Items |
 |---|---|
-| Identity of the transaction | Order identifier · subscription identifier · time of the transaction |
 | The other party | The buyer's email address |
 | What was supplied | Product name · billing interval (monthly or annual) · quantity (number of repositories) |
-| Payment | Subtotal, discount, tax and total at the time of the transaction, with the currency · payment status · refunded amount |
+| Payment | Subtotal, discount, tax and total, with the currency · payment status · refunded amount |
 | Evidence | Invoice number · receipt number |
+| Time | Time of the transaction |
 
-⛔ **The billing address and the tax identification number are not received.** What preservation requires is the **fact** of the contract, the payment and the supply; those two are items the Seller uses to issue invoices. ⛔ Payment instrument details never reach the Company by any route (Section 2).
+⛔ **The Seller's order and subscription identifiers are not received.** The handle that points at such a record is the **evidence number** (invoice or receipt); preservation has no reason to hold the Seller's internal identifiers as well.
+
+⛔ **The billing address and the tax identification number are not received either.** What preservation requires is the **fact** of the contract, the payment and the supply; those two are items the Seller uses to issue invoices. ⛔ Payment instrument details never reach the Company by any route (Section 2).
+
+⚠️ All three are items that **could** be received and are not — they are present in the Seller's order records. This is written down because "not stated because it does not exist" and "exists and is not taken" are different statements.
 
 **How they are obtained**: the items above are obtained through the order-lookup features the Seller provides (its dashboard and API) and then preserved. The Seller's terms state no obligation to provide records, so if that access closes, the Company will arrange another way to continue preservation and state it here.
 
