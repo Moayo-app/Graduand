@@ -11,6 +11,19 @@ code and judges whether the repository still matches them. There are only three 
 Judgment runs **in your own CI**. This is not a hosted SaaS. There is no place where our
 infrastructure reads your repository.
 
+## Subscribing
+
+There is one place to subscribe — **<https://graduand.dev>**. Pricing and payment stand only on
+that screen; this repository holds no second entrance.
+
+⬜ **That address is not served yet** — attaching the domain *is* the switch to public. What this
+line points at today is a **settled place**, not a screen that stands.
+
+⭕ **Subscribing does not move the boundary**: judgment still runs on your side. What entitlement
+divides is **whether a feature needs a declaration** — `refs` reports with no declaration at all,
+while the three declaration-driven axes and admissions, the grid and exemptions do ask for it.
+Even where it is asked for, the **shape of the cells stays visible**; only the counts are withheld.
+
 ## What gets judged
 
 | Verifier | The question it asks |
@@ -30,12 +43,13 @@ exemption **with a reason and an expiry**.
 
 ## What stands today, and what does not
 
-- ⭕ **Six policy documents** (terms, refunds, privacy × ko · en, version 1.0.0 —
-  [docs/policies/](docs/policies/)) and their guards. The build renders them to HTML.
+- ⭕ **Six policy documents** (terms, refunds, privacy × ko · en, version 1.0.0 — **in effect
+  2026-10-28** · [docs/policies/](docs/policies/)) and their guards. The build renders them to HTML.
 - ⭕ **The source of the verifiers and of the diagnosis page**, plus the declaration of where the
   site stands ([`wrangler.jsonc`](wrangler.jsonc)).
-- ⬜ **The diagnosis page is not public yet** — no domain is attached, and attaching one is the
-  switch to public.
+- ⬜ **The diagnosis page is not public yet** — no domain is attached to `graduand.dev`, and
+  attaching one is the switch to public. The day it attaches, this line and the ⬜ under
+  "Subscribing" are lifted **together**.
 - ⬜ **The package is not published yet** — [`verifier/package.json`](verifier/package.json) is
   `private: true`, and lifting that comes after the switch to public.
 

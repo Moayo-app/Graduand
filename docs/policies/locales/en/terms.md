@@ -3,7 +3,7 @@
   기한·수량·관할의 숫자와 조건은 축자로 옮긴다 — 번역가 재량 0.
   ko 정본이 개정되면 이 판을 재전파하고 아래 정본 해시를 갱신한다 — 가드가 둘의 일치를 잰다.
   ⛔ 머리말에 「버전:」·「발행일:」·「시행일:」 기계 줄을 넣지 않는다 — 메타의 출처는 ko 정본 하나다.
-  정본 해시: sha256:3fff1588c8132caf8a9b9cb7a478278ec6a038942068295b5501a89006178f86
+  정본 해시: sha256:8d9633c4acdc5914f52ca9f1509742e8e9137b0389bebe94841129a19be2fdd7
 -->
 
 # Terms of Service
@@ -122,6 +122,6 @@
 
 ## Addendum
 
-The effective date of these terms (version 1.0.0) has not yet been set — on the day payments open, the effective date will be set, stated here, and kept one-to-one with the header.
+These terms (version 1.0.0) take effect on 28 October 2026.
 
-For this version, the publication date has not yet been set either — the publication date and the effective date are the same day, and that day is the day payments open.
+This version was published on 28 October 2026 — for this version the publication date and the effective date are the same day.

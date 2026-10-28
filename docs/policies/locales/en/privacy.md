@@ -3,7 +3,7 @@
   ⚠️ ko·en 양 벌이 같은 합집합(🇰🇷 ∪ 🇺🇸 13절)을 담는다 — 한쪽에만 담으면 한쪽 독자에게 요건이 빠진다.
   ko 정본이 개정되면 이 판을 재전파하고 아래 정본 해시를 갱신한다 — 가드가 둘의 일치를 잰다.
   ⛔ 머리말에 「버전:」·「발행일:」·「시행일:」 기계 줄을 넣지 않는다 — 메타의 출처는 ko 정본 하나다.
-  정본 해시: sha256:3ec4c7d4f0bc9d68b8bd76ff7a71b08abcda4f705191588c3d03c43d29ea41f9
+  정본 해시: sha256:4e925bdec0839e2c42c21d70643f3d7fce13ae7f88e88f52232cf481a8f17ebf
 -->
 
 # Privacy Policy
@@ -119,6 +119,6 @@ When the Company changes this policy, it announces the content of the change and
 
 ## 13. Effective date
 
-The effective date of this policy (version 1.0.0) has not yet been set — on the day payments open, the effective date will be set, stated here, and kept one-to-one with the header.
+This policy (version 1.0.0) takes effect on 28 October 2026.
 
-For this version, the publication date has not yet been set either — the publication date and the effective date are the same day, and that day is the day payments open.
+This version was published on 28 October 2026 — for this version the publication date and the effective date are the same day.
