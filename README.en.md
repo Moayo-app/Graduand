@@ -1,9 +1,5 @@
 # Graduand
 
-> ⭕ The name is **settled** (2026-10-27) — the written form equals the identifier: `graduand`.
-> ⚠️ What holds it up is **two trademark applications**, and **an application is not a
-> registration** — examination is still open.
-
 **Judging whether the rules you wrote down still hold at this commit.**
 
 [한국어](README.md) · this is a translation; the Korean text is the canon.
