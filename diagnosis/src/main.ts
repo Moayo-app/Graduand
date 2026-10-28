@@ -9,12 +9,13 @@
  * 주소로 옮기는 제품에서 그것은 기능이 아니라 결함이다. ⇒ 주소 하나가 한 언어를 가리킨다.
  */
 
-import { DECLARATION_FILE, SCAFFOLD_JSON } from '../../verifier/src/index.ts';
+import { DECLARATION_FILE, looksLikeFragment, SCAFFOLD_JSON } from '../../verifier/src/index.ts';
 import { parseRepoInput } from './github-url.ts';
 import { diagnoseUrl, openFragment, type Outcome } from './outcome.ts';
+import { buildObservation } from './observation.ts';
 import { buildReport } from './report.ts';
 import { unjudgeableScreen } from './screens.ts';
-import { renderReport, renderScreen } from './render.ts';
+import { renderObservation, renderReport, renderScreen } from './render.ts';
 import { stringsFor } from './strings.ts';
 
 /**
@@ -31,6 +32,7 @@ const must = <T extends Element>(selector: string): T => {
 };
 
 const result = must<HTMLElement>('#result');
+const scaffold = must<HTMLElement>('#scaffold');
 const form = must<HTMLFormElement>('#diagnose-form');
 const input = must<HTMLInputElement>('#repo-input');
 const button = must<HTMLButtonElement>('#diagnose-button');
@@ -40,11 +42,19 @@ const entryStatus = must<HTMLParagraphElement>('#entry-status');
 function show(outcome: Outcome): void {
   result.replaceChildren();
   if (outcome.kind === 'report') {
-    result.append(
-      renderReport(buildReport(outcome.measurement, outcome.origin, strings, outcome.entitlement)),
-    );
+    // ⭐⭐ **갈래가 하나로 합쳐졌다** — 격자가 봉투에 타면서, 요약으로 들어온 보고도 저장소를
+    //   읽은 보고와 **같은 화면**을 받는다. 그 전에는 비공개 고객(요약으로 들어오는 유일한
+    //   길)만 관할 수 한 줄을 못 받았다 — 돈 내는 쪽이 더 가난한 화면을 받던 자리다.
+    result.append(renderObservation(buildObservation(outcome, strings)));
+    // ⭕ 보고서 옆에는 남는다 — 수가 나온 뒤 선언을 고치는 것이 다음 걸음이다.
+    scaffold.hidden = false;
   } else {
-    result.append(renderScreen(unjudgeableScreen(outcome, strings)));
+    const screen = unjudgeableScreen(outcome, strings);
+    result.append(renderScreen(screen));
+    // ⭐ 갈래는 screens.ts 가 쥔다 — 여기는 그 사실을 **적용만** 한다. 명령을 든 화면에서
+    //   스캐폴드가 같이 서면 「어느 쪽을 하라는 건가」가 흐려지고, `error` 에서는 스캐폴드가
+    //   아무것도 풀지 않는다(고칠 자리가 우리 쪽이거나 네트워크다).
+    scaffold.hidden = !screen.showsScaffold;
   }
   result.scrollIntoView({ block: 'nearest' });
 }
@@ -68,9 +78,22 @@ form.addEventListener('submit', (event) => {
   });
 });
 
+/**
+ * 해시 하나를 **둘이 나눠 쓴다** — 보고서 요약과 페이지 앵커다. 보고 페이지의 주소가
+ * 루트 + `#<요약>` 이라 그 자리가 겹친다.
+ *
+ * ⭐⭐ **가르는 규칙은 이 파일의 것이 아니다.** 요약의 모양을 아는 것은 그 형식이고
+ * (`looksLikeFragment`), 여기서 따로 판단하면 그 판단이 형식과 갈라진다 — 갈라진 날
+ * **요약이 조용히 앵커로 읽혀** 보고서가 아무 표시 없이 사라진다.
+ *
+ * ⚠️ 그 전까지는 **비어 있지 않은 해시 전부**를 요약으로 읽었다. 그래서 페이지 앵커
+ * (`#cta`)를 누르면 본문 위에 「조각을 읽을 수 없다」 판정 불가 화면이 떴다 — 화면이 참이
+ * 아닌 말을 하는 자리였다. ⇒ 판 이름을 자처하지 않는 해시는 **브라우저의 몫**으로 둔다:
+ * 우리가 아무것도 하지 않는 것이 곧 앵커로 도는 것이다.
+ */
 async function openFromHash(): Promise<void> {
   const fragment = window.location.hash.slice(1);
-  if (fragment === '') return;
+  if (!looksLikeFragment(fragment)) return;
   show(await openFragment(fragment));
 }
 
@@ -104,7 +127,22 @@ scaffoldCopy.addEventListener('click', () => {
   );
 });
 
-// 체크아웃에서 돌아오는 활성화 신호의 자리.
+/**
+ * 체크아웃에서 돌아오는 활성화 신호의 자리.
+ *
+ * ⭐⭐ **창구에 주는 돌아오는 주소는 로케일을 명시한다.** 그 주소는 이 저장소 밖(창구의
+ * 설정)에 살고, 가드는 발행본의 바이트만 물지 창구를 보지 못한다 — 그래서 여기 적는 것은
+ * 값이 아니라 **고른 사유**다: 발행 출처 + 기본 로케일의 원페이지 + 이 질의 하나.
+ *
+ * ⬜ **맨 도메인을 주지 않는 이유가 미판정이다.** 맨 도메인은 리다이렉트 선언을 한 번 지나는데
+ * (루트 → 기본 로케일), 그 선언이 **질의 문자열을 목적지로 넘기는지**를 벤더 1차 문서가
+ * 말하지 않는다(목적지에 질의를 **쓸 수 있다**는 말만 있고, 들어온 질의를 잇는다는 말은
+ * 없다). 넘기지 않으면 이 블록이 영영 열리지 않고, 그 실패는 화면에 아무 표시도 남기지
+ * 않는다 — 돈을 낸 사람만 조용히 확인을 못 받는다.
+ * ⇒ 재는 비용보다 **지나지 않는 쪽**이 싸다: 로케일을 명시하면 그 선언을 아예 밟지 않는다.
+ * ⭕ 그리고 **잃는 것이 0 이다** — 루트는 어차피 **무조건** 기본 로케일로 가므로 둘이 같은
+ * 문서에 닿는다. ⚠️ 닫으려면 실물에 `curl` 로 한 번 재면 된다(붙은 뒤에만 잴 수 있다).
+ */
 if (new URLSearchParams(window.location.search).get('activated') !== null) {
   must<HTMLElement>('#activated-banner').hidden = false;
 }

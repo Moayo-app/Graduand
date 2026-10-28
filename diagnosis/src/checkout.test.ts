@@ -1,19 +1,22 @@
 /**
  * 체크아웃 입구의 AC — **스텁임을 말한다 · 새 탭 · 계정 식별자 0 · 월환산 표기 0.**
  *
- * ⭐⭐ **순서가 못박혀 있다 — 「Build first, submit second」.** 실링크는 벤더 심사가
- * 끝난 뒤에만 실물이 되고, 심사 제출과 통과는 **사람 몫**이다. 그래서 지금 페이지가 질
- * 수 있는 것은 둘이다: ⑴ **지금 스텁이라는 사실을 말하는가** ⑵ 실링크가 선 날 **페이지가
- * 거짓말을 하지 않는 모양인가**(새 탭 · 수량을 링크가 잠그지 않음 · 계정 식별자 0).
+ * ⭐⭐ **순서가 못박혀 있다 — 「Build first, submit second」.** 제출과 통과는 **사람 몫**이고
+ * 그 몫은 끝났다 — 심사가 통과했고 창구에 카탈로그가 섰다. ⚠️ 그래도 이 입구는 스텁이다:
+ * 남은 조건이 **우리 손으로 옮겨왔을** 뿐이고, 그것은 이 주소를 창구로 보내는 리다이렉트
+ * 선언이다. 그래서 지금 페이지가 질 수 있는 것은 여전히 둘이다: ⑴ **지금 스텁이라는 사실을
+ * 말하는가** ⑵ 실링크가 선 날 **페이지가 거짓말을 하지 않는 모양인가**(새 탭 · 수량을
+ * 링크가 잠그지 않음 · 계정 식별자 0).
  *
- * ⭐ **교체는 페이지 밖에서 일어난다.** 입구의 `href` 는 `./checkout/` 이고 그것은 지정된
+ * ⭐ **교체는 페이지 밖에서 일어난다.** 입구의 `href` 는 `CHECKOUT_PATH` 이고 그것은 지정된
  * 리다이렉트 자리다 — 벤더 주소는 발행된 화면에 박히지 않는다(벤더가 주소를 바꾼 날 그
- * 화면이 거짓말을 하고, 그 거짓말은 붙여넣어 옮겨지며 오래 산다). ⇒ 실링크 교체 때 움직이는
- * 것은 **리다이렉트 선언 하나**이고, 페이지에서 걷히는 것은 **아래 스텁 고지**다.
+ * 화면이 거짓말을 하고, 그 거짓말은 붙여넣어 옮겨지며 오래 산다). ⇒ 벤더가 움직일 때
+ * 움직이는 것은 **선언 한 줄**(`CHECKOUT_SITE`)이고 발행본은 한 바이트도 움직이지 않는다.
  *
- * ⚠️ **스텁 고지를 걷는 것을 무는 것은 없다** — 코드는 「벤더 심사가 통과했는가」를 알 길이
- * 없다. 아래가 무는 것은 「**지금** 고지가 서 있는가」이고, 심사 통과 뒤 그 고지를 걷는 것은
- * 사람의 한 수다. 숨기지 않고 적는다 — 「안 재다」가 아니라 「재고, 무는 것이 없다」이다.
+ * ⭕ **그 선언이 섰고, 그래서 스텁 고지가 걷혔다.** 머리말이 적어 두었던 「고지를 걷도록
+ * 무는 것은 없다 — 그것은 사람의 한 수다」가 **실제로 일어난 자리**다. ⛔ 단정을 지운 것이
+ * 아니라 **사실을 따라 옮겼다**: 아래 AC1 이 자구 둘 대신 구조 둘을 문다(선언에 행이 있다 ·
+ * 발행본에 벤더 주소가 0 이다). ⚠️ 서빙은 여전히 별개다 — 도메인이 붙는 날 이 문이 열린다.
  *
  * ⬜ **수량을 비워 둔 링크에서 고객이 수량을 고르는 화면**은 벤더 문서에 없다 — 문서는 범위만
  * 말한다. 그 칸은 **샌드박스 실측 몫**이고, 「선언 > 실재」라 문서의 함의로 닫지 않는다.
@@ -21,14 +24,38 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { DOCUMENT_FILE, renderAll, TEMPLATE_FILE } from './generate.ts';
+import { CHECKOUT_PATH, CHECKOUT_SITE, REDIRECTS } from './site.ts';
+import { LOCALES } from './strings.ts';
+
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const read = (path: string): string => readFileSync(join(ROOT, path), 'utf8');
-const page = (): string => read('index.html');
+
+/**
+ * ⭐⭐ **분모는 발행본이다.** 산문이 카탈로그로 내려온 뒤 손글씨 틀에는 산문이 0 이므로,
+ * 「화면이 무엇을 말하는가」를 묻는 단정이 틀을 보면 **아무 말도 하지 않는다**. ⇒ 생성기가
+ * 낸 바이트를 받는다 — 그것이 자바스크립트를 끈 방문자가 받는 전부이기도 하다.
+ *
+ * ⭐ 틀을 **인자로** 받는 꼴이라, 금칙을 심은 틀로도 같은 유도가 돈다(음성 대조군의 조건).
+ */
+const documentsFrom = (template: string): Record<string, string> =>
+  Object.fromEntries(
+    Object.entries(renderAll(template)).map(([locale, html]) => [`${locale}/${DOCUMENT_FILE}`, html]),
+  );
+
+const template = (): string => read(TEMPLATE_FILE);
+const documents = (): Record<string, string> => documentsFrom(template());
+
+/**
+ * 정본 로케일의 발행본 — ⚠️ **한국어 자구를 무는 단정이 보는 자리**다(ko 가 정본이다).
+ * 번역 벌의 자구를 여기 적으면 사본이 로케일마다 하나씩 늘고, 그 사본들이 갈라지는 것이
+ * 이 제품이 재는 결함이다 — 번역 벌이 비어 있지 않고 옮겨졌는지는 `i18n.test.ts` 가 문다.
+ */
+const page = (): string => documents()[`${LOCALES[0]}/${DOCUMENT_FILE}`]!;
 
 /** 발행되는 화면 코드 — 테스트는 분모가 아니다(스펙이 축자로 들어야 하는 자리가 있다). */
 const shippedSrc = (): string[] =>
@@ -40,7 +67,7 @@ const shippedSrc = (): string[] =>
 /** 구독 절 하나 — 입구가 둘이면 어느 것이 문인지 모른다는 기존 단정과 같은 자리를 본다. */
 function ctaSection(html: string): string {
   const found = /<section id="cta"[\s\S]*?<\/section>/.exec(html)?.[0];
-  assert.ok(found, 'index.html 에 구독 절이 없다');
+  assert.ok(found, '발행본에 구독 절이 없다');
   return found;
 }
 
@@ -57,47 +84,50 @@ const attrOf = (tag: string, name: string): string | null => new RegExp(`${name}
 const amountsOf = (html: string): number[] =>
   [...html.matchAll(/\$([\d.,]+)/g)].map((m) => Number(m[1]!.replace(/,/g, '')));
 
-/** `index.html` 하나만 베낀 사본 — 위반을 **실제로 심어** 빨강을 확인할 자리. */
-function pageFixture(): string {
-  const root = mkdtempSync(join(tmpdir(), 'graduand-checkout-'));
-  writeFileSync(join(root, 'index.html'), page());
-  return root;
-}
-const fixtureHtml = (root: string): string => readFileSync(join(root, 'index.html'), 'utf8');
-const plant = (root: string, html: string): void => writeFileSync(join(root, 'index.html'), html);
+/**
+ * 위반을 **실제로 심은** 발행본 — ⭐ 심는 자리가 **틀**이다: 틀에 선 것은 발행본 전수에
+ * 가므로, 같은 유도로 난 발행본에서 빨강을 확인하는 것이 「심으니 빨갛다」의 올바른 모양이다.
+ * ⚠️ 임시 디렉터리가 필요 없어졌다 — 발행본은 **유도된 것**이라 파일로 내리지 않아도 난다.
+ */
+const plantedPage = (replace: (template: string) => string): string =>
+  documentsFrom(replace(template()))[`${LOCALES[0]}/${DOCUMENT_FILE}`]!;
 
 /**
- * ⭐ **스텁 고지가 말해야 하는 것 둘** — 「스텁이다」와 「결제로 이어지지 않는다」.
- * 하나만 있으면 반쪽이다: 상태만 말하고 결과를 말하지 않으면 방문자는 눌러 보고서야 알고,
- * 결과만 말하고 상태를 말하지 않으면 **고장**처럼 읽힌다.
+ * ⭐⭐ **문이 선언을 지난다** — 입구의 `href` 는 상대 경로이고, 밖으로 나가는 절대 주소는
+ * `site.ts` 의 선언 한 줄이 든다. 그 둘이 **같은 경로**에서 만나는지를 여기서 묻는다:
+ * 선언만 서고 화면이 다른 곳을 가리키면 문은 여전히 아무 데도 열리지 않는다.
+ *
+ * ⚠️⚠️ **이 자리는 「스텁 고지가 서 있는가」였다.** 그 고지가 댄 사유는 두 번 움직였고
+ * (⑴ 벤더의 창구 심사 → ⑵ 이 주소를 창구로 보내는 연결), ⑵ 가 선언으로 서면서 고지가
+ * 가리킬 조건이 **0** 이 됐다 — 걷는 한 수는 머리말이 적어 둔 대로 **사람**이 뒀다.
+ * ⇒ 단정도 사실을 따라 옮겼다: 「아직 안 간다」를 묻던 자리가 「**어디로 가는지가 선언에
+ * 있다**」를 묻는다. ⛔ 지운 단정은 0 이다 — 자구 둘이 사라진 만큼 구조 둘이 들어왔다.
  */
-const stubClaims: readonly { readonly pattern: RegExp; readonly why: string }[] = [
-  { pattern: /스텁/, why: '상태 — 이 입구가 아직 실물이 아니라는 사실' },
-  { pattern: /결제로 이어지지 않는다/, why: '결과 — 눌렀을 때 무엇이 일어나지 않는지' },
-];
+test('AC1 — 구독 입구가 지정된 문을 지난다: 목적지가 선언에 있고 발행본에는 없다', () => {
+  const rule = REDIRECTS.find((entry) => entry.from === CHECKOUT_PATH);
+  assert.ok(rule, `${CHECKOUT_PATH} 행이 없다 — 입구가 가리키는 자리가 비어 있다`);
+  assert.equal(rule!.to, CHECKOUT_SITE, '입구의 목적지가 선언된 벤더 주소가 아니다');
+  // ⚠️ 302 다 — 벤더가 링크를 다시 내면 주소가 바뀌고, 301 을 캐시한 방문자는 죽은 문을 받는다.
+  assert.equal(rule!.status, '302', '입구의 문이 영구 이동이다');
 
-test('AC1 — 심사 통과 전: CTA 가 스텁임을 말하고 결제로 이어지지 않는다', () => {
-  const cta = ctaSection(page());
-  for (const { pattern, why } of stubClaims) {
-    assert.match(cta, pattern, `스텁 고지에 없는 것: ${why}`);
+  for (const [name, html] of Object.entries(documents())) {
+    const href = attrOf(checkoutAnchor(ctaSection(html)), 'href');
+    assert.equal(href, CHECKOUT_PATH, `${name}: 입구가 지정된 리다이렉트 자리가 아니다`);
+    assert.ok(!html.includes(CHECKOUT_SITE), `${name}: 발행본에 벤더 주소가 박혔다 — 문을 지나지 않는다`);
   }
-
-  // 결제로 이어지지 않는 **근거**는 「주소가 벤더가 아니다」다 — `./checkout/` 은 지정된
-  // 리다이렉트 자리이고, 그 선언이 서기 전까지 이 문은 아무 데도 열리지 않는다.
-  const href = attrOf(checkoutAnchor(cta), 'href');
-  assert.equal(href, './checkout/', '체크아웃 href 가 지정된 리다이렉트 자리가 아니다');
 });
 
-test('AC1 (negative) — 스텁 고지를 걷으면 빨갛다', () => {
-  // 음성 대조군 — 깨끗한 사본이 초록이어야 「걷으니 빨갛다」가 가드의 증거가 된다.
-  const clean = pageFixture();
-  for (const { pattern } of stubClaims) assert.match(ctaSection(fixtureHtml(clean)), pattern);
+test('AC1 (negative) — 벤더 주소가 발행본에 박히면 빨갛다', () => {
+  // 음성 대조군 — 깨끗한 발행본에 그 주소가 0 이어야 「박으니 빨갛다」가 증거가 된다.
+  for (const html of Object.values(documents())) assert.ok(!html.includes(CHECKOUT_SITE));
 
-  for (const { pattern, why } of stubClaims) {
-    const root = pageFixture();
-    plant(root, fixtureHtml(root).replace(/<p class="stub-notice">[\s\S]*?<\/p>/, ''));
-    assert.doesNotMatch(ctaSection(fixtureHtml(root)), pattern, `고지를 걷었는데 ${why} 가 남아 있다`);
-  }
+  const planted = plantedPage((t) => t.replace(`href="${CHECKOUT_PATH}"`, `href="${CHECKOUT_SITE}"`));
+  assert.ok(planted.includes(CHECKOUT_SITE), '벤더 주소를 심었는데 발행본에 없다 — 하네스가 죽었다');
+  assert.notEqual(
+    attrOf(checkoutAnchor(planted), 'href'),
+    CHECKOUT_PATH,
+    '심었는데 입구가 그대로다 — 이 단정이 보는 자리가 틀렸다',
+  );
 });
 
 /**
@@ -106,6 +136,17 @@ test('AC1 (negative) — 스텁 고지를 걷으면 빨갛다', () => {
  * 자기 보고서를 잃는다. 그래서 새 탭이고, `rel` 둘은 그 새 탭의 조건이다.
  */
 test('AC2 (페이지 몫) — 입구가 새 탭으로 열리고, 수량을 링크가 미리 잠그지 않는다', () => {
+  // ⭐ 이 단정들은 **구조**를 묻는다(자구가 아니다) ⇒ 발행본 전수가 분모다.
+  for (const [name, html] of Object.entries(documents())) {
+    const section = ctaSection(html);
+    const link = checkoutAnchor(section);
+    assert.equal(attrOf(link, 'target'), '_blank', `${name}: 입구가 같은 탭을 덮는다`);
+    assert.equal(attrOf(link, 'href'), '/checkout/', `${name}: 입구가 지정된 리다이렉트 자리가 아니다`);
+    for (const locked of ['units', 'seats', 'quantity', 'qty']) {
+      assert.doesNotMatch(section, new RegExp(locked, 'i'), `${name}: 구독 절이 수량을 미리 선언한다: ${locked}`);
+    }
+  }
+
   const cta = ctaSection(page());
   const anchor = checkoutAnchor(cta);
 
@@ -144,18 +185,20 @@ test('AC3 (negative) — 체크아웃 호출에 우리 쪽 계정 식별자가 0
   const leaks = (text: string): string[] =>
     accountWords.filter(({ word }) => new RegExp(word, 'i').test(text)).map(({ word }) => word);
 
-  for (const file of ['index.html', ...shippedSrc()]) {
-    assert.deepEqual(leaks(read(file)), [], `${file} 에 계정 어휘가 있다`);
+  // ⭐ 분모가 **틀 + 발행본 + 화면 코드**다 — 산문이 카탈로그로 내려와서 계정 어휘가 설
+  //   수 있는 자리가 하나 늘었고(카탈로그), 방문자가 받는 바이트도 따로 봐야 한다.
+  const subjects = {
+    ...Object.fromEntries([TEMPLATE_FILE, ...shippedSrc()].map((file) => [file, read(file)])),
+    ...documents(),
+  };
+  for (const [name, text] of Object.entries(subjects)) {
+    assert.deepEqual(leaks(text), [], `${name} 에 계정 어휘가 있다`);
   }
 
-  // 음성 대조군 — 깨끗한 사본이 초록이어야 「심으니 빨갛다」가 금칙의 증거가 된다.
-  assert.deepEqual(leaks(fixtureHtml(pageFixture())), [], '깨끗한 사본이 빨갛다 — 하네스가 고장났다');
-
   // ⛔ 질의로 실어 보내는 꼴을 **실제로 심는다** — 그전까지 가드가 0 이던 자리다.
-  const root = pageFixture();
-  plant(root, fixtureHtml(root).replace('href="./checkout/"', 'href="./checkout/?uid=abc123"'));
-  assert.notDeepEqual(leaks(fixtureHtml(root)), [], 'uid 를 심었는데 초록이다 — 금칙이 죽었다');
-  assert.match(attrOf(checkoutAnchor(fixtureHtml(root)), 'href') ?? '', /[?]/, '심은 질의가 href 에 없다');
+  const planted = plantedPage((t) => t.replace('href="/checkout/"', 'href="/checkout/?uid=abc123"'));
+  assert.notDeepEqual(leaks(planted), [], 'uid 를 심었는데 초록이다 — 금칙이 죽었다');
+  assert.match(attrOf(checkoutAnchor(planted), 'href') ?? '', /[?]/, '심은 질의가 href 에 없다');
 
   // 각 금칙에 **왜 계정 식별자인가**가 붙어 있다 — 사유 없는 금칙은 다음 사람이 걷는다.
   const self = read('src/checkout.test.ts');
@@ -182,23 +225,23 @@ test('AC4 (negative) — 연 상품에 월환산 표기가 0건: 심으면 빨�
     return amounts.filter((amount) => Math.abs(amount - perMonth) < 0.005);
   };
 
-  const amounts = amountsOf(page());
-  assert.equal(new Set(amounts).size, 2, `화면의 금액이 둘(월·연)이 아니다: ${JSON.stringify(amounts)}`);
-  assert.deepEqual(monthlyEquivalents(page()), [], '화면에 월환산가가 적혀 있다');
-  // 수가 아니라 **말**로 적는 길도 막는다 — 「월 환산」·「환산하면」.
+  // ⭐ 금액은 **로케일 불변**이다(총액 둘) ⇒ 수를 무는 단정은 발행본 전수가 분모다.
+  for (const [name, html] of Object.entries(documents())) {
+    const found = amountsOf(html);
+    assert.equal(new Set(found).size, 2, `${name}: 화면의 금액이 둘(월·연)이 아니다: ${JSON.stringify(found)}`);
+    assert.deepEqual(monthlyEquivalents(html), [], `${name}: 화면에 월환산가가 적혀 있다`);
+  }
+
+  // 수가 아니라 **말**로 적는 길도 막는다 — 「월 환산」·「환산하면」. ⚠️ 자구라서 정본을 본다.
   assert.doesNotMatch(page(), /환산/, '화면에 「환산」이라는 말이 있다');
 
-  // 음성 대조군 — 깨끗한 사본이 초록이어야 「심으니 빨갛다」가 금칙의 증거가 된다.
-  assert.deepEqual(monthlyEquivalents(fixtureHtml(pageFixture())), [], '깨끗한 사본이 빨갛다 — 하네스가 고장났다');
-
-  const annual = Math.max(...amounts);
+  const annual = Math.max(...amountsOf(page()));
   const planted = [
     `<span class="price-note">(월 $${(annual / 12).toFixed(2)} 상당)</span>`,
     `<p>연 결제는 월 $${annual / 12} 꼴이다</p>`,
   ];
   for (const sample of planted) {
-    const root = pageFixture();
-    plant(root, fixtureHtml(root).replace('</main>', `  ${sample}\n</main>`));
-    assert.notDeepEqual(monthlyEquivalents(fixtureHtml(root)), [], `${sample} 을 심었는데 초록이다 — 금칙이 죽었다`);
+    const leaky = plantedPage((t) => t.replace('</main>', `  ${sample}\n</main>`));
+    assert.notDeepEqual(monthlyEquivalents(leaky), [], `${sample} 을 심었는데 초록이다 — 금칙이 죽었다`);
   }
 });

@@ -1,0 +1,87 @@
+<!--
+  둘째 문서의 **본문** — 블록 **하나**(헌법 관리)와 조건부 하나(조립 결과)다. 크롬(head ·
+  GNB · 히어로 틀 · 푸터)은 `chrome.html` 한 벌이 든다.
+
+  ⭐⭐ **관측은 여기 없다** — 그 자리는 **루트의 진단**이다(결정 2026-10-27). 판정을 보여
+    주는 표면이 둘이면 같은 모듈이 두 화면을 내고, 그 둘은 갈라진다. ⇒ 저장소를 읽은 진단이
+    격자까지 말하고, 이 문서는 **헌법을 쥐는 일**만 한다.
+
+  ⭐⭐ **추측을 받지 않는다.** 트리오(어댑터 · 파일 · 스코프)를 손으로 적게 두면 고객은 세 번
+    추측하고(어느 파일인지 · 스코프의 자구 · 거기서 값이 읽히는지), 틀린 선언은 조용하지
+    않다 — 판정이 멈춘다. ⇒ 저장소를 **읽어** 고르게 한다: 주소 하나 → 그 저장소가 든 후보
+    파일 → 그 파일에서 어댑터가 **실제로 본** 스코프.
+
+  ⭐⭐ **헌법이 여럿이다**(개정 4) — 선언은 공유값 축을 **이름으로** 여럿 들고, 축마다 정본이
+    따로 선다. 그래서 이 화면은 축 하나를 조립하고, 선언이 이미 있으면 **그 선언에 축을
+    더한** 전문을 낸다 — 두 선언을 손으로 합치는 그 행위가 이 제품이 재는 공정이라서다.
+
+  ⚠️ 갈래가 둘인데 **입력의 모양은 하나**다 — 가르는 것은 「읽은 저장소가 누구의 것인가」다:
+    생성은 **당신 저장소**를 읽어 「여기가 정본이다」를 적고, 연결은 **정본 저장소**를 읽어
+    「정본은 저기이고 값은 이것이다」를 적는다(박제는 그 읽기에서 온다).
+
+  ⚠️ 이 주석은 발행본에 **남지 않는다** — 생성기가 벗긴다(발행본은 공개 배달 범위다).
+-->
+  <main>
+    <section id="hold" class="hold" aria-label="{{plain:hold.label}}">
+      <h2>{{hold.title}}</h2>
+      <p>{{hold.body}}</p>
+      <p class="ink-notice">{{hold.writeNote}}</p>
+
+      <form id="hold-form" class="hold-form">
+        <label for="hold-kind">{{hold.kindLabel}}</label>
+        <select id="hold-kind" name="kind">
+          <option value="canon">{{hold.kindCanon}}</option>
+          <option value="link">{{hold.kindLink}}</option>
+        </select>
+        <!--
+          갈래의 설명 **둘 다** 바이트로 선다 — 스크립트를 끈 방문자가 받는 것이 발행된
+          바이트이고, 한쪽을 런타임에 채우면 그 방문자는 **고르기 전에** 아무 설명도 못 받는다.
+          ⇒ 둘을 세우고 스크립트는 **보이는 쪽만** 바꾼다(없는 말을 만들지 않는다).
+        -->
+        <p id="hold-note-canon" class="note">{{hold.canonNote}}</p>
+        <p id="hold-note-link" class="note" hidden>{{hold.linkNote}}</p>
+
+        <!--
+          ⭐⭐ **헌법의 이름이 입력이다**(개정 4) — 한 저장소가 헌법 여럿에 답하고 축마다
+          정본이 따로 서므로, 「어느 헌법인가」를 묻지 않으면 우리가 이름을 **고르게** 된다.
+          ⛔ 기본값을 두지 않는다: 우리가 고른 이름이 저장소 N 개에 조용히 박힌다.
+        -->
+        <label for="hold-axis">{{hold.axisLabel}}</label>
+        <input id="hold-axis" name="axis" type="text" autocomplete="off" autocapitalize="off"
+          spellcheck="false" placeholder="{{plain:hold.axisPlaceholder}}" required>
+        <p class="note">{{hold.axisNote}}</p>
+
+        <label for="hold-repo">{{hold.repoLabel}}</label>
+        <input id="hold-repo" name="repo" type="text" inputmode="url" autocomplete="off"
+          autocapitalize="off" spellcheck="false" placeholder="{{plain:hold.repoPlaceholder}}" required>
+        <button type="submit" id="hold-read">{{hold.read}}</button>
+      </form>
+
+      <p id="hold-error" class="field-error" role="alert" hidden></p>
+      <p id="hold-status" class="field-status" role="status" hidden></p>
+
+      <!--
+        고르는 자리 둘 — 읽기 전에는 **비어 있지 않고 서 있지도 않다**(둘 다 `hidden`):
+        고를 것이 없는 고르개는 고객에게 「여기서 무엇을 골라야 하는가」를 묻는 빈 칸이다.
+        ⭐ 어댑터는 고르개가 아니다 — 등록부에 이름이 여럿이면 그때 서는 자리이고, 지금은
+        후보를 거르는 손으로만 쓰인다(화면이 확장자를 알지 못한다).
+      -->
+      <div id="hold-pick" class="hold-pick" hidden>
+        <label for="hold-file">{{hold.fileLabel}}</label>
+        <select id="hold-file" name="file"></select>
+        <label for="hold-scope">{{hold.scopeLabel}}</label>
+        <select id="hold-scope" name="scope"></select>
+        <button type="button" id="hold-compose">{{hold.compose}}</button>
+      </div>
+
+      <section id="hold-result" aria-live="polite"></section>
+
+      <!--
+        조립된 선언 — ⛔ 전송이 아니다: 클립보드와 화면뿐이고 이 조각은 어디로도 가지 않는다.
+        ⭐ 복사하지 못한 것을 복사했다고 말하지 않는다 — 조각은 화면에 그대로 있다.
+      -->
+      <pre id="hold-snippet" class="snippet" aria-label="{{plain:hold.snippetLabel}}" hidden></pre>
+      <button type="button" id="hold-copy" hidden>{{hold.copy}}</button>
+      <p class="note">{{hold.nextNote}}</p>
+    </section>
+  </main>

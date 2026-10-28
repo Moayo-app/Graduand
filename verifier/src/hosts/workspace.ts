@@ -14,7 +14,12 @@ import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { needsContent, RepoUnreadableError, type RepoSnapshot } from '../snapshot.ts';
-import { declaredCanon, declaredPaletteFiles, DECLARATION_FILE } from '../declaration.ts';
+import {
+  declaredCanons,
+  declaredAxisFiles,
+  DECLARATION_FILE,
+  type CanonPointer,
+} from '../declaration.ts';
 
 export interface WorkspaceLoad {
   snapshot: RepoSnapshot;
@@ -80,12 +85,12 @@ export function loadWorkspaceSnapshot(root = '.', alsoContent: readonly string[]
     }
   };
 
-  // 선언 파일을 먼저 읽는다 — 어댑터가 읽을 파일(palette.files)은 선언이 지목하므로,
+  // 선언 파일을 먼저 읽는다 — 어댑터가 읽을 파일(축 전부의 `files`)은 선언이 지목하므로,
   // 본문을 실을 목록이 선언에 의존한다. 깨진 선언이면 더 싣지 않는다(판정 층이 멈춘다).
   if (paths.includes(DECLARATION_FILE)) read(DECLARATION_FILE);
   const declText = files.get(DECLARATION_FILE);
   const declared = new Set([
-    ...(typeof declText === 'string' ? declaredPaletteFiles(declText) : []),
+    ...(typeof declText === 'string' ? declaredAxisFiles(declText) : []),
     ...alsoContent,
   ]);
 
@@ -107,20 +112,35 @@ export function loadWorkspaceSnapshot(root = '.', alsoContent: readonly string[]
  * 로더는 1회차에 「내 파일 하나가 남의 정본이다」를 알 수 없다. 1회차로 선언들을 읽어
  * 지목을 모으고, 지목된 파일이 아직 안 실린 체크아웃만 다시 읽는다 — 추측으로 더 읽지
  * 않고, 지목이 없으면 2회차도 없다.
+ *
+ * @param intended 아직 **선언에 없는** 지목. ⭐ 헌법 조립의 `link` 가 여기 온다 — 그
+ *        포인터는 명령줄에 있고 선언에는 아직 없으므로(그 선언을 **짓는** 중이다) 1회차의
+ *        선언 읽기로는 알 수 없다. ⛔ 그래도 추측은 늘지 않는다: 실리는 것은 **지목된
+ *        경로 하나**이고, 추적되지 않는 경로는 여전히 실리지 않는다.
  */
-export function loadWorkspaces(roots: readonly string[]): WorkspaceLoad[] {
+export function loadWorkspaces(
+  roots: readonly string[],
+  intended: readonly CanonPointer[] = [],
+): WorkspaceLoad[] {
   const first = roots.map((root) => ({ root, load: loadWorkspaceSnapshot(root) }));
 
   // 정본으로 지목된 저장소 → 그 저장소에서 읽어야 하는 파일. 주소(`repo`)를 읽지 못한
   // 체크아웃은 지목될 수 없다 — 이름이 없으면 포인터와 맞출 자리가 없다.
   const wanted = new Map<string, Set<string>>();
+  const want = (repo: string, file: string): void => {
+    const at = wanted.get(repo) ?? new Set<string>();
+    at.add(file);
+    wanted.set(repo, at);
+  };
+  for (const canon of intended) want(canon.repo, canon.file);
   for (const { load } of first) {
     const text = load.snapshot.files.get(DECLARATION_FILE);
-    const canon = declaredCanon(typeof text === 'string' ? text : null);
-    if (canon === null) continue;
-    const at = wanted.get(canon.repo) ?? new Set<string>();
-    at.add(canon.file);
-    wanted.set(canon.repo, at);
+    // ⭐ 지목이 **축마다 하나**라서 목록이다 — 축이 여럿이면 한 선언이 서로 다른 저장소
+    //   여럿을 가리킬 수 있고(디자인 정본과 API 정본이 다른 상류에 산다), 첫 하나만
+    //   따라가면 나머지 축은 「정본이 시야에 없다」로 영원히 미판정이 된다.
+    for (const { canon } of declaredCanons(typeof text === 'string' ? text : null)) {
+      want(canon.repo, canon.file);
+    }
   }
 
   return first.map(({ root, load }) => {

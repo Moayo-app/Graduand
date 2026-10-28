@@ -61,6 +61,21 @@ const measure = (snapshot: RepoSnapshot, measuredAt: string): Measurement => ({
   measuredAt,
   verifier: { name: VERIFIER.name, version: VERIFIER.version },
   dirty: 0,
+  // 개정 3 — 봉투가 격자와 시야를 든다. 빈 격자는 사유를 들고(빈 분모는 미판정),
+  // 빈 시야는 「한 저장소 표면」이다.
+  grid: { surfaces: [], rules: [], reason: 'no-declaration' },
+  undeclared: {
+    copies: [],
+    copiesOmitted: 0,
+    blocks: 0,
+    diverged: [],
+    divergedOmitted: 0,
+    divergedPairs: 0,
+    divergedTruncated: false,
+    documents: { tracked: 0, read: 0 },
+    surfaces: [],
+  },
+  peers: [],
 });
 
 const gateOf = (snapshot: RepoSnapshot, measuredAt: string): 0 | 1 =>

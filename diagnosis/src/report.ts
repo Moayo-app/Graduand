@@ -15,7 +15,9 @@
  */
 
 import {
+  MIN_COPY_LINES,
   NOTATIONS,
+  foldDiverged,
   entitlementNotice,
   utcDateOf,
   type CheckResult,
@@ -23,6 +25,8 @@ import {
   type Entitlement,
   type EntitlementNotice,
   type Measurement,
+  type Span,
+  type UndeclaredFacts,
 } from '../../verifier/src/index.ts';
 import type { Strings } from './strings.ts';
 
@@ -37,7 +41,62 @@ export interface CheckVM {
   countsLine: string;
   /** 축자 증거 — 한 건당 한 줄. */
   evidence: string[];
+  /**
+   * 접은 증거의 요약 — ⚠️ **보인 수만** 말한다. 자른 수는 `omittedLine` 이 따로 말한다:
+   * 「안 보이는 이유」가 둘(접힘 · 잘림)인데 한 수로 뭉치면 읽는 사람이 **펼치면 다 보인다**고
+   * 읽는다. 증거가 0 건이면 null 이다 — 접을 것이 없다.
+   */
+  evidenceSummary: string | null;
   omittedLine: string | null;
+}
+
+/** 보고서의 한 절 — ⭐ 머리와 목록이 **한 쌍**으로만 선다(빈 절은 뷰모델에서 이미 없다). */
+export interface ReportSection {
+  heading: string;
+  checks: CheckVM[];
+}
+
+/** 사본 한 건 — 집들과 그 손잡이. ⛔ 블록 전문은 봉투에도 없다(싣는 것은 첫 줄 하나다). */
+export interface CopyVM {
+  homesLine: string;
+  head: string;
+  files: string[];
+}
+
+/**
+ * 선언 0 에서 보이는 사실의 절 — ⛔ **상태가 없다.** `CheckVM` 과 달리 `status` 도
+ * `statusLabel` 도 없는 것이 그 규율의 집행이다: 이 절을 그리는 렌더러가 글리프를 붙일
+ * 자리가 **타입에** 없다.
+ */
+/**
+ * 갈라진 사본의 **가족** — 손잡이 하나와 그 집들. ⛔ 비율이 아니다.
+ *
+ * ⭐ 쌍이 아니라 가족인 것이 화면의 결정이다 — 집이 N 이면 쌍이 C(N,2) 로 불어 같은 손잡이가
+ * 열 몇 번 반복된다(실측). ⛔ 접는 손은 **판정기 모듈의 하나**다(`foldDiverged`): 여기서
+ * 접으면 측정 명령과 이 화면이 갈라지고, 갈라진 뒤에도 양쪽이 자기 기준으로는 옳다.
+ */
+export interface DivergedVM {
+  countsLine: string;
+  head: string;
+  files: string[];
+}
+
+export interface UndeclaredVM {
+  heading: string;
+  noticeLines: string[];
+  documentsLine: string;
+  copiesLine: string;
+  copies: CopyVM[];
+  omittedLine: string | null;
+  /** ⭐ 축자 사본과 **다른 줄**이다 — 「아직 같다」와 「이미 두 말을 한다」를 접지 않는다. */
+  divergedLine: string;
+  diverged: DivergedVM[];
+  divergedOmittedLine: string | null;
+  /** ⚠️ 다 보지 못했을 때만 non-null — 상한에 잘린 목록과 다른 사실이다. */
+  divergedTruncatedLine: string | null;
+  whyLines: string[];
+  surfacesHeading: string;
+  surfaceLines: string[];
 }
 
 /** 보고서 머리의 항목 이름 — ⭐ 렌더러가 아니라 **뷰모델**이 든다(조립과 문구를 가르는 선). */
@@ -84,8 +143,17 @@ export interface ReportVM {
     entitlementLines: string[];
   };
   scopeLines: string[];
-  checks: CheckVM[];
+  /** 재어진 것 — 통과와 위반이 **같은 칸** 안에서 갈린다(심볼이 가른 쪽과 같다). */
+  measured: ReportSection;
+  /** 재지 않은 것 — ⭕ 0 건이면 **절이 없다**(AC3). */
+  unmeasured: ReportSection | null;
   totalsLine: string;
+  /**
+   * 선언 0 에서 보이는 사실 — ⛔ **null 이 아니다.** 「사본 0」도 사실이고, 절을 없애면
+   * 「읽지 않았다」와 같은 화면이 된다(빈 절을 세우지 않는 그 규율의 **반대쪽** 자리다:
+   * 저쪽은 머리만 서고 아무 수도 없는 절이고, 이쪽은 분모와 수가 둘 다 있는 절이다).
+   */
+  undeclared: UndeclaredVM;
 }
 
 /** 화면에 싣는 증거 상한 — 수(counts)는 그와 무관하게 항상 전수다. */
@@ -132,6 +200,8 @@ function buildCheck(check: CheckResult, strings: Strings): CheckVM {
     reasonLine: check.status === 'unjudged' && check.reason !== null ? strings.reason[check.reason] : null,
     countsLine,
     evidence: shown.map((e) => evidenceLine(e, strings)),
+    // ⭐ 보인 수와 자른 수를 **따로** 든다 — 접힘과 잘림은 「안 보이는 이유」가 다르다.
+    evidenceSummary: shown.length > 0 ? strings.report.evidenceSummary(shown.length) : null,
     omittedLine: beyond > 0 ? strings.report.omitted(beyond) : null,
   };
 }
@@ -164,6 +234,53 @@ function entitlementLines(notice: EntitlementNotice, strings: Strings): string[]
   return lines;
 }
 
+/**
+ * 선언 0 의 사실 → 이 로케일의 줄들. ⛔ 여기서 **세지 않는다** — 수는 봉투가 적어 오고,
+ * 이 함수가 하는 일은 「어느 문구를 어느 자리에」다(보고서 전체의 그 규율 그대로다).
+ */
+/** 범위 한 자리 — ⭐ 전부 같으면 **한 수**다(없는 폭을 적지 않는다). 측정 명령과 같은 꼴이다. */
+const span = (range: Span): string => (range.from === range.to ? `${range.from}` : `${range.from}–${range.to}`);
+
+function buildUndeclared(facts: UndeclaredFacts, strings: Strings): UndeclaredVM {
+  const say = strings.undeclared;
+  const { documents, copies, copiesOmitted, blocks, surfaces } = facts;
+  return {
+    heading: say.heading,
+    noticeLines: [...say.notice],
+    // 분모가 **먼저**다 — 「사본 0」이 「문서를 못 읽었다」와 같아 보이지 않게.
+    documentsLine:
+      documents.read === documents.tracked
+        ? say.documentsRead(documents.tracked)
+        : say.documentsPartial(documents.tracked, documents.read),
+    // ⭐ 하한의 수는 판정기 모듈의 상수에서 온다 — 문구에 박으면 세는 손과 갈라진다.
+    copiesLine: blocks === 0 ? say.copiesNone(MIN_COPY_LINES) : say.copies(blocks),
+    copies: copies.map((copy) => ({
+      homesLine: say.homes(copy.files.length, copy.lines),
+      head: copy.head,
+      files: [...copy.files],
+    })),
+    omittedLine: copiesOmitted > 0 ? say.copiesOmitted(copiesOmitted) : null,
+    divergedLine: facts.divergedPairs === 0 ? say.divergedNone : say.diverged(facts.divergedPairs),
+    diverged: foldDiverged(facts.diverged).map((family) => ({
+      countsLine: say.divergedFamily(family.files.length, family.pairs, span(family.shared), span(family.differing)),
+      head: family.head,
+      files: [...family.files],
+    })),
+    divergedOmittedLine: facts.divergedOmitted > 0 ? say.divergedOmitted(facts.divergedOmitted) : null,
+    // ⛔ 「다 보지 못했다」를 「갈라짐 0」 옆에 **침묵으로** 두지 않는다.
+    divergedTruncatedLine: facts.divergedTruncated ? say.divergedTruncated : null,
+    whyLines: [...say.why],
+    surfacesHeading: say.surfacesHeading,
+    surfaceLines: surfaces.map((surface) =>
+      surface.files === 0
+        ? say.surfaceNone(surface.adapter)
+        : surface.loaded === surface.files
+          ? say.surfaceAll(surface.adapter, surface.files)
+          : say.surfacePartial(surface.adapter, surface.files, surface.loaded),
+    ),
+  };
+}
+
 export function buildReport(
   measurement: Measurement,
   origin: ReportOrigin,
@@ -179,6 +296,9 @@ export function buildReport(
   const violations = judgment.checks.filter((c) => c.status === 'violation').length;
   const unjudged = judgment.checks.filter((c) => c.status === 'unjudged').length;
   const passes = judgment.checks.length - violations - unjudged;
+  // ⭐⭐ **가르는 손이 여기 하나다.** 렌더러가 상태를 보고 나누면 「어느 칸인가」가 조립
+  //    층의 판단이 되고, 그 판단은 화면마다 사본이 된다 — 이 파일의 산문이 정한 선이다.
+  const unmeasured = checks.filter((check) => check.status === 'unjudged');
   return {
     title: strings.report.title,
     labels: { ...strings.report.label },
@@ -194,7 +314,22 @@ export function buildReport(
       entitlementLines: entitlementLines(notice, strings),
     },
     scopeLines: [...strings.report.scope(NOTATIONS.map((n) => n.id).join(' · '))],
-    checks,
-    totalsLine: strings.report.totals({ checks: judgment.checks.length, violations, passes, unjudged }),
+    measured: {
+      heading: strings.report.measuredHeading,
+      checks: checks.filter((check) => check.status !== 'unjudged'),
+    },
+    // ⛔ **빈 절을 세우지 않는다** — 「재지 않은 것 0건」이라는 머리가 서면 읽는 사람이 그
+    //    절을 한 번 읽고 아무것도 못 얻는다. 수는 합계 줄이 0 으로 말한다(그쪽은 침묵하지
+    //    않는다 — 미판정이 없다는 것도 사실이라 적힌다).
+    unmeasured: unmeasured.length === 0 ? null : { heading: strings.report.unmeasuredHeading, checks: unmeasured },
+    // ⭐ 재어진 절과 **다른 칸**이다 — 상태 없는 수가 체크 옆에 서면 위반처럼 읽힌다.
+    undeclared: buildUndeclared(measurement.undeclared, strings),
+    totalsLine: strings.report.totals({
+      checks: judgment.checks.length,
+      measured: violations + passes,
+      violations,
+      passes,
+      unjudged,
+    }),
   };
 }

@@ -24,6 +24,7 @@ import {
   type Entitlement,
   type EntitlementDetail,
 } from '../entitlement.ts';
+import type { Activation } from '../activate.ts';
 import { isPastDate, utcDateOf } from '../expiry.ts';
 
 /**
@@ -147,3 +148,96 @@ export async function resolveEntitlement(io: EntitlementIo, onDate: string): Pro
   if (expires !== null && isPastDate(expires, onDate)) return absent('past-expiry', expires);
   return { state: 'entitled', expires };
 }
+
+/**
+ * 키 하나를 **자리 하나**로 바꾼다 — 벤더의 활성화를 한 번 부르고, 답에서 핸들을 읽는다.
+ *
+ * ⭐⭐ **위 `resolveEntitlement` 와 같은 규율, 다른 행위.** 저쪽은 **묻고**(몇 번이든 돌아도
+ * 같은 세상) 이쪽은 **쓴다**(고객이 산 자리 하나를 소비한다). 그래서 저쪽은 판정이 지나는
+ * 길에 있고 이쪽은 **고객이 치는 명령**에만 있다 — 이 모듈의 머리말이 축자로 적어 둔
+ * 「자동 재활성화는 고객 모르게 자격 하나를 소비한다」가 그 가름이다.
+ *
+ * ⭐ 답의 가름은 저쪽과 **같은 표**를 쓴다: 5xx·끊김은 「답을 못 받았다」, 그 밖의 비 2xx 는
+ * 「벤더가 답했고 거절했다」, 200 인데 모르는 모양은 「읽지 못했다」. ⛔ 셋을 뭉치면
+ * 「네트워크를 열어라」와 「키를 확인해라」가 한 말이 된다.
+ *
+ * ⛔ **키를 돌려주지 않는다** — 이 함수가 내는 것은 핸들과 사유뿐이다. 거절의 `said` 는
+ * 벤더가 한 말이고, 그 말에 우리 키는 실리지 않는다.
+ */
+export async function activateEntitlement(io: EntitlementIo, label: string): Promise<Activation> {
+  const key = io.readKey();
+  if (key === null) return { state: 'refused', detail: 'key-absent', said: null };
+  if (ENTITLEMENT.organizationId === null) {
+    return { state: 'refused', detail: 'vendor-unconfigured', said: null };
+  }
+
+  let response: Response;
+  try {
+    response = await io.fetch(ENTITLEMENT.activateUrl, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        [ENTITLEMENT.versionHeader]: ENTITLEMENT.apiVersion,
+      },
+      body: JSON.stringify({ key, organization_id: ENTITLEMENT.organizationId, label }),
+      signal: AbortSignal.timeout(VALIDATE_TIMEOUT_MS),
+    });
+  } catch {
+    return { state: 'refused', detail: 'no-answer', said: null };
+  }
+
+  // 5xx 는 벤더가 서 있지 않은 것이라 「답을 못 받았다」와 같은 자리다.
+  if (response.status >= 500) return { state: 'refused', detail: 'no-answer', said: null };
+  if (!response.ok) return { state: 'refused', detail: 'vendor-said-no', said: await saidBy(response, key) };
+
+  let raw: unknown;
+  try {
+    raw = await response.json();
+  } catch {
+    return { state: 'refused', detail: 'answer-unreadable', said: null };
+  }
+  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
+    return { state: 'refused', detail: 'answer-unreadable', said: null };
+  }
+  const activationId = (raw as Record<string, unknown>)[ENTITLEMENT.activationKey];
+  // ⛔ 빈 문자열을 핸들로 받지 않는다 — `parseHandle` 이 거부하는 값을 우리가 쓰면
+  //    우리가 쓴 파일을 우리가 못 읽는다.
+  if (typeof activationId !== 'string' || activationId.trim() === '') {
+    return { state: 'refused', detail: 'answer-unreadable', said: null };
+  }
+  return { state: 'activated', activationId };
+}
+
+/**
+ * 벤더가 **한 말** — 거절의 사유는 벤더가 알고 우리는 모른다(키가 틀렸는가 · 자리를 다
+ * 썼는가). ⛔ 지어내지 않고 **그대로 싣되** 길이를 자른다: 화면이 남의 본문으로 넘치지
+ * 않게. ⭕ 못 읽으면 null 이다 — 읽지 못한 말을 말했다고 적지 않는다.
+ *
+ * ⛔⛔ **키를 지운다.** 벤더가 에러에 키를 되비칠 수 있고(「key … not found」), 그 말은
+ * 그대로 CI 로그에 남아 붙여넣어 옮겨진다 — 한 번 샌 비밀은 되돌릴 수 없다. 지우는 자리가
+ * **여기**인 것은 키를 아는 자리가 여기뿐이기 때문이다: 화면을 그리는 손은 키를 받지 않고,
+ * 그래서 거기서는 지울 수도 없다.
+ */
+async function saidBy(response: Response, key: string): Promise<string | null> {
+  let text: string;
+  try {
+    text = await response.text();
+  } catch {
+    return null;
+  }
+  let said = text.trim();
+  try {
+    const body: unknown = JSON.parse(said);
+    if (typeof body === 'object' && body !== null && !Array.isArray(body)) {
+      const detail = (body as Record<string, unknown>)['detail'] ?? (body as Record<string, unknown>)['error'];
+      if (typeof detail === 'string' && detail.trim() !== '') said = detail.trim();
+    }
+  } catch {
+    // JSON 이 아니면 본문 그대로다 — 모르는 모양을 버리지 않는다.
+  }
+  // ⛔ 자르기 **전에** 지운다 — 뒤에 지우면 잘린 조각이 키의 절반을 들고 나간다.
+  said = said.split(key).join('[키]');
+  if (said === '') return null;
+  return said.length > 200 ? `${said.slice(0, 200)}…` : said;
+}
+

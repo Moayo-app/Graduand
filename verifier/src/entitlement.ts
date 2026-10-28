@@ -53,6 +53,23 @@ export const ENTITLEMENT = {
   keyEnv: 'GRADUAND_LICENSE_KEY',
   /** 벤더 검증 엔드포인트 — **무인증**이다(스키마에 `security` 키가 아예 없다). */
   validateUrl: 'https://api.polar.sh/v1/customer-portal/license-keys/validate',
+  /**
+   * 벤더 **활성화** 엔드포인트 — 키 하나를 자리 하나로 바꾼다(`activate.ts`).
+   * ⛔ 판정이 지나는 길에 불리지 않는다: 부르는 자리는 고객이 치는 명령 하나다.
+   */
+  activateUrl: 'https://api.polar.sh/v1/customer-portal/license-keys/activate',
+  /**
+   * 활성화 답에서 **핸들이 오는 필드** — 벤더 이름을 그대로 쓴다(`handleKey` 와 같은 규율:
+   * 번역하면 사본이 하나 늘고 그 사본이 벤더의 판 갈이와 조용히 갈라진다).
+   */
+  activationKey: 'id',
+  /**
+   * 활성화에 붙이는 **이름표** — ⛔ 저장소 이름을 싣지 않는다. 고객 저장소의 내용은 보고
+   * 밖으로 나가지 않는다는 규율이 벤더 호출에도 그대로 선다: 이름표는 **우리가 고른 한
+   * 낱말**이고, 고객이 구분하고 싶으면 창구에서 고쳐 쓴다.
+   * ⬜ `--label` 은 아직 없다 — 고객이 고른 말을 받는 자리이고, 받기 전까지 지어내지 않는다.
+   */
+  activationLabel: 'graduand',
   /** 날짜 판을 고르는 요청 헤더. */
   versionHeader: 'Polar-Version',
   /** 못 박은 판. */
@@ -66,11 +83,21 @@ export const ENTITLEMENT = {
    */
   expiresKey: 'expires_at',
   /**
-   * 발행 조직 id — 벤더 심사가 끝나는 날 들어온다. ⛔ 지어내지 않는다: `null` 은 「아직
-   * **물을 수 없다**」이고, 그 상태는 고객 탓이 아니므로 「자격 없음」이 아니라 「확인
-   * 불가」다(아래 `vendor-unconfigured`).
+   * 발행 조직 id — ⭕ **들어왔다**(벤더 심사 통과 · 창구에 카탈로그와 체크아웃 링크가 섰다).
+   *
+   * ⚠️⚠️ **이 한 줄이 제품의 상태를 바꾼다.** `null` 이던 동안 핸들도 키도 없는 저장소는
+   * `unwired` 였고 그것은 「아무것도 막지 않았다」였다. 값이 들어온 지금 같은 저장소는
+   * `not-configured` 로 떨어지고 **선언을 분모로 쓰는 축**이 막힌다(무료 축은 그대로 돈다 —
+   * 가르는 자리는 `verifiers/registry.ts` 의 `VERIFIER_BASIS` 다).
+   *
+   * ⛔ **비밀이 아니다** — 발행 조직의 공개 식별자이고 체크아웃 주소에도 실린다. 비밀은
+   * 키 하나뿐이고 그것은 환경에서 온다(`keyEnv`).
+   *
+   * ⚠️ **`null` 분기를 지우지 않는다** — id 가 없는 빌드는 여전히 설 수 있고(포크 · 발행 전),
+   * 그 빌드가 고객을 「자격 없음」으로 적으면 **우리 미비를 고객 탓으로** 적는 것이다.
+   * 그 자리가 아래 `vendor-unconfigured` 이고, 테스트는 상수를 비워 그 분기를 그대로 문다.
    */
-  organizationId: null as string | null,
+  organizationId: '9b993415-969d-4dbf-8dbb-6f47651b2931' as string | null,
 };
 
 /**

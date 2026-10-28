@@ -31,7 +31,7 @@ const DECLARATION = {
     R1: { verifiers: ['refs'] },
     R2: { verifiers: [] }, // 「판정기 없음」이라는 선언
     R3: {}, // `verifiers` 키 부재 — 같은 자리에 앉는다
-    R4: { verifiers: ['refs', 'palette-cross'] }, // 하나는 통과, 하나는 미판정
+    R4: { verifiers: ['refs', 'shared-values-cross'] }, // 하나는 통과, 하나는 미판정
   },
   exemptions: {
     R5: { reason: '이 저장소에 그 표면이 없다', expires: '2027-01-31' },
@@ -90,12 +90,14 @@ test('줄의 상태는 판정을 접지 않고 합친다 — 부분 판정은 �
 
   // 하나가 미판정이면 줄이 미판정이다 — 통과로 접으면 낙관적으로 틀린다. 그리고 그 줄의
   // 사유는 **그 판정기가 적은 사유 그대로**다: 격자가 사유를 새로 짓지 않는다.
-  const cross = checks.find((c) => c.id === 'palette-cross')!;
+  // ⭐ 이 선언은 공유값 축을 **하나도** 들지 않으므로 그 칸은 접미 없는 맨 이름이다 —
+  //   그리고 규칙이 선언한 이름(`shared-values-cross`)이 그 칸을 그대로 모은다.
+  const cross = checks.find((c) => c.id === 'shared-values-cross')!;
   const partial = rowOf(grid.rules, 'R4');
   assert.equal(cross.status, 'unjudged');
   assert.equal(partial.status, 'unjudged');
   assert.equal(partial.reason, cross.reason);
-  assert.deepEqual(partial.verifiers, ['palette-cross', 'refs']);
+  assert.deepEqual(partial.verifiers, ['refs', 'shared-values-cross']);
 });
 
 test('면제된 규칙은 「밖 — 미판정」이고 분모는 줄지 않는다', () => {
@@ -152,4 +154,43 @@ test('선언 파일을 못 읽었으면 잘림이다 — 부재로 접지 않는
 test('깨진 선언에서는 격자도 수를 내지 않는다 — 판정 실패다', () => {
   const snapshot = snap({ 'README.md': 'ok\n', 'graduand.json': '{"coverage": "enforced"}\n' });
   assert.throws(() => admissionGrid(snapshot, []), DeclarationInvalidError);
+});
+
+// ── 개정 4 — 이름 하나가 칸 여럿을 모은다 ──────────────────────────────
+
+test('규칙이 선언한 판정기 이름 하나가 **축 전부의 칸**을 모은다 — 한 축의 위반이 줄을 빨갛게 한다', () => {
+  // 축 둘: 하나는 코드와 박제가 같고(통과), 하나는 어긋난다(위반). 규칙이 선언하는 것은
+  // **등록부의 이름**(`shared-values`) 하나이고, 칸은 `shared-values:<축>` 둘이다.
+  const declaration = {
+    ui: ['src/'],
+    'shared-values': {
+      ok: {
+        adapter: 'css-custom-properties',
+        files: ['src/ok.css'],
+        scope: ':root',
+        canon: { repo: 'acme/design-system', file: 'tokens.css', scope: ':root' },
+        pinned: { '--ink': '#1C1F2E' },
+      },
+      drifted: {
+        adapter: 'css-custom-properties',
+        files: ['src/drifted.css'],
+        scope: ':root',
+        canon: { repo: 'acme/design-system', file: 'tokens.css', scope: ':root' },
+        pinned: { '--paper': '#FFFFFF' },
+      },
+    },
+    admissions: { R1: { verifiers: ['shared-values'] } },
+  };
+  const { grid, checks } = judged({
+    'graduand.json': `${JSON.stringify(declaration)}\n`,
+    'src/ok.css': ':root {\n  --ink: #1C1F2E;\n}\n',
+    'src/drifted.css': ':root {\n  --paper: #F6F5F2;\n}\n', // 박제와 어긋난다
+  });
+
+  assert.equal(checks.find((c) => c.id === 'shared-values:ok')!.status, 'pass');
+  assert.equal(checks.find((c) => c.id === 'shared-values:drifted')!.status, 'violation');
+  // ⛔ 축 사이를 접지 않는다 — 「하나는 통과」가 그 줄의 ✅ 를 사지 못한다.
+  assert.equal(rowOf(grid.rules, 'R1').status, 'violation');
+  // 선언에 적힌 것은 여전히 **등록부의 이름**이다 — 축은 결과의 칸이 든다.
+  assert.deepEqual(rowOf(grid.rules, 'R1').verifiers, ['shared-values']);
 });

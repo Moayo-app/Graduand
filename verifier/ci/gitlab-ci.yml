@@ -1,0 +1,71 @@
+# GitLab include — 고객 저장소가 **한 줄로** graduand 를 돌리는 자리.
+#
+#   include:
+#     - remote: 'https://raw.githubusercontent.com/Moayo-app/Graduand/<ref>/verifier/ci/gitlab-ci.yml'
+#   variables:
+#     GRADUAND_REF: '<ref>'
+#
+# ⭐ 들어오는 것은 잡 둘이다 — 쓸 수 있는 `graduand` 하나와, 늘려 쓸 수 있는 숨은 템플릿
+# `.graduand` 하나. 축마다 잡을 따로 세우고 싶으면 `extends: .graduand` 로 늘린다.
+#
+# ⭐⭐ **공유 스크립트가 둘이고 입구가 셋이다** — argv 를 짓는 손(`graduand-ci.sh`)과 시야를
+# 모으는 손(`graduand-peers.sh`). 입구마다 변환을 적으면 그 사본들은 갈라지고, 갈라진 뒤에도
+# 각자 자기 기준으로는 옳다 — 이 모듈이 재는 그 결함이다. ⇒ 이 템플릿이 하는 일은
+# ⑴ 판정기를 가져오고 ⑵ 그 두 스크립트를 부르는 것뿐이다.
+#
+# ⭐ **또래 clone 이 이 파일에서 내려갔다**(#115) — 빅버킷 조각이 같은 루프를 적어야 했고,
+# 그 사본이 태어나기 전에 손을 하나로 모았다.
+#
+# ⚠️ **왜 clone 인가.** GitHub 쪽은 Action 을 참조하면 그 저장소가 러너에 **이미 놓인다**
+# (`github.action_path`). GitLab 에는 그 기전이 없으므로 판정기를 직접 가져온다. 런타임
+# 의존이 0 이라 `npm install` 이 없다 — ⭐ **얕은 clone 하나가 설치의 전부다.**
+#
+# ⚠️⚠️ **`GRADUAND_REF` 에 기본값을 두지 않는다 — 비면 멈춘다.** `main` 을 기본으로 깔면
+# 고객의 판정기가 **고객이 모르는 사이에** 바뀌고, 어제 초록이던 커밋이 오늘 빨강이 된다.
+# 그것은 「공유값의 정본과 하류가 갈라졌는가」를 파는 도구가 자기 고객에게 저지르는 바로
+# 그 갈라짐이다. ⇒ 판을 고정하는 것은 **고객의 선언**이고, 선언하지 않은 것은 추측하지 않는다.
+#
+# ⛔ 이 잡은 저장소에 아무것도 쓰지 않고 판정 결과를 어디로도 내보내지 않는다.
+# ⛔ 종료 코드를 접지 않는다 — 0 통과 · 1 위반 또는 넘긴 만기 · 2 판정 실패.
+
+.graduand:
+  # ⚠️ Node ≥23.6 이 TypeScript 소스를 빌드 없이 그대로 도는 첫 판이다. 이 아래로 내리면
+  #    스크립트가 **먼저 묻고 멈춘다**(exit 2) — 돌 수 없는 것이 「위반 0」이 되지 않는다.
+  image: node:24-alpine
+  variables:
+    GRADUAND_REPO: "https://github.com/Moayo-app/Graduand.git"
+    # ⛔ 기본값 없음 — 위 ⚠️⚠️ 참조. 고객이 적는다.
+    GRADUAND_REF: ""
+    GRADUAND_SRC_DIR: ".graduand-src"
+    # 체크아웃 경로 — 한 줄에 하나. ⚠️ **선언이다**: 아래 GRADUAND_PEERS 로 가져온 저장소도
+    # 여기 적지 않으면 시야에 들지 않는다(적지 않은 체크아웃은 추측으로 채워지지 않는다).
+    GRADUAND_ROOTS: "."
+    # 시야에 더할 저장소 — 한 줄에 `<디렉터리> <url> <ref>`. 비면 clone 0 이다.
+    # ⚠️ 가져오는 것과 **보는 것**은 다른 행위다 — 가져온 뒤 GRADUAND_ROOTS 에 그 디렉터리를
+    #    적어야 판정의 시야에 든다. 둘을 한 변수로 합치면 「무엇을 보았는가」의 손이 둘이 된다.
+    GRADUAND_PEERS: ""
+    GRADUAND_COMMAND: "judge"
+    GRADUAND_FORMAT: "report"
+  before_script:
+    - |
+      set -eu
+      if [ -z "$GRADUAND_REF" ]; then
+        echo "graduand: GRADUAND_REF 가 비었다 — 판정기의 판을 고정해라." >&2
+        echo "  고정하지 않으면 판정기가 고객이 모르는 사이에 바뀌고, 어제 초록이던 커밋이" >&2
+        echo "  오늘 빨강이 된다 — 이 도구가 파는 그 갈라짐을 이 도구가 저지르는 자리다." >&2
+        exit 2
+      fi
+      command -v git >/dev/null 2>&1 || apk add --no-cache git >/dev/null
+      # ⚠️ **부트스트랩의 이 세 줄만 사본이다** — 공유 스크립트를 가져오는 줄이라 공유
+      #    스크립트가 될 수 없다(닭과 달걀). 없앨 수 없는 사본이므로 선언하고 가드를
+      #    세운다: 빅버킷 조각의 같은 자리와 **함께** 테스트가 문다(판 고정 · 얕은 clone).
+      rm -rf "$GRADUAND_SRC_DIR"
+      git clone --quiet --depth 1 --branch "$GRADUAND_REF" "$GRADUAND_REPO" "$GRADUAND_SRC_DIR"
+    # ⭐ 시야를 모으는 손도 공유다 — 빅버킷 조각이 **같은 파일**을 부른다.
+    - "$GRADUAND_SRC_DIR/verifier/ci/graduand-peers.sh"
+  script:
+    # ⭐ 같은 스크립트 · 같은 환경 이름 — Action 과 이 잡이 **같은 argv** 를 짓는다.
+    - GRADUAND_SRC="$GRADUAND_SRC_DIR/verifier" "$GRADUAND_SRC_DIR/verifier/ci/graduand-ci.sh"
+
+graduand:
+  extends: .graduand

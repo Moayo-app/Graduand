@@ -10,7 +10,7 @@
   "scripts": {
     "test": "node --test \"src/**/*.test.ts\"",
     "typecheck": "tsc --noEmit",
-    "build": "tsc -p tsconfig.build.json"
+    "build": "tsc -p tsconfig.build.json && node src/generate.ts"
   },
   "devDependencies": {
     "@types/node": "24.10.1",

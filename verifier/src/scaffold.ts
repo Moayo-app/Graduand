@@ -26,7 +26,7 @@
  * (`cli.ts`)에서 들어온다 — `Opener` 와 같은 모양이다.
  */
 
-import { DECLARATION_FILE, PALETTE_KEYS, TOP_KEYS } from './declaration.ts';
+import { DECLARATION_FILE, declarationJson, AXIS_KEYS, SHARED_VALUES_KEY, TOP_KEYS } from './declaration.ts';
 import { VERIFIER_IDS } from './verifiers/registry.ts';
 
 /**
@@ -36,11 +36,13 @@ import { VERIFIER_IDS } from './verifiers/registry.ts';
 export const SCAFFOLD_DECLARATION: { admissions: Record<string, never> } = { admissions: {} };
 
 /**
- * `init` 이 쓰는 **바이트** = 페이지가 내보내는 **문자열**. 들여쓰기와 끝 개행이 이
- * 상수의 일부다 — 손으로 고치는 파일이고, 두 입구의 산출물이 바이트까지 같아야 「같은
- * 스키마, 같은 내용」이 단정이 아니라 사실이 된다.
+ * `init` 이 쓰는 **바이트** = 페이지가 내보내는 **문자열**. 두 입구의 산출물이 바이트까지
+ * 같아야 「같은 스키마, 같은 내용」이 단정이 아니라 사실이 된다.
+ *
+ * ⭐ 들여쓰기와 끝 개행을 **여기서 짓지 않는다** — 선언을 내는 입구가 스캐폴드 하나가
+ * 아니게 되면서(조립의 갈래 둘) 바이트를 짓는 손이 `declarationJson` 으로 모였다.
  */
-export const SCAFFOLD_JSON = `${JSON.stringify(SCAFFOLD_DECLARATION, null, 2)}\n`;
+export const SCAFFOLD_JSON = declarationJson(SCAFFOLD_DECLARATION);
 
 /** 호스트가 쥐는 셋 — 자리 · 실재 · 쓰기. 경로의 의미도 파일시스템의 의미도 호스트 몫이다. */
 export interface ScaffoldIo {
@@ -50,7 +52,7 @@ export interface ScaffoldIo {
   write(path: string, text: string): void;
 }
 
-export type InitOutcome =
+export type DeclarationWrite =
   /** 썼다. `path` 가 쓰인 그 자리다. */
   | { kind: 'written'; path: string }
   /** 이미 선언이 있다 — 쓰지 않았다. ⛔ 덮어쓰기는 이 명령이 할 수 있는 일이 아니다. */
@@ -58,32 +60,40 @@ export type InitOutcome =
   /** 쓰려 했고 실패했다 — 쓰지 않았다. */
   | { kind: 'write-failed'; path: string; message: string };
 
-export function initDeclaration(root: string, io: ScaffoldIo): InitOutcome {
+export function writeDeclaration(root: string, io: ScaffoldIo, text: string): DeclarationWrite {
   const path = io.pathIn(root);
   // ⛔ 덮어쓰지 않는다 — 선언은 고객이 적은 것이고, 우리가 지울 수 있는 것이 아니다.
   // 「있으면 멈추고 말한다」가 이 분기의 전부다: 병합도 보존도 추측이다.
   if (io.exists(path)) return { kind: 'already-declared', path };
   try {
-    io.write(path, SCAFFOLD_JSON);
+    io.write(path, text);
   } catch (e) {
     return { kind: 'write-failed', path, message: (e as Error).message };
   }
   return { kind: 'written', path };
 }
 
+/**
+ * `init` — **빈 선언**을 쓴다. 쓰는 규율(덮어쓰지 않는다 · 쓰지 못한 것을 썼다고 말하지
+ * 않는다)은 위 `writeDeclaration` 하나이고, 이 함수가 더하는 것은 **내용** 하나다.
+ */
+export const initDeclaration = (root: string, io: ScaffoldIo): DeclarationWrite =>
+  writeDeclaration(root, io, SCAFFOLD_JSON);
+
 /** 다음에 적을 것 — 스키마에서 **읽어서** 적는다(산문 사본 0: 정본은 `declaration.ts`). */
 const nextLines = (): string[] => [
   `   다음에 적을 것 — 최상위 키 ${TOP_KEYS.length} 개 (${TOP_KEYS.join(' · ')}):`,
   `     · admissions.<규칙 id>.verifiers — 고를 수 있는 판정기: ${VERIFIER_IDS.join(' · ')}`,
   `       (키는 규칙 id 다 — 규범 **정본의 규칙을 가리키는 이름**이지 규칙 본문이 아니다)`,
-  `     · palette — 키 ${PALETTE_KEYS.length} 개 (${PALETTE_KEYS.join(' · ')})`,
+  `     · ${SHARED_VALUES_KEY}.<축> — 공유값 축 하나당 키 ${AXIS_KEYS.length} 개 (${AXIS_KEYS.join(' · ')})`,
+  `       (축의 이름은 **당신이 짓는다** — 「디자인 · API」처럼 규율의 갈래마다 하나이고, 축마다 정본이 따로 선다)`,
   `     · ui — UI 경로 목록. 적지 않으면 그 축은 미판정이고, 빈 목록은 「UI 없음」이라는 선언이다`,
   '   ⭐ canon 은 가리키는 자리다 — 규범의 정본 주소를 적고, 규범 자체를 저장소마다 베끼지 않는다.',
   '      저장소 10 개에 같은 규범이 10 부 적히면 그것이 바로 이 판정기가 재는 갈라짐이다.',
 ];
 
 /** 말하는 것 — 쓴 것 · 쓰지 않은 것 · 다음에 적을 것. 보고 표면과 같은 규율: 상태를 숨기지 않는다. */
-export function formatInitOutcome(outcome: InitOutcome): { stdout: string[]; stderr: string[] } {
+export function formatInitOutcome(outcome: DeclarationWrite): { stdout: string[]; stderr: string[] } {
   switch (outcome.kind) {
     case 'written':
       return {
@@ -116,4 +126,4 @@ export function formatInitOutcome(outcome: InitOutcome): { stdout: string[]; std
 }
 
 /** 0 = 썼다 · 2 = 쓰지 않았다. ⛔ 1 은 쓰지 않는다 — 그 자리는 「위반 ≥ 1」의 몫이다. */
-export const initExitCode = (outcome: InitOutcome): 0 | 2 => (outcome.kind === 'written' ? 0 : 2);
+export const writeExitCode = (outcome: DeclarationWrite): 0 | 2 => (outcome.kind === 'written' ? 0 : 2);

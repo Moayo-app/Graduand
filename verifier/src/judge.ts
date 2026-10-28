@@ -2,8 +2,9 @@
  * 판정 오케스트레이션 — 스냅샷 하나와 그 **시야**를 받아 **등록부에 선 판정기 전부**를 돌린다.
  *
  * ⭐⭐ 시야와 **자격**이 같은 자리(`JudgeContext`)에 같은 성질로 들어온다 — 둘 다 호스트가
- * 읽어(물어) 싣는 입력이고, 판정은 받는다. 자격이 없으면 등록부는 **돌지 않고** 칸 전부가
- * 「미판정 + 사유」로 남는다(`ungraded`) — 자격은 위반이 아니고, 분모는 그대로 보인다.
+ * 읽어(물어) 싣는 입력이고, 판정은 받는다. 자격이 없으면 **선언을 분모로 쓰는 축만** 돌지
+ * 않고 그 칸이 「미판정 + 사유」로 남는다(`ungraded`) — 자격은 위반이 아니고, 분모는 그대로
+ * 보인다. ⚠️ **전부가 아니다**: 선언 없이 도는 축은 그대로 수를 낸다(아래 `judgeSnapshot`).
  *
  * 순수 함수다: I/O 도 네트워크도 없다. 고객 CI 와 브라우저가 **이 함수 하나**를 쓰므로
  * 같은 커밋에 대한 두 표면의 판정은 canonical 직렬화까지 바이트 동일하다 — ⚠️ 같은 시야
@@ -11,7 +12,7 @@
  * 원리상 못 보던 축이 서므로 수가 **달라진다**: 같은 입력에 같은 바이트이고, 시야는 입력이다.
  *
  * ⭐ **판정 집합의 정본은 등록부다**(`verifiers/registry.ts`). 여기 있던 하드코딩된 배열
- * (`[judgeRefs(…), judgeUiPaths(…), …judgePalette(…)]`)은 등록부와 **조용히 갈라질 수
+ * (`[judgeRefs(…), judgeUiPaths(…), …judgeSharedValues(…)]`)은 등록부와 **조용히 갈라질 수
  * 있었다** — 고객이 고를 수 있는 이름과 실제로 도는 판정기가 다른 목록에 적히면, 선언된
  * 이름이 어느 칸도 내지 않는 채 초록이 된다. 아래 `RUNNERS` 는 `Record<VerifierId, …>` 라서
  * 등록부에 이름을 더하면 **런너 없이는 타입이 서지 않는다.**
@@ -24,11 +25,17 @@
 import { SCHEMA_VERSION, type CheckResult, type Judgment, type ReasonCode } from './schema.ts';
 import { indexPaths, type PathIndex, type RepoSnapshot } from './snapshot.ts';
 import { declarationOf, type ResolvedDeclaration } from './declaration.ts';
-import { VERIFIER_IDS, type VerifierId } from './verifiers/registry.ts';
+import {
+  FREE_VERIFIER_IDS,
+  isCheckOf,
+  PAID_VERIFIER_IDS,
+  VERIFIER_IDS,
+  type VerifierId,
+} from './verifiers/registry.ts';
 import { entitlementGate, type Entitlement, type EntitlementDetail } from './entitlement.ts';
 import { judgeRefs } from './verifiers/refs.ts';
 import { judgeUiPaths } from './verifiers/ui-paths.ts';
-import { judgePalette } from './verifiers/palette.ts';
+import { judgeSharedValues } from './verifiers/shared-values.ts';
 
 /**
  * 판정이 보는 **시야** — 이 스냅샷 하나가 아니라, 같은 잡이 함께 체크아웃한 것들.
@@ -70,24 +77,39 @@ type Runner = (input: JudgeInput) => CheckResult[];
 
 /** 등록부 조회 — 이름마다 런너 하나. 전수는 `Record` 가 집행한다(빠지면 타입이 선다). */
 const RUNNERS: Record<VerifierId, Runner> = {
-  palette: (input) => judgePalette(input),
-  'palette-cross': (input) => judgePalette(input),
   refs: ({ snapshot, index }) => [judgeRefs(snapshot, index)],
+  'shared-values': (input) => judgeSharedValues(input),
+  'shared-values-cross': (input) => judgeSharedValues(input),
   'ui-paths': ({ index, declaration }) => [judgeUiPaths(index, declaration)],
 };
 
 /**
- * 등록부를 돌려 체크 전부를 낸다. 이름 하나가 여러 칸을 내면 그 칸들이 한 번에 들어오고,
+ * 칸의 정렬 — ⭐ **세는 손이 하나다.** 자격이 축을 가르면서 결과가 두 갈래(돈 축 · 안 돈 축)
+ * 에서 오는데, 갈래마다 각자 정렬하면 합친 목록의 순서가 **갈래의 수에 따라** 달라진다.
+ * 그러면 같은 커밋·같은 자격에서 직렬화 바이트가 흔들리고, 두 표면의 바이트 동일성이 깨진다.
+ */
+const byCheckId = (a: CheckResult, b: CheckResult): number => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+
+/**
+ * 등록부를 돌려 체크를 낸다. 이름 하나가 여러 칸을 내면 그 칸들이 한 번에 들어오고,
  * 이미 든 이름은 다시 돌리지 않는다 — 판정은 순수하므로 두 번 돌려도 같은 수이되, 같은
  * 수를 두 번 내는 것은 낭비다. 결과는 `id` 코드유닛 순으로 정렬된다.
+ *
+ * ⭐ **부분 집합을 받는다** — 자격이 없을 때 도는 것은 선언 없이 서는 축뿐이다. ⛔ 전부
+ * 돌려 놓고 표시만 가리는 길은 이 모듈이 기각한 모양이다(「계산하고 표시만 가린다」는
+ * 「막는 척」이다): **돌지 않는 것**이 집행이라, 막힌 축은 이 함수에 들어오지도 않는다.
  */
-function runRegistry(input: JudgeInput): CheckResult[] {
+function runRegistry(input: JudgeInput, ids: readonly VerifierId[] = VERIFIER_IDS): CheckResult[] {
   const byId = new Map<string, CheckResult>();
-  for (const id of VERIFIER_IDS) {
-    if (byId.has(id)) continue;
+  for (const id of ids) {
+    // ⭐ 「이미 돌았는가」를 **칸의 이름으로** 묻는다 — 개정 4 에서 칸의 id 가 등록부 이름과
+    //   같지 않게 됐다(`shared-values:<축>`). `byId.has(id)` 로 물으면 축이 선언된 저장소에서
+    //   그 질문이 영원히 거짓이고, 판정기가 축 수와 무관하게 **두 번** 돈다(순수 함수라 수는
+    //   같지만, 같은 수를 두 번 내는 것은 낭비다). 가르는 술어는 등록부가 쥔다.
+    if ([...byId.keys()].some((checkId) => isCheckOf(id, checkId))) continue;
     for (const check of RUNNERS[id](input)) byId.set(check.id, check);
   }
-  return [...byId.values()].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  return [...byId.values()].sort(byCheckId);
 }
 
 /**
@@ -103,28 +125,46 @@ export function judgeSnapshot(snapshot: RepoSnapshot, context: JudgeContext = {}
   // 멈춘다), 자격이 없다고 그 사실이 조용해지지 않는다. 그리고 이 호출이 분모를 세우므로
   // 「분모는 자격 없이 보인다」가 이 순서에 걸려 있다 — 격자는 같은 선언을 읽는다.
   const declaration = declarationOf(snapshot, index);
+  const input: JudgeInput = { snapshot, index, declaration, peers: context.peers ?? [] };
+
+  // ⭐⭐ **자격은 전부를 막지 않는다 — 축마다 가른다.** 가르는 기준은 파일도 판정기의
+  //    난이도도 아니고 **「선언이 필요한 기능인가」**이고, 그 분류의 정본은 등록부다
+  //    (`VERIFIER_BASIS`). 화면이 그 말로 팔고 있으므로 여기서 다른 기준을 쓰면 **선언과
+  //    실물이 갈라진다** — 이 제품이 파는 바로 그 결함이다.
+  // ⛔ 전부 돌려 놓고 막힌 축의 수만 지우지 않는다: 막힌 축은 `runRegistry` 에 들어오지도
+  //    않는다(「계산하고 표시만 가린다」는 「막는 척」이다).
+  // ⛔ 반대로 막힌 축의 **칸을 없애지도** 않는다 — 칸의 구성은 선언에서 오고 선언은 고객
+  //    것이다. 자격이 거는 것은 **수를 내는 것**뿐이라, 칸은 「미판정 + 사유」로 남는다.
   const gate = entitlementGate(context.entitlement);
   const checks =
     gate === null
-      ? runRegistry({ snapshot, index, declaration, peers: context.peers ?? [] })
-      : ungraded(gate.reason, gate.detail);
+      ? runRegistry(input)
+      : [
+          ...runRegistry(input, FREE_VERIFIER_IDS),
+          ...ungraded(gate.reason, gate.detail, PAID_VERIFIER_IDS),
+        ].sort(byCheckId);
 
   return { v: SCHEMA_VERSION, repo: snapshot.repo, commit: snapshot.commit, checks };
 }
 
 /**
- * 자격이 없을 때의 체크 전부 — **등록부의 이름마다 한 칸**이고 전부 미판정이다.
+ * 자격이 막은 축의 체크 — **이름마다 한 칸**이고 전부 미판정이다.
  *
  * ⭐ **수가 없고 칸은 있다**: `counts` 가 비는 것이 「수를 내지 않았다」의 집행이고,
  * 칸의 분모는 선언에서 오므로(`grid.ts`) 자격 없이도 그대로 보인다. ⛔ 「계산하고 표시만
  * 가린다」가 아니다 — 판정기는 **돌지 않는다**(위 분기가 `runRegistry` 를 부르지 않는다).
  * ⛔ 「분모도 감춘다」도 아니다 — 격자는 이 결과 위에서 선언의 칸을 그대로 센다.
  *
- * 이름을 베껴 적지 않고 등록부를 **읽는다** — 사본은 등록부와 갈라지고, 갈라지면 어느
- * 칸이 자격에 막혔는지 말할 수 없다. 정렬은 `runRegistry` 와 같은 `id` 코드유닛 순이다.
+ * ⚠️ **분모가 등록부 전수에서 부분 집합으로 좁아졌다** — 전에는 이 함수가 칸 **전부**를
+ * 냈고, 그것이 무료 축까지 함께 끄던 그 한 줄이다. 받는 쪽이 목록을 **인자로** 넘기므로
+ * 이 함수는 무엇이 무료인지 모른다: 그 분류를 아는 자리는 등록부 하나다.
  */
-function ungraded(reason: ReasonCode, detail: EntitlementDetail): CheckResult[] {
-  return [...VERIFIER_IDS]
+function ungraded(
+  reason: ReasonCode,
+  detail: EntitlementDetail,
+  ids: readonly VerifierId[] = VERIFIER_IDS,
+): CheckResult[] {
+  return [...ids]
     .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
     .map((id) => ({ id, status: 'unjudged' as const, reason, counts: {}, evidence: [{ entitlement: detail }] }));
 }

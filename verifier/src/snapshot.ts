@@ -20,7 +20,7 @@ export interface RepoSnapshot {
   paths: string[];
   /**
    * 판정이 본문을 읽어야 하는 파일의 내용 — 마크다운 · 선언 파일, 그리고 선언이
-   * 지목한 팔레트 파일(`palette.files` — 호스트가 선언을 먼저 읽고 싣는다).
+   * 지목한 공유값 파일(축 전부의 `files` — 호스트가 선언을 먼저 읽고 싣는다).
    * **null = 읽기 실패.** 조용히 건너뛰지 않는다 — 못 읽은 것은 잘림이고,
    * 잘림 위에서는 수를 내지 않는다.
    */
@@ -30,7 +30,7 @@ export interface RepoSnapshot {
 /**
  * 스냅샷이 언제나 본문까지 실어야 하는 파일인가 — 마크다운과 선언 파일.
  * 선언이 지목하는 팔레트 파일은 여기 없다: 그 목록은 선언의 내용이라 정적으로 알 수
- * 없고, 호스트가 선언을 읽은 뒤 `declaredPaletteFiles` 로 더 싣는다.
+ * 없고, 호스트가 선언을 읽은 뒤 `declaredAxisFiles` 로 더 싣는다.
  */
 export const needsContent = (path: string): boolean =>
   path.endsWith('.md') || path === 'graduand.json';

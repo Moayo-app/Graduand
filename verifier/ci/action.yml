@@ -1,0 +1,77 @@
+# 재사용 Action — 고객 저장소가 **한 줄로** graduand 를 돌리는 자리.
+#
+#   - uses: Moayo-app/Graduand/verifier/ci@<ref>
+#
+# ⭐⭐ **체크아웃 N 개를 받는 모양이 이 Action 의 요점이다.** 교차 축(「박제 == 정본」)은
+# 정본이 **같은 잡의 시야에** 있을 때만 설 수 있고, 그 시야를 만드는 유일한 길이 `--root`
+# 를 여러 번 주는 것이다. 그 조립을 고객에게 맡기면 **가장 중요한 판정이 가장 어려운 호출**
+# 이 된다 — 그래서 `roots` 를 여러 줄로 받고, 변환은 공유 스크립트 하나가 한다.
+#
+# 시야를 만드는 쪽은 GitHub 의 관행 그대로다(우리가 기전을 만들지 않는다):
+#
+#   - uses: actions/checkout@v4
+#     with: { path: app }
+#   - uses: actions/checkout@v4
+#     with: { repository: acme/design-system, path: design-system }
+#   - uses: actions/setup-node@v4
+#     with: { node-version: 24 }
+#   - uses: Moayo-app/Graduand/verifier/ci@<ref>
+#     with:
+#       roots: |
+#         app
+#         design-system
+#
+# ⚠️ **`roots` 는 선언이다** — 체크아웃해 둔 것이 자동으로 시야에 들지 않는다. 적지 않은
+# 체크아웃은 보이지 않고, 그 축은 「위반 0」이 아니라 `single-repo-surface` 미판정이다.
+# ⛔ 디스크를 훑어 추측하지 않는다: 추측한 분모 위의 수는 전부 거짓이다.
+#
+# ⚠️ **Node 를 세우지 않는다.** `actions/setup-node` 를 여기서 부르면 고객 워크플로가 이미
+# 세운 판을 말없이 덮어쓴다 — 그것은 이 Action 이 요청받지 않은 행위다. ⇒ 고객이 세우고,
+# 이 Action 은 **먼저 묻고 멈춘다**(Node ≥23.6 · exit 2). 돌 수 없는 것은 초록이 아니다.
+#
+# ⛔ 토큰도 시크릿도 받지 않는다 — 이 Action 은 저장소에 아무것도 쓰지 않고 네트워크로
+# 아무것도 내보내지 않는다. 다른 Action 도 부르지 않는다(공급망 표면 0).
+name: graduand
+description: 공유값의 정본과 하류가 갈라졌는가를 3상태(통과 · 위반 · 미판정 + 사유)로 판정한다.
+
+inputs:
+  roots:
+    description: >-
+      판정할 체크아웃 경로 — 한 줄에 하나. 여럿이면 각 체크아웃은 나머지 전부를 시야로
+      판정되고, 교차 축이 그 표면에서 선다. 기본은 작업 디렉터리 하나다.
+    required: false
+    default: "."
+  command:
+    description: >-
+      judge (기본) = 판정한다. rules = 선언이 **무엇을 분모로 세웠는가**만 낸다
+      (편입 규칙 · 규칙마다의 판정기 · 축마다의 정본 주소 · 면제와 만기). rules 는 판정하지
+      않으므로 빨강을 내지 않는다.
+    required: false
+    default: judge
+  format:
+    description: >-
+      report (기본) = 사람이 읽는 보고. json = 기계가 읽는 한 줄(체크아웃마다 한 줄).
+      ⛔ fragment · open 은 없다 — 측정 하나를 싣는 플래그이고, CI 에는 브라우저가 없다.
+    required: false
+    default: report
+  output-path:
+    description: >-
+      stdout 을 함께 담을 파일. 비면 담지 않는다. ⭐ 담은 파일은 아티팩트로 올리거나 PR
+      코멘트로 붙이는 자리다 — 종료 코드는 그와 무관하게 **그대로 전달된다**.
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    # ⭐ 값은 **환경으로** 들어간다 — `run:` 본문에 ${{ }} 를 끼우면 입력이 셸 문법으로
+    #    읽히는 자리가 생긴다(고객이 적는 값이고, 그 값은 우리 것이 아니다).
+    - name: graduand
+      shell: bash
+      env:
+        GRADUAND_ROOTS: ${{ inputs.roots }}
+        GRADUAND_COMMAND: ${{ inputs.command }}
+        GRADUAND_FORMAT: ${{ inputs.format }}
+        GRADUAND_OUTPUT: ${{ inputs.output-path }}
+      # ⭐ argv 를 짓는 손은 이 스크립트 하나다 — GitLab include 가 **같은 파일**을 부른다.
+      run: "${{ github.action_path }}/graduand-ci.sh"

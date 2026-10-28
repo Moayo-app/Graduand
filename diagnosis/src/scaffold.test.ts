@@ -16,6 +16,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { DECLARATION_FILE, SCAFFOLD_JSON, validateDeclaration } from '../../verifier/src/index.ts';
+import { DOCUMENT_FILE, renderAll, TEMPLATE_FILE } from './generate.ts';
 import { CATALOG } from './strings.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -51,12 +52,18 @@ test('AC4 — 조각과 `init` 산출물은 같은 스키마가 아니라 **같�
 });
 
 test('AC4 — 페이지는 조각의 사본을 들지 않는다 (마크업에 박힌 선언 0)', () => {
-  const html = read('index.html');
-  // 빈 자리 하나 — 내용은 판정기 모듈에서 온다. 마크업이 사본을 들면 스키마가 움직이는
-  // 날 페이지만 옛 조각을 내보내고, 그것을 알아차릴 길이 없다.
-  assert.match(html, /<pre id="scaffold-snippet"[^>]*><\/pre>/);
-  for (const key of Object.keys(JSON.parse(SCAFFOLD_JSON) as Record<string, unknown>)) {
-    assert.ok(!html.includes(`"${key}"`), `index.html 이 조각의 사본을 든다: ${key}`);
+  // ⭐ 분모가 **발행본**이다 — 방문자가 받는 바이트에 사본이 없어야 하고, 산문이 카탈로그로
+  //   내려온 뒤 그 바이트는 틀이 아니라 생성기가 낸다(틀만 보면 카탈로그에 박힌 사본을
+  //   아무 말도 하지 않는다).
+  const documents = renderAll(read(TEMPLATE_FILE));
+  for (const [locale, html] of Object.entries(documents)) {
+    const name = `${locale}/${DOCUMENT_FILE}`;
+    // 빈 자리 하나 — 내용은 판정기 모듈에서 온다. 마크업이 사본을 들면 스키마가 움직이는
+    // 날 페이지만 옛 조각을 내보내고, 그것을 알아차릴 길이 없다.
+    assert.match(html, /<pre id="scaffold-snippet"[^>]*><\/pre>/, `${name}: 빈 자리가 없다`);
+    for (const key of Object.keys(JSON.parse(SCAFFOLD_JSON) as Record<string, unknown>)) {
+      assert.ok(!html.includes(`"${key}"`), `${name} 이 조각의 사본을 든다: ${key}`);
+    }
   }
 });
 

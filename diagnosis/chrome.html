@@ -1,0 +1,161 @@
+<!doctype html>
+<!--
+  **크롬** — 문서 둘이 같이 쓰는 한 벌이다: head · GNB · 히어로 틀 · 푸터. 본문이 들어오는
+  자리는 `{{raw:body}}` **하나**이고, 그 자리에 문서마다의 틀(`template*.html`)이 들어온다.
+  ⭐⭐ 틀 둘에 크롬을 베끼면 한쪽만 고치는 날 갈라진다 — 이 제품이 파는 바로 그 결함이라
+  자기에게 먼저 적용한다. ⛔ 자리가 없거나 둘이면 생성기가 **던진다**(본문이 조용히 사라지는
+  실패를 발행본까지 보내지 않는다).
+
+  손으로 쓰는 것은 **구조**뿐이고 산문은 0 이다(`src/strings-{ko,en}.ts`).
+  `node src/generate.ts` 가 **문서 × 로케일**마다 `dist/<로케일>/[<문서>/]index.html` 을 낸다.
+
+  ⭐ 문서에 따라 달라지는 자리 넷 — 페이지 스크립트(`{{plain:scriptPath}}`) · 브랜드 링크의
+    `aria-current`(`{{raw:homeCurrent}}`: 원페이지에서만 자기를 가리킨다) · 그 로케일의 루트로
+    가는 상대 경로(`{{plain:localeRoot}}`: 정책 문서 셋이 거기 산다) · 제품 컬럼
+    (`{{raw:productLinks}}`: **문서마다 자기 블록**을 가리킨다).
+
+  ⭐ 자리의 꼴 셋 — `{{키}}` 는 산문(이스케이프 + 인라인 강조), `{{plain:키}}` 는 속성과
+    `<title>`(이스케이프만), `{{raw:키}}` 는 **생성기가 지은 마크업**이다(브랜드 정본에서
+    읽은 도형 · `LOCALES` 에서 유도한 목록 · 법정 행). 카탈로그의 키는 raw 로 설 수 없고,
+    모르는 자리도 쓰이지 않는 키도 생성기가 **던진다**.
+
+  ⭐⭐ 경로를 **성질로** 가른다.
+    · 로케일마다 둘이 되는 것 — 이 문서와 `policies/*.html`(번역판 정본이 따로 있다).
+      ⇒ **문서 기준 상대 경로**로 부른다(`./policies/…` · 형제 로케일은 `../<로케일>/`):
+      로케일 접두를 박지 않으므로 접두가 움직여도 이 틀이 따라 움직일 필요가 없다.
+    · 루트 하나로 남는 것 — `styles.css` · 페이지 스크립트 · 파비콘 · `checkout/` ·
+      `portal/` · `company/`. ⇒ **루트 절대 경로**로 부른다(`/styles.css`): 로케일 불변인데
+      복제하면 사본이고, 사본은 갈라진다. ⭕ 루트 절대 경로는 **밖으로 나가는 주소가
+      아니다** — 밖으로 나가는 문은 여전히 **지정된 리다이렉트**이고, 금칙(절대 주소 ·
+      프로토콜 상대 주소)은 그대로 돈다.
+    · ⭐⭐ 그리고 **절대 주소가 서는 자리가 생겼다** — 색인 선언(canonical · hreflang · OG)은
+      규격이 절대 주소를 요구해 상대 경로로 적을 수 없다. 금칙은 걷지 않고 **자리를 하나로
+      모았다**: 출처가 `src/site.ts` 의 상수 하나이고, 가드가 그 하나만 면제한 뒤 발행본의
+      모든 절대 주소가 **그 출처로 시작하는지**까지 센다(벤더 주소가 들어올 길이 없다).
+
+  ⭐⭐ **해시를 둘이 나눠 쓴다** — 보고서 요약과 페이지 닻이다. 가르는 규칙은 요약의 모양이
+    정하므로 그 모양을 아는 판정기 모듈이 든다(`looksLikeFragment`). ⇒ 같은 문서 안의 닻이
+    설 수 있고, 조건 둘을 진다: 가리키는 블록이 **실재해야** 하고 닻이 **요약을 자처하지
+    않아야** 한다(둘 다 가드가 문다). ⛔ GNB 에는 여전히 내비가 0 인데, 그 사유는 앵커가
+    아니라 **중복**이다 — 진단 입구가 히어로 바로 아래라 첫 화면에 이미 있다.
+
+  ⚠️ 이 주석은 발행본에 **남지 않는다** — 생성기가 벗긴다(발행본은 공개 배달 범위다).
+-->
+<html lang="{{plain:locale}}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{plain:title}}</title>
+  <meta name="description" content="{{plain:description}}">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="stylesheet" href="/styles.css">
+  <script type="module" src="{{plain:scriptPath}}"></script>
+
+  <!--
+    색인 선언 — ⭐ canonical 과 hreflang 이 **한 식**에서 난다(`src/site.ts` 의 `documentUrl`).
+      따로 지어지면 둘이 서로 다른 주소를 가리키는 사고가 설 자리가 생기고, 그 사고는 화면에
+      아무 표시도 남기지 않는다 — 색인만 조용히 갈라진다.
+    ⭐ `x-default` 는 루트 리다이렉트의 대상과 **같은 문서**다: 루트 · `x-default` · 크롤러가
+      보는 것이 한 곳으로 모인다.
+  -->
+  {{raw:indexing}}
+  {{raw:openGraph}}
+</head>
+<body>
+  <header class="gnb">
+    <nav class="gnb-in" aria-label="{{plain:nav.label}}">
+      <!--
+        브랜드 락업 — 홈이다. ⭐ 해시 보기에서 **해시를 지우고 본문으로 돌아가는 유일한
+        길**이고, 정지 상태에서는 자기 자신을 가리키므로 `aria-current="page"` 를 진다.
+        도형은 브랜드 정본에서 읽어 인라인한다 — 이름은 이 `<a>` 가 진다.
+      -->
+      <a class="brand-link" href="{{plain:localeRoot}}"{{raw:homeCurrent}} aria-label="{{plain:nav.home}}">{{raw:lockup}}</a>
+      <!--
+        로케일 셀렉터 — `<details>` 디스클로저 + **평앵커**, 자바스크립트 0.
+        ⛔ `<select>` + 이동은 협상 금칙(`location.(replace|assign|href=)`)에 걸린다.
+        ⭕ 사람이 눌러 주소가 바뀌는 것은 협상이 **아니다**.
+      -->
+      <details class="locale-pick">
+        <summary>{{nav.localeLabel}}</summary>
+        <ul class="locale-list">{{raw:localeOptions}}</ul>
+      </details>
+    </nav>
+  </header>
+
+  <section class="masthead">
+    <h1>{{heading}}</h1>
+    <p class="lede">{{lede}}</p>
+  </section>
+
+  {{raw:body}}
+
+  <footer>
+    <div class="foot-cols">
+      <!-- 브랜드 — ⛔ 태그라인 0: 원페이지라 히어로 문장이 같은 문서 안에 있고, 두 번 적으면 사본이다. -->
+      <p class="foot-brand">{{raw:lockup}}<span class="visually-hidden">graduand</span></p>
+
+      <!--
+        회사 컬럼 — ⛔ 제품 표면에서 회사는 **마크가 아니라 텍스트로만** 나타난다.
+        회사 사이트로 나가는 문은 `checkout/`·`portal/` 과 같은 꼴의 **지정된 리다이렉트**다 —
+        절대 주소를 발행본에 박지 않는다. ⭕ 그 문이 **섰다**(`site.ts` 의 REDIRECTS) — 목적지는
+        회사 사이트이고 302 다. ⚠️ **새 창으로 연다**(`target="_blank"`): 제품 표면을 떠나지
+        않게 하는 쪽이 방문자에게 낫고, ⛔ 그 사실이 **말없이** 일어나지 않게 시각 숨김 문구가
+        따라 붙는다 — 그 문구도 카탈로그를 지나므로 번역 벌이 분모다.
+      -->
+      <nav class="foot-col foot-company" aria-label="{{plain:footer.companyHeading}}">
+        <h2 class="foot-h" aria-hidden="true">{{footer.companyHeading}}</h2>
+        <ul>
+          <li>
+            <a href="/company/" target="_blank" rel="noopener"
+              >{{publisher.about}}<span class="visually-hidden"> ({{footer.newWindow}})</span></a
+            >
+          </li>
+          <li><a href="{{plain:publisher.contactMail}}">{{footer.contact}}</a></li>
+        </ul>
+      </nav>
+
+      <!--
+        제품 컬럼 — ⭐ 요금제는 **같은 문서 안의 닻**이다(별 페이지가 아니라 이 원페이지의
+        한 블록). 그 닻이 설 수 있게 된 것은 해시를 요약과 나눠 쓰는 규칙이 형식에 생긴
+        뒤다 — 그전에는 누르면 「조각을 읽을 수 없다」 판정 불가 화면이 떴다.
+        ⚠️ 가리키는 블록은 **실재해야 한다** — 가드가 같은 문서의 `id` 로 대조한다.
+        ⭐ FAQ 줄은 **그 블록이 선 뒤에** 들어왔다. 자구는 블록의 제목 키를 **같이 쓴다** —
+          링크와 제목이 여기서는 같은 말이라, 두 키로 적으면 사본이다.
+      -->
+      <nav class="foot-col" aria-label="{{plain:footer.productHeading}}">
+        <h2 class="foot-h" aria-hidden="true">{{footer.productHeading}}</h2>
+        <ul>
+          {{raw:productLinks}}
+        </ul>
+      </nav>
+
+      <nav class="foot-col" aria-label="{{plain:footer.legalHeading}}">
+        <h2 class="foot-h" aria-hidden="true">{{footer.legalHeading}}</h2>
+        <ul>
+          <li><a class="policy-link" href="{{plain:localeRoot}}policies/terms.html">{{footer.terms}}</a></li>
+          <li><a class="policy-link privacy" href="{{plain:localeRoot}}policies/privacy.html">{{footer.privacy}}</a></li>
+          <li><a class="policy-link" href="{{plain:localeRoot}}policies/refunds.html">{{footer.refunds}}</a></li>
+        </ul>
+        <!-- ⚠️ 갱신 조건은 **소비자 고지**라 법률에 남는다 — 해지 입구는 제품의 행동이다. -->
+        <p class="note renewal">{{footer.renewal}}</p>
+        <p class="note effective">{{footer.effective}}</p>
+      </nav>
+    </div>
+
+    <!-- 언어 — 셀렉터의 둘째 자리. 긴 문서의 **끝에서** 언어를 찾는 자리다. -->
+    <nav class="foot-langs" aria-label="{{plain:footer.languagesHeading}}">
+      <h2 class="foot-h" aria-hidden="true">{{footer.languagesHeading}}</h2>
+      <ul class="locale-list">{{raw:localeList}}</ul>
+    </nav>
+
+    <!--
+      법정 사업자 신원정보 — 🇰🇷 전자상거래법 시행령 §31② 지속 게재.
+      ⭐⭐ **양쪽 로케일에 선다** — 루트가 `/en/` 이라 한국 이용자의 초기화면이 영문이 되고,
+        게시가 그 화면에 있어야 한다. 값은 로케일 불변이고 **라벨만** 번역된다.
+    -->
+    <section class="publisher" aria-label="{{plain:footer.publisherLabel}}">{{raw:publisherRows}}</section>
+    <p class="copyright">{{publisher.copyright}}</p>
+  </footer>
+</body>
+</html>

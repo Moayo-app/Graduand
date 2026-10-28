@@ -119,8 +119,8 @@ test('AC3 — 비공개(또는 부재) URL 은 「위반 0」이 아니라 판�
 
   const screen = unjudgeableScreen(outcome, ko, NOW);
   const prose = screen.lines.join('\n');
-  assert.match(prose, /「위반 0」이 아니다/);
-  assert.match(prose, /비공개 저장소이거나, 존재하지 않는다/);
+  assert.match(prose, /「위반 0」이 아닙니다/);
+  assert.match(prose, /비공개 저장소이거나, 존재하지 않습니다/);
   assert.equal(screen.command, CLI_COMMAND);
   assert.equal(reasonOf(outcome), 'private-or-missing');
 });
@@ -141,13 +141,13 @@ test('AC4 — 무인증 한도 소진은 남은 대기 시간과 명령 경로�
 
   const screen = unjudgeableScreen(outcome, ko, NOW);
   const prose = screen.lines.join('\n');
-  assert.match(prose, /약 23분 뒤 풀린다/);
+  assert.match(prose, /약 23분 뒤 풀립니다/);
   assert.equal(screen.command, CLI_COMMAND);
   assert.equal(reasonOf(outcome), 'rate-limited');
 
   // 리셋 시각이 없는 응답 — 모름을 0분으로 바꾸지 않는다.
   const silent = unjudgeableScreen({ kind: 'rate-limited', resetAt: null }, ko, NOW);
-  assert.match(silent.lines.join('\n'), /리셋 시각을 말하지 않았다/);
+  assert.match(silent.lines.join('\n'), /리셋 시각을 말하지 않았습니다/);
 });
 
 test('fragment 왕복 — 측정이 그대로 돌아오고 출처는 fragment 다', async () => {
@@ -167,7 +167,7 @@ test('AC6 — 모르는 fragment 판은 조용히 해석하지 않고 버전 불
   assert.deepEqual(outcome, { kind: 'version-mismatch', axis: 'fragment', found: 'g9' });
   if (outcome.kind !== 'version-mismatch') return;
   const screen = unjudgeableScreen(outcome, ko, NOW);
-  assert.match(screen.lines.join('\n'), /모른다/);
+  assert.match(screen.lines.join('\n'), /모릅니다/);
   assert.equal(screen.command, CLI_COMMAND_LATEST);
   assert.equal(reasonOf(outcome), 'version-mismatch');
 });
@@ -192,7 +192,7 @@ test('손상된 fragment 는 그리지 않는다 — 자기검증 실패는 보�
   assert.equal(outcome.kind, 'fragment-unreadable');
   if (outcome.kind !== 'fragment-unreadable') return;
   const screen = unjudgeableScreen(outcome, ko, NOW);
-  assert.match(screen.lines.join('\n'), /그리지 않는다/);
+  assert.match(screen.lines.join('\n'), /그리지 않습니다/);
   assert.equal(reasonOf(outcome), 'fragment-unreadable');
 });
 
