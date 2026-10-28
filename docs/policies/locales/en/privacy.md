@@ -3,7 +3,7 @@
   ⚠️ ko·en 양 벌이 같은 합집합(🇰🇷 ∪ 🇺🇸 13절)을 담는다 — 한쪽에만 담으면 한쪽 독자에게 요건이 빠진다.
   ko 정본이 개정되면 이 판을 재전파하고 아래 정본 해시를 갱신한다 — 가드가 둘의 일치를 잰다.
   ⛔ 머리말에 「버전:」·「발행일:」·「시행일:」 기계 줄을 넣지 않는다 — 메타의 출처는 ko 정본 하나다.
-  정본 해시: sha256:90b73a21b0fa9b98ca0b4fc960b21ae64265d41d79bc8d1817ca79706e45ce80
+  정본 해시: sha256:b8cb7f5d9aef4fa0e5a46303d94e11fcc140263c4ce5c90a269d08d17064258f
 -->
 
 # Privacy Policy
@@ -67,9 +67,11 @@ As a mail-order business, the Company preserves transaction records for the peri
 
 These records are used only for the purpose of preservation, and are destroyed by the method in Section 7 once the period ends.
 
-⚠️ **The items collected at checkout do not pass through the Company** (Section 2). The Seller's buyer terms state that the Seller acts as **merchant of record and authorized reseller**, and that the buyer purchases the product **from the Seller** — the contract of sale stands between the buyer and the **Seller**, while the Company licenses the product as the **Supplier**.
+These records are used **only for the purpose of preservation**, and cannot be deleted on request for the duration of the period (Section 9), because a law orders them preserved. Once the period ends they are destroyed by the method in Section 7.
 
-⬜ **For that reason, this policy does not assert here who preserves the payment and contract records among the above.** The Seller's terms state neither a retention period nor a record-keeping obligation, and that attribution has to be settled in the relationship with the Seller. It will be stated here on the day it is settled — the discipline of Section 2, that empty cells are not filled with guesses, applies here too.
+⚠️ **The items collected at checkout do not pass through the Company** (Section 2) — the Seller collects them as merchant of record, and the contract of sale stands between the buyer and the Seller. ⭕ **The preservation duty above is nonetheless the Company's**: the Company is a registered mail-order business and publishes that registration number on every screen of the Service, and the duty that comes with that standing is not moved by the commercial arrangement with the Seller.
+
+⬜ **Which items are preserved, and the procedure for obtaining them from the Seller, are not yet stated here.** The Seller's terms state no obligation to provide records, and the items cannot be written down before it is settled what is received and preserved. They will be stated here on the day it is settled — the discipline of Section 2, that empty cells are not filled with guesses, applies here too.
 
 ## 4. Provision to third parties, and categories of third parties
 
