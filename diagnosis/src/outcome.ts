@@ -219,12 +219,19 @@ export async function readRepo(
 export type ScopeRead = { kind: 'scopes'; snapshot: RepoSnapshot; probe: ScopeProbe } | Unjudgeable;
 
 /**
- * 그 파일에서 어댑터가 본 스코프들 — ⚠️ 본문을 실어야 하므로 **한 번 더 읽는다**. 지목이
- * 선언에 아직 없으므로(그 선언을 짓는 중이다) 로더가 그것을 인자로 받는다.
+ * 고른 **파일들**에서 어댑터가 본 스코프들 — ⚠️ 본문을 실어야 하므로 **한 번 더 읽는다**.
+ * 지목이 선언에 아직 없으므로(그 선언을 짓는 중이다) 로더가 그것을 인자로 받는다.
+ *
+ * ⭐⭐ **파일이 여럿이다** — 축 하나가 `files` 목록과 `scope` **하나**를 들기 때문이고
+ * (스키마), 그래서 고를 스코프는 **고른 파일 전부를 합쳐** 읽은 사실이어야 한다. 파일마다
+ * 따로 물어 화면이 합치면 「어느 스코프를 선언할 수 있는가」를 아는 손이 둘이 된다.
+ *
+ * ⚠️ 본문이 **하나라도** 안 실리면 잘림이다 — 읽은 것만으로 수를 내면 그 수는 낙관이고,
+ * 그 위에 선언을 지으면 판정이 멈추는 자리가 된다(「토큰 0」으로도 접지 않는다).
  */
 export async function readScopes(
   target: RepoRef,
-  file: string,
+  files: readonly string[],
   adapterId: string,
   options: DiagnoseOptions = {},
 ): Promise<ScopeRead> {
@@ -233,14 +240,16 @@ export async function readScopes(
       repo: target.repo,
       ref: target.ref,
       fetch: options.fetch,
-      alsoContent: [file],
+      alsoContent: [...files],
     });
-    const text = load.snapshot.files.get(file);
-    if (typeof text !== 'string') {
+    const read: { path: string; text: string }[] = [];
+    for (const file of files) {
+      const text = load.snapshot.files.get(file);
       // 추적되는데 본문을 못 읽었다 — 잘림이지 「토큰 0」이 아니다.
-      return { kind: 'unreadable', code: 'tree-truncated' };
+      if (typeof text !== 'string') return { kind: 'unreadable', code: 'tree-truncated' };
+      read.push({ path: file, text });
     }
-    return { kind: 'scopes', snapshot: load.snapshot, probe: scopesIn(adapterId, file, text) };
+    return { kind: 'scopes', snapshot: load.snapshot, probe: scopesIn(adapterId, read) };
   } catch (error) {
     return mapError(error);
   }
@@ -257,10 +266,19 @@ export type ComposeNetOutcome = { kind: 'compose'; outcome: ComposeOutcome } | U
 
 export async function composeIntent(
   intent: ConstitutionIntent,
-  options: DiagnoseOptions = {},
+  options: DiagnoseOptions & { readonly peers?: readonly RepoSnapshot[] } = {},
 ): Promise<ComposeNetOutcome> {
-  if (intent.kind === 'canon') return { kind: 'compose', outcome: composeConstitution(intent) };
   try {
+    if (intent.kind === 'canon') return { kind: 'compose', outcome: composeConstitution(intent) };
+    // ⭐⭐ **정본이 이미 손에 있으면 다시 가지 않는다.** 헌법 한 벌을 조립하는 화면은 정본을
+    //   **먼저** 읽어(파일과 스코프를 거기서 골랐다) 그 스냅샷을 쥐고 있다 — 연결 저장소마다
+    //   정본을 한 번씩 더 읽으면 고객이 묻지 않은 요청이 N 개 늘고, 그 N 번의 읽기가 **같은
+    //   커밋을 본다는 보장도 없다**(그 사이 정본이 움직이면 박제가 저장소마다 갈린다).
+    //   ⇒ 시야를 **인자로** 받는다. ⛔ 생략은 「시야가 없다」가 아니라 「묻지 않았다」다:
+    //   그 자리에서는 지목을 따라 **읽는다**(아래).
+    if (options.peers !== undefined) {
+      return { kind: 'compose', outcome: composeConstitution(intent, options.peers) };
+    }
     const canon: CanonPointer = intent.canon;
     const peer = await loadGithubSnapshot({
       repo: canon.repo,

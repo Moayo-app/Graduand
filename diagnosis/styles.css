@@ -559,25 +559,60 @@ footer {
 .hold > h2, .observe > h2 { margin: 0 0 0.6rem; font-size: 1.15rem; }
 .hold > p, .observe > p { margin: 0 0 0.9rem; color: var(--ink-dense); font-size: 0.95rem; }
 
-/* 입구 둘 — 생성과 연결. 좁은 화면에서는 한 줄씩 선다. */
-.hold-forms { display: grid; gap: 1rem; margin-bottom: 1rem; }
-@media (min-width: 720px) {
-  .hold-forms { grid-template-columns: 1fr 1fr; }
+/* ── 조립하는 자리 둘 — ⭐ 라디오와 CSS 로만 갈린다. 스크립트가 **0** 이라 터미널 걸음의
+   산문이 스크립트를 끈 방문자에게도 그대로 선다(두 패널이 둘 다 발행본의 바이트에 있다). ── */
+.tab-pick {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  border: 0;
 }
-.hold-card {
-  display: grid;
-  gap: 0.5rem;
-  background: var(--base);
+.tab-label {
+  display: inline-block;
+  min-height: var(--tap-min);
+  padding: 0.6rem 0.9rem;
+  margin: 0 0.4rem 1rem 0;
   border: 1px solid var(--ink-light);
   border-radius: 8px;
-  padding: 1.1rem 1.1rem 1.25rem;
+  background: var(--base);
+  color: var(--ink-dense);
+  font-size: 0.9rem;
+  cursor: pointer;
 }
-.hold-card h3 { margin: 0; font-size: 1rem; }
-.hold-card p { margin: 0 0 0.3rem; color: var(--ink-dense); font-size: 0.9rem; }
-.hold-card label, form#observe-form label { font-size: 0.85rem; color: var(--ink-heavy); }
+#hold-tab-web:checked + .tab-label,
+#hold-tab-cli:checked + .tab-label {
+  background: var(--ink-burnt);
+  border-color: var(--ink-burnt);
+  color: var(--card);
+}
+/* 초점은 **누른 탭 하나**에만 선다 — 라벨이 자기 라디오 바로 뒤인 이유가 이것이다. */
+.tab-pick:focus-visible + .tab-label { outline: 2px solid var(--ink-dense); outline-offset: 2px; }
+.tab-panel { display: none; }
+#hold-tab-web:checked ~ .tab-web,
+#hold-tab-cli:checked ~ .tab-cli { display: block; }
+
+/* 절의 머리 — 헌법 이름 · 정본 선언 · 연결 선언을 가르는 선이다. */
+.hold-h {
+  margin: 1.6rem 0 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--ink-clear);
+  font-size: 1rem;
+}
+
+.hold-form, .hold-pick { display: grid; gap: 0.5rem; }
+.hold-form label, .hold-pick label { font-size: 0.85rem; color: var(--ink-heavy); }
+.hold-form .note, .hold-pick .note { margin: 0 0 0.4rem; }
 
 /* 입력 칸의 꼴 — ⭐ 선택자가 **선언된 칸들**을 함께 받는다(id 마다 베끼지 않는다). */
-.hold-card input, .hold-card select, .hold-card textarea, input#observe-input {
+.hold-form input,
+.hold-form select,
+.hold-pick input,
+.hold-pick select,
+input#observe-input {
   min-height: var(--tap-min);
   padding: 0.5rem 0.8rem;
   border: 1px solid var(--ink-light);
@@ -587,15 +622,53 @@ footer {
   font-family: var(--mono);
   font-size: 0.95rem;
 }
-.hold-card textarea { min-height: calc(var(--tap-min) * 1.4); resize: vertical; line-height: 1.5; }
-.hold-card input:focus-visible,
-.hold-card select:focus-visible,
-.hold-card textarea:focus-visible,
+.hold-form input:focus-visible,
+.hold-form select:focus-visible,
+.hold-pick input:focus-visible,
+.hold-pick select:focus-visible,
 input#observe-input:focus-visible {
   outline: 2px solid var(--ink-dense);
   outline-offset: 1px;
 }
 form#observe-form { display: grid; gap: 0.6rem; }
+
+/* 연결 저장소 목록 — 주소와 제거가 한 줄에 선다. 비었다는 사실은 쪽지가 **말한다**. */
+.hold-links { margin: 0.2rem 0 0.6rem; padding: 0; list-style: none; display: grid; gap: 0.4rem; }
+.hold-links li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.4rem 0.4rem 0.4rem 0.7rem;
+  background: var(--base);
+  border: 1px solid var(--ink-light);
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+/* 조립된 선언 — **벌마다 카드 하나.** 조각과 그 버튼은 한 쌍으로만 선다. */
+.hold-result { display: grid; gap: 1rem; margin-top: 1.2rem; }
+.hold-card {
+  display: grid;
+  gap: 0.5rem;
+  background: var(--base);
+  border: 1px solid var(--ink-light);
+  border-radius: 8px;
+  padding: 1.1rem 1.1rem 1.25rem;
+}
+.hold-card p { margin: 0 0 0.3rem; color: var(--ink-dense); font-size: 0.9rem; }
+/* ⭐ 「어느 저장소의 선언인가」 — 주소라 고정폭이다(눈이 그 한 줄을 먼저 찾는다). */
+.card-h { margin: 0 0 0.4rem; font-family: var(--mono); font-size: 0.95rem; }
+.card-snippet { display: grid; gap: 0.5rem; justify-items: start; }
+
+/* 걸음 — 번호 · 머리 · 명령 · 사유. */
+.cli-steps { margin: 0; padding-left: 1.3rem; display: grid; gap: 1.5rem; }
+/* ⭐ 걸음의 명령은 **접어서** 보인다(가로 스크롤 상자가 아니다) — 상자 안의 것은 인쇄에도
+   검색에도 걸리지 않고 「더 있다」가 스크롤바로만 남는다. `pre-wrap` 이라 복사한 바이트는
+   한 줄 그대로다(줄바꿈이 끼지 않는다). */
+.cli-steps pre.command { white-space: pre-wrap; }
+.cli-h { margin: 0 0 0.5rem; font-size: 0.95rem; }
+.cli-steps .note { margin: 0.5rem 0 0; }
 
 /* 조립 결과 — 조각과 그 버튼은 한 쌍으로만 선다(한쪽만 보이는 자리가 없다). */
 .composed p { margin: 0 0 0.5rem; font-size: 0.95rem; }

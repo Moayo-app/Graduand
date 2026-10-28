@@ -280,12 +280,30 @@ export interface PageText {
    */
   readonly faq: {
     readonly title: string;
-    /** 칼 셋 중 **안 선 둘** — 광고 자리는 선 것만 말하고, 묻는 사람에게는 여기서 답한다. */
+    /** 칼 셋 중 **안 선 것** — 광고 자리는 선 것만 말하고, 묻는 사람에게는 여기서 답한다. */
     readonly knivesQ: string;
-    /** 쥐다 — 결 ⑵: 우리 손이지만 **선행 결정 하나**가 먼저 뒤집혀야 한다. */
+    /** 쥐다 — **섰다.** 막고 있던 선행 결정이 닫혔다(조립은 화면, 쓰기는 명령). */
     readonly knivesA1: string;
-    /** 승격하다 — 결 ⑶: 상류가 안개다. 조건은 **「없다」**이고, 빈 칸으로 두지 않는다. */
+    /**
+     * 고치다 — ⭐⭐ **절반이 섰다.**
+     *
+     * ⚠️⚠️ **이 잎은 「승격은 아직 서지 않았다」 한 줄이었고, 그 문장은 지금도 참이다.**
+     * 그런데 배달이 출하되면서 **읽히지 않게** 됐다: 같은 문서의 기능 칸이 「갈라진 값을
+     * 정본에 맞춰 되돌립니다」를 광고하는데, 여기서는 「고치는 쪽은 아직」으로 읽힌다.
+     * ⛔ 거짓이 아니라 **분간이 안 되는 것**이고, 분간이 안 되는 참은 다음 사람에게 거짓과
+     * 같은 일을 한다. ⇒ 방향을 **이름으로** 가른다 — 되돌리기(정본→하류)는 섰고,
+     * 승격(하류→상류)은 아직이다.
+     */
     readonly knivesA2: string;
+    /**
+     * 왜 갈렸는가 — ⭐⭐ **「누가 정하는가」가 가른다.** 되돌리기는 고를 것이 없다(정본이
+     * 기준이고, 어긋난 쪽을 거기 맞출 뿐이다). 승격은 「하류가 옳고 정본이 낡았다」는
+     * **판단**이라, 그것을 기계가 대신하면 이 제품의 경계(**판정은 고객에게 남는다**)를
+     * 제품이 스스로 깬다. ⇒ 안 선 것이 능력의 문제가 아니라 **경계의 문제**임을 적는다.
+     *
+     * ⚠️ 셋째 줄이 한계다 — 답이 세 줄을 넘으면 그 내용은 정책 문서로 간다(가드가 발행본에서 센다).
+     */
+    readonly knivesA3: string;
     /**
      * 자격의 의미 — ⭐ 가격 블록과 **중복이 아니다**: 가격은 「얼마」를 말하고 이것은
      * 「자격이 없으면 **무엇이 달라지나**」를 말한다.
@@ -315,15 +333,6 @@ export interface PageText {
     readonly terms: string;
     readonly refunds: string;
     readonly portal: string;
-    readonly renewal: string;
-    /** 정책 셋의 시행일 — ⛔ 날짜를 적지 않는다: 아직 정해지지 않았고 그 조건을 말한다. */
-    readonly effective: string;
-    /**
-     * 시행일이 **박힌 뒤의** 같은 줄 — ⭐ 날짜를 인자로 받는다(값은 `publisher.ts` 가 들고
-     * 로케일 불변이다). ⚠️ 함수 잎이라 객체를 훑는 가드에 **보이지 않는다** — 깨우는 손이
-     * `i18n.test.ts` 에 있다. ⛔ 자구에 날짜를 박지 않는다: 박으면 사본이 둘이 된다.
-     */
-    readonly effectiveOn: (date: string) => string;
     readonly companyHeading: string;
     /** 새 창으로 열리는 링크가 **말없이** 열리지 않게 — 시각으로는 숨고 보조기술에는 들린다. */
     readonly newWindow: string;
@@ -369,7 +378,18 @@ export interface ConstitutionText {
   readonly lede: string;
 
   /**
-   * 헌법 관리 — 「헌법을 만든다」의 두 갈래를 **조립해 내보낸다**.
+   * 헌법 관리 — **헌법 하나를 그 헌법에 답하는 저장소 전부의 선언으로** 조립해 내보낸다.
+   *
+   * ⭐⭐ **입구가 「갈래 고르개」에서 「헌법 한 벌」로 바뀌었다.** 앞 판은 생성(정본)과
+   * 연결을 고르개 하나로 갈랐고, 한 번 누를 때 선언 **하나**가 나왔다 — 그래서 헌법 하나를
+   * 저장소 N 개에 심으려면 고객이 같은 화면을 N+1 번 돌고 축 이름을 N+1 번 **손으로** 적었다.
+   * 그 반복이 이 제품이 재는 갈라짐의 생산 공정 그대로다(한 번만 틀려도 축 이름이 갈린다).
+   * ⇒ 입구를 헌법 한 벌로 바꾼다: **이름 하나 · 정본 하나 · 연결 N 개 → 선언 1+N 벌.**
+   *
+   * ⭐⭐ **정본 저장소가 하나인 것은 취향이 아니라 스키마다.** 축 하나가 드는 정본 포인터는
+   * `canon` **하나**이고(`declaration.ts`), 「한 헌법에 정본 둘」을 적을 자리가 없다.
+   * ⛔ 스키마를 늘려 열지 않는다 — 정본이 둘인 헌법은 **정본이 없는 헌법**이고, 그 상태를
+   * 선언 가능하게 만드는 것은 이 제품이 파는 명제를 스스로 깨는 일이다.
    *
    * ⛔ **쓰지 않는다 · 커밋하지 않는다** — 이 화면이 내는 것은 **문자열**이고, 파일을 쓰는
    * 것은 측정 명령의 몫이다(결정: 조립은 화면, 쓰기는 CLI). 조립기는 **같은 함수 하나**라
@@ -383,35 +403,103 @@ export interface ConstitutionText {
     readonly writeNote: string;
 
     /**
-     * 갈래 — ⭐ **입력의 모양은 하나**이고 가르는 것은 「읽은 저장소가 누구의 것인가」다.
-     * 그래서 고르개 하나가 그 둘을 든다(입구를 둘로 두면 같은 입력이 두 벌이 된다).
+     * 조립하는 자리 둘의 이름 — ⭐⭐ **탭은 스크립트 없이 선다**(라디오 + CSS). 웹 조립의
+     * 손은 스크립트가 필요하지만 **터미널 걸음의 산문은 아니다**: 스크립트를 끈 방문자가
+     * 받는 바이트에 그 걸음이 없으면 그 방문자에게 쓸 수 있는 길이 **0** 이 된다.
      */
-    readonly kindLabel: string;
-    readonly kindCanon: string;
-    readonly kindLink: string;
-    /** 고른 갈래가 **무엇을 적는가** — 고르개 바로 아래에서 갈래마다 바뀐다. */
-    readonly canonNote: string;
-    readonly linkNote: string;
+    readonly tabsLabel: string;
+    readonly tabWeb: string;
+    readonly tabCli: string;
 
     /**
-     * 공유값 축의 이름 — ⭐⭐ **한 저장소가 헌법 여럿에 답한다**(개정 4): 축마다 정본이
-     * 따로 서므로 개발 헌법과 디자인 헌법이 **서로 다른 상류**에 살아도 한 선언이 둘을
-     * 가리킨다. ⛔ 이름을 우리가 고르지 않는다 — 고르면 선언은 우리가 상상한 조직의 것이 된다.
+     * 공유값 축의 이름 — ⭐⭐ **한 저장소가 헌법 여럿에 답한다**: 축마다 정본이 따로 서므로
+     * 개발 헌법과 디자인 헌법이 **서로 다른 상류**에 살아도 한 선언이 둘을 가리킨다.
+     * ⛔ 이름을 우리가 고르지 않는다 — 고르면 선언은 우리가 상상한 조직의 것이 된다.
+     * ⭐ 이 한 칸이 **1+N 벌 전부**에 같은 이름으로 들어간다: 손으로 N 번 적던 자리가 사라진 것이
+     * 이 판의 요점이고, 그래서 이름이 블록의 **첫 입력**이다.
      */
     readonly axisLabel: string;
     readonly axisPlaceholder: string;
     readonly axisNote: string;
 
+    /** 정본 선언의 머리 — 「여기가 정본이다」를 적는 저장소 하나의 절이다. */
+    readonly canonHeading: string;
+    readonly canonNote: string;
+
+    /**
+     * ⭐⭐ **셋 다 주소로 받는다 — 그것이 비공개 저장소의 길이다.**
+     *
+     * ⚠️⚠️ 앞 판은 저장소를 **읽어** 파일과 스코프를 고르게 했다. 사유는 「추측을 받지
+     * 않는다」였고 그 사유는 그대로 참이지만, 그 입구에는 **분모가 하나 빠져 있었다**:
+     * 이 브라우저가 읽을 수 있는 것은 **공개 저장소뿐**이라, 고르는 입구는 비공개 저장소를
+     * 쓰는 조직에게 「여기서는 아무것도 못 한다」였다. 그리고 규칙의 정본을 비공개에 두는
+     * 조직이 평상시다. ⇒ 셋을 **주소로** 받는다.
+     *
+     * ⭕ **추측을 받지 않는다는 규율은 읽기로 옮겨 갔다** — 아래 `read` 는 고르는 버튼이
+     * 아니라 **확인하는** 버튼이고, 눌러서 읽히면 조립이 그 스냅샷으로 적은 주소를 **읽어
+     * 본다**(실재하는가 · 그 스코프에서 값이 하나라도 읽히는가). ⛔ 누르지 않은 것은 「참이다」가
+     * 아니라 **「묻지 않았다」**이고, 조립기가 그 둘을 이미 가른다(`self: null`).
+     */
     readonly repoLabel: string;
     readonly repoPlaceholder: string;
     readonly read: string;
+    readonly readNote: string;
     readonly fileLabel: string;
+    readonly filePlaceholder: string;
+    readonly fileNote: string;
     readonly scopeLabel: string;
+    readonly scopePlaceholder: string;
+    /** ⭐ 스코프는 **하나**다 — 축 하나가 드는 `scope` 가 하나이기 때문이다(스키마). */
+    readonly scopeNote: string;
+
+    /** 연결 선언의 머리 — 「정본은 저기이고 값은 이것이다」를 적는 저장소 N 개의 절이다. */
+    readonly linkHeading: string;
+    readonly linkNote: string;
+    readonly linkRepoLabel: string;
+    readonly linkRepoPlaceholder: string;
+    readonly linkAdd: string;
+    /** 목록의 제거 버튼 이름 — ⭐ 발행본의 **속성으로** 서고 스크립트가 그것을 읽는다(사본 0). */
+    readonly linkRemove: string;
+    /** 연결이 0 일 때 — ⭕ 참인 상태다(정본 선언만 내는 것도 쓸 수 있는 결과다). */
+    readonly linkEmpty: string;
+
     readonly compose: string;
+
+    readonly resultLabel: string;
     readonly snippetLabel: string;
     readonly copy: string;
+    /**
+     * 파일로 받는 길 — ⭐⭐ **1+N 벌이 되면서 클립보드만으로는 모자라진다**: 저장소 N 개에
+     * 넣을 선언을 하나씩 복사해 옮기면 그 사이에 어느 것이 어느 저장소의 것인지가 사람의
+     * 기억에 남는다. ⛔ 전송이 아니다 — 브라우저가 쥔 바이트를 **그 브라우저가** 파일로 내린다.
+     */
+    readonly download: string;
     /** 조각을 받은 뒤의 다음 걸음 — ⭐ 판정은 **루트의 진단**이 보여준다. */
     readonly nextNote: string;
+
+    /**
+     * 터미널 걸음 — ⭐⭐ **같은 조립기를 부르는 둘째 입구**다(화면이 조립하고, CLI 가 쓴다).
+     *
+     * ⛔ **자리표(`<이름>`)를 쓰지 않는다** — 걸음의 명령은 발행본에서 가드가 **뽑아서
+     * 돌리고**(`boundary.test.ts`), 자리표가 든 줄은 돌릴 수 없다. 돌려 보지 못하는 명령을
+     * 광고하는 것은 「광고와 실물의 일치」를 포기하는 쪽이다 ⇒ 실례 한 벌을 **실물 값으로**
+     * 적고, 그 값이 예시임은 산문이 말한다(`cliExampleNote`).
+     *
+     * ⛔ 명령의 **바이트는 카탈로그에 없다** — 생성기가 한 벌에서 짓는다(로케일 불변).
+     * 적으면 두 벌이 같은 명령을 각자 적게 되고, 그 둘이 갈라지는 날 한쪽 독자가 받는 한 줄이
+     * 실물과 어긋난다.
+     */
+    readonly cliTitle: string;
+    readonly cliBody: string;
+    readonly cliExampleNote: string;
+    readonly cliCanonStep: string;
+    readonly cliCanonNote: string;
+    readonly cliLinkStep: string;
+    readonly cliLinkNote: string;
+    readonly cliRulesStep: string;
+    readonly cliRulesNote: string;
+    readonly cliJudgeStep: string;
+    readonly cliJudgeNote: string;
   };
 
   /**
@@ -433,6 +521,14 @@ export interface ConstitutionText {
     /** 조립이 박제를 **정본에서 읽었다** — 그 수. */
     /** 어느 헌법의 조립인가 — 체크 id 의 뒷칸이 이 이름이다. */
     readonly axis: (axis: string) => string;
+    /**
+     * 선언 카드의 머리 — ⭐⭐ **1+N 벌이 되면서 「어느 저장소의 선언인가」가 필수가 됐다.**
+     * 한 벌만 나올 때는 화면 위의 주소가 그 답이었지만, 여러 벌이 한 화면에 서면 그 답이
+     * 사라진다 — 주소 없는 선언을 내려받아 **엉뚱한 저장소에 커밋하는** 자리가 그것이다.
+     * ⛔ 둘을 한 문장으로 접지 않는다: 정본과 연결은 **다른 것을 적은** 선언이다.
+     */
+    readonly cardCanon: (repo: string) => string;
+    readonly cardLink: (repo: string) => string;
     /** ⭐ **더한 것과 지은 것을 가른다** — 더했으면 조각은 「당신의 선언 + 축 하나」의 전문이다. */
     readonly added: string;
     readonly pinned: (count: number) => string;

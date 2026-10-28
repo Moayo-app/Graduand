@@ -28,8 +28,9 @@ import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { VALUE_ADAPTERS } from '../../verifier/src/index.ts';
 import { LOCALE_NAMES } from './locale-names.ts';
-import { copyrightLine, POLICY_EFFECTIVE, PUBLISHER, PUBLISHER_ROWS } from './publisher.ts';
+import { copyrightLine, PUBLISHER, PUBLISHER_ROWS } from './publisher.ts';
 import {
   alternates,
   DOCUMENTS,
@@ -372,12 +373,6 @@ function chromeSlots(
     'footer.privacy': page.footer.privacy,
     'footer.terms': page.footer.terms,
     'footer.refunds': page.footer.refunds,
-    'footer.renewal': page.footer.renewal,
-    // ⭐⭐ **약속과 사실 중 하나만 선다** — 고르는 것은 시행일이 **박혔는가** 하나다.
-    //   ⛔ 둘을 같이 내보내지 않는다: 날짜가 선 뒤에도 「아직 정해지지 않았습니다」가 남으면
-    //   발행본이 자기 모순이 되고, 그 모순은 화면에만 있고 타입에는 보이지 않는다.
-    'footer.effective':
-      POLICY_EFFECTIVE === null ? page.footer.effective : page.footer.effectiveOn(POLICY_EFFECTIVE),
     'footer.companyHeading': page.footer.companyHeading,
     'footer.newWindow': page.footer.newWindow,
     'footer.contact': page.footer.contact,
@@ -394,6 +389,39 @@ function chromeSlots(
 }
 
 /**
+ * 터미널 걸음의 **실례 한 벌** — ⭐⭐ 값이 자리표(`<이름>`)가 아니라 **실물**인 것이 결정이다.
+ *
+ * ⚠️⚠️ **사유가 가드다.** 둘째 문서의 명령 틀은 전까지 **0 건**이었고, 그 0 을 단정으로 쥔
+ * 가드의 사유가 축자로 「쓰는 명령의 한 줄은 고객의 값(플래그)을 품어야 해서 이 가드가
+ * **돌려 볼 수 없다**」였다. 걸음을 세우려면 그 사유를 풀어야 하고, 푸는 길은 둘뿐이었다 —
+ * ⛔ 자리표를 적고 가드를 걷는 길(그러면 광고와 실물이 어긋날 수 있다), ⭕ **실물 값을 적고
+ * 가드가 그 값으로 픽스처를 짓는 길**. 뒤를 골랐다: 가드는 이 명령들을 **뽑아서 돌린다**.
+ *
+ * ⭐ **어댑터 이름은 등록부에서 읽는다** — 적으면 사본이고, 사본은 등록부가 움직이는 날
+ * 조용히 갈라진다(화면이 그 이름을 적지 않는 그 규율과 같은 자리다).
+ *
+ * ⛔ 자리를 카탈로그에 두지 않는다 — 로케일 불변이고, 두 벌이 같은 명령을 각자 적으면 그
+ * 둘이 갈라지는 날 한쪽 독자가 받는 한 줄이 실물과 어긋난다.
+ */
+const CLI_EXAMPLE = {
+  axis: 'design',
+  adapter: VALUE_ADAPTERS[0]!.id,
+  file: 'tokens.css',
+  scope: ':root',
+  canonRepo: 'acme/design',
+  /** 정본 체크아웃의 **상대 경로** — 연결 걸음의 시야가 거기서 온다. */
+  canonRoot: '../design',
+} as const;
+
+/** 걸음 넷의 명령 — ⭐ 한 벌에서 짓는다(위 상수가 분모다). */
+const CLI_COMMANDS = {
+  canon: `npx graduand canon --axis ${CLI_EXAMPLE.axis} --adapter ${CLI_EXAMPLE.adapter} --file ${CLI_EXAMPLE.file} --scope ${CLI_EXAMPLE.scope}`,
+  link: `npx graduand link --axis ${CLI_EXAMPLE.axis} --canon ${CLI_EXAMPLE.canonRepo} --canon-file ${CLI_EXAMPLE.file} --canon-scope ${CLI_EXAMPLE.scope} --root . --root ${CLI_EXAMPLE.canonRoot}`,
+  rules: 'npx graduand rules',
+  judge: `npx graduand --root . --root ${CLI_EXAMPLE.canonRoot}`,
+} as const;
+
+/**
  * 그 문서의 본문 자리들 — ⭐ **문서마다 자기 것만** 낸다. 둘을 합쳐 내면 어느 문서를 짓든
  * 「쓰이지 않는 키」가 남고, 그 단정이 죽으면 낡은 선언이 조용히 산다.
  *
@@ -408,25 +436,65 @@ function bodySlots(strings: Strings, doc: DocumentId): Readonly<Record<string, s
       'hold.title': hold.title,
       'hold.body': hold.body,
       'hold.writeNote': hold.writeNote,
-      'hold.kindLabel': hold.kindLabel,
-      'hold.kindCanon': hold.kindCanon,
-      'hold.kindLink': hold.kindLink,
-      // ⭐ 갈래의 설명 **둘 다** 발행본에 선다(한쪽은 `hidden`) — 스크립트가 꺼진 방문자도
-      //   둘을 다 받는다. 런타임에 채우면 그 방문자는 고르기 전에 아무 설명도 못 받는다.
-      'hold.canonNote': hold.canonNote,
-      'hold.linkNote': hold.linkNote,
+
+      'hold.tabsLabel': hold.tabsLabel,
+      // ⭐ 탭 **둘 다** 발행본에 선다 — 가르는 것은 라디오와 CSS 이고 스크립트가 아니다.
+      'hold.tabWeb': hold.tabWeb,
+      'hold.tabCli': hold.tabCli,
+
       'hold.axisLabel': hold.axisLabel,
       'hold.axisPlaceholder': hold.axisPlaceholder,
       'hold.axisNote': hold.axisNote,
+
+      'hold.canonHeading': hold.canonHeading,
+      'hold.canonNote': hold.canonNote,
       'hold.repoLabel': hold.repoLabel,
       'hold.repoPlaceholder': hold.repoPlaceholder,
       'hold.read': hold.read,
+      'hold.readNote': hold.readNote,
       'hold.fileLabel': hold.fileLabel,
+      'hold.filePlaceholder': hold.filePlaceholder,
+      'hold.fileNote': hold.fileNote,
       'hold.scopeLabel': hold.scopeLabel,
+      'hold.scopePlaceholder': hold.scopePlaceholder,
+      'hold.scopeNote': hold.scopeNote,
+
+      'hold.linkHeading': hold.linkHeading,
+      'hold.linkNote': hold.linkNote,
+      'hold.linkRepoLabel': hold.linkRepoLabel,
+      'hold.linkRepoPlaceholder': hold.linkRepoPlaceholder,
+      'hold.linkAdd': hold.linkAdd,
+      // ⭐ 런타임에 태어나는 자리의 자구 — 발행본의 **속성**으로 서고 스크립트가 읽는다.
+      //   스크립트가 쥐면 그것이 사본이고, 사본은 카탈로그가 움직이는 날 갈라진다.
+      'hold.linkRemove': hold.linkRemove,
+      'hold.linkEmpty': hold.linkEmpty,
+
       'hold.compose': hold.compose,
+
+      'hold.resultLabel': hold.resultLabel,
       'hold.snippetLabel': hold.snippetLabel,
       'hold.copy': hold.copy,
+      'hold.download': hold.download,
       'hold.nextNote': hold.nextNote,
+
+      'hold.cliTitle': hold.cliTitle,
+      'hold.cliBody': hold.cliBody,
+      'hold.cliExampleNote': hold.cliExampleNote,
+      'hold.cliCanonStep': hold.cliCanonStep,
+      'hold.cliCanonNote': hold.cliCanonNote,
+      'hold.cliLinkStep': hold.cliLinkStep,
+      'hold.cliLinkNote': hold.cliLinkNote,
+      'hold.cliRulesStep': hold.cliRulesStep,
+      'hold.cliRulesNote': hold.cliRulesNote,
+      'hold.cliJudgeStep': hold.cliJudgeStep,
+      'hold.cliJudgeNote': hold.cliJudgeNote,
+
+      // ⭐⭐ 명령의 바이트 — **카탈로그가 아니라 여기서 짓는다**(로케일 불변). 아래 상수
+      //   하나가 분모이고, 두 벌이 같은 명령을 각자 적는 자리를 만들지 않는다.
+      'cli.canon': CLI_COMMANDS.canon,
+      'cli.link': CLI_COMMANDS.link,
+      'cli.rules': CLI_COMMANDS.rules,
+      'cli.judge': CLI_COMMANDS.judge,
     };
   }
   const { page } = strings;
@@ -481,6 +549,7 @@ function bodySlots(strings: Strings, doc: DocumentId): Readonly<Record<string, s
     'faq.knivesQ': page.faq.knivesQ,
     'faq.knivesA1': page.faq.knivesA1,
     'faq.knivesA2': page.faq.knivesA2,
+    'faq.knivesA3': page.faq.knivesA3,
     'faq.freeQ': page.faq.freeQ,
     'faq.freeA1': page.faq.freeA1,
     'faq.freeA2': page.faq.freeA2,

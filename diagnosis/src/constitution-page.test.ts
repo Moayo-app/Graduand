@@ -250,7 +250,7 @@ test('조립 AC1 — 생성 갈래는 **네트워크가 0** 이고, 낸 선언�
       fetch: (() => assert.fail('생성 갈래가 네트워크를 썼다')) as unknown as typeof fetch,
     },
   );
-  const vm = buildComposed(composeOf(outcome), 'canon', strings);
+  const vm = buildComposed(composeOf(outcome), 'canon', strings, CANON_REPO);
   assert.ok(vm.json !== null);
   const read = validateDeclaration(vm.json);
   assert.equal(read.state, 'valid');
@@ -274,7 +274,7 @@ test('조립 AC2 — 연결 갈래가 박제를 **정본에서 읽는다**: 손�
     { fetch: api.fetch },
   );
   const composed = composeOf(outcome);
-  const vm = buildComposed(composed, 'link', strings);
+  const vm = buildComposed(composed, 'link', strings, CANON_REPO);
   assert.ok(vm.json !== null);
 
   const read = validateDeclaration(vm.json);
@@ -305,7 +305,7 @@ test('조립 AC4 (negative) — 정본이 자기 읽는 법을 선언하지 않�
     { kind: 'link', axis: AXIS, base: null, canon: { repo: CANON_REPO, file: CANON_FILE, scope: ':root' }, trio: null, self: null },
     { fetch: api.fetch },
   );
-  const vm = buildComposed(composeOf(outcome), 'link', strings);
+  const vm = buildComposed(composeOf(outcome), 'link', strings, CANON_REPO);
 
   assert.equal(vm.json, null, '지어낸 분모가 든 조각을 냈다');
   assert.equal(vm.refusedHead, strings.constitution.result.refused);
@@ -322,7 +322,7 @@ test('조립 (negative) — 해석되지 않는 정본 값은 박제되지 않�
     { kind: 'link', axis: AXIS, base: null, canon: { repo: CANON_REPO, file: CANON_FILE, scope: ':root' }, trio: null, self: null },
     { fetch: api.fetch },
   );
-  const vm = buildComposed(composeOf(outcome), 'link', strings);
+  const vm = buildComposed(composeOf(outcome), 'link', strings, CANON_REPO);
 
   assert.ok(vm.json !== null);
   assert.ok(!vm.json.includes('--alias'), '해석되지 않은 값이 기준이 됐다');
@@ -395,7 +395,7 @@ test('탐색 AC1 — 후보 파일은 **어댑터가 읽는 꼴**뿐이고, 스�
   assert.deepEqual(listed, [CANON_FILE]);
   assert.ok(!listed.includes('README.md'), '읽지 못하는 꼴이 후보에 들었다');
 
-  const scoped = await readScopes({ repo: CANON_REPO }, CANON_FILE, 'css-custom-properties', {
+  const scoped = await readScopes({ repo: CANON_REPO }, [CANON_FILE], 'css-custom-properties', {
     fetch: api.fetch,
   });
   assert.equal(scoped.kind, 'scopes');
@@ -415,7 +415,7 @@ test('탐색 AC2 (negative) — 읽을 꼴의 파일이 없으면 **빈 목록**
 
 test('탐색 AC3 (negative) — 고른 스코프가 실물과 어긋나면 **조립이 거부한다**', async () => {
   const api = fakeGithub({ [CANON_REPO]: canonFiles() });
-  const scoped = await readScopes({ repo: CANON_REPO }, CANON_FILE, 'css-custom-properties', {
+  const scoped = await readScopes({ repo: CANON_REPO }, [CANON_FILE], 'css-custom-properties', {
     fetch: api.fetch,
   });
   assert.equal(scoped.kind, 'scopes');
@@ -430,7 +430,7 @@ test('탐색 AC3 (negative) — 고른 스코프가 실물과 어긋나면 **조
     trio: { adapter: 'css-custom-properties', files: [CANON_FILE], scope: '.dark' },
     self: snapshot,
   });
-  const vm = buildComposed(composeOf(outcome), 'canon', strings);
+  const vm = buildComposed(composeOf(outcome), 'canon', strings, CANON_REPO);
   assert.equal(vm.json, null, '실물과 어긋난 선언을 냈다');
   assert.ok(vm.problems.join(' ').includes('reads zero values'), vm.problems.join(' | '));
   // ⭐ 어댑터가 **본 것**을 함께 말한다 — 다음에 고를 값이 그 줄에 있다.
@@ -439,7 +439,7 @@ test('탐색 AC3 (negative) — 고른 스코프가 실물과 어긋나면 **조
 
 test('탐색 AC4 — 읽어서 고른 트리오는 그대로 통과한다 (화면이 내는 것이 참인 선언이다)', async () => {
   const api = fakeGithub({ [CANON_REPO]: canonFiles() });
-  const scoped = await readScopes({ repo: CANON_REPO }, CANON_FILE, 'css-custom-properties', {
+  const scoped = await readScopes({ repo: CANON_REPO }, [CANON_FILE], 'css-custom-properties', {
     fetch: api.fetch,
   });
   const read = scoped as Extract<typeof scoped, { kind: 'scopes' }>;
@@ -455,7 +455,7 @@ test('탐색 AC4 — 읽어서 고른 트리오는 그대로 통과한다 (화�
     trio: { adapter: 'css-custom-properties', files: [CANON_FILE], scope: chosen },
     self: read.snapshot,
   });
-  const vm = buildComposed(composeOf(outcome), 'canon', strings);
+  const vm = buildComposed(composeOf(outcome), 'canon', strings, CANON_REPO);
   assert.ok(vm.json !== null, vm.problems.join(' | '));
   const declaration = validateDeclaration(vm.json);
   assert.ok(declaration.state === 'valid');
@@ -513,7 +513,7 @@ test('조립 AC5 — 선언이 있는 저장소에 **축을 더하면** 전문�
     self: read.snapshot,
   });
   const composed = composeOf(outcome);
-  const vm = buildComposed(composed, 'canon', strings);
+  const vm = buildComposed(composed, 'canon', strings, CANON_REPO);
   assert.ok(vm.json !== null, vm.problems.join(' | '));
 
   const declaration = validateDeclaration(vm.json);
@@ -543,7 +543,7 @@ test('조립 AC6 (negative) — **같은 축**을 다시 조립하지 않는다:
     trio: { adapter: 'css-custom-properties', files: ['src/theme.css'], scope: ':root' },
     self: read.snapshot,
   });
-  const vm = buildComposed(composeOf(outcome), 'canon', strings);
+  const vm = buildComposed(composeOf(outcome), 'canon', strings, CANON_REPO);
   assert.equal(vm.json, null, '있는 축을 덮어쓴 조각을 냈다');
   assert.ok(vm.problems.join(' ').includes('already declared'), vm.problems.join(' | '));
 });

@@ -773,11 +773,13 @@ const declaredFields: Readonly<
 > = {
   page: [{ id: 'repo-input', why: '저장소 주소 하나 — 공개 저장소의 무료 진단 입구다' }],
   constitution: [
-    { id: 'hold-kind', why: '갈래 고르개 — 입력의 모양은 하나이고, 가르는 것은 「읽은 저장소가 누구의 것인가」다' },
-    { id: 'hold-axis', why: '헌법의 이름(공유값 축) — 한 저장소가 헌법 여럿에 답하므로 「어느 헌법인가」를 묻지 않으면 우리가 이름을 고르게 된다' },
-    { id: 'hold-repo', why: '읽을 저장소의 주소 하나 — 갈래가 그 저장소의 의미를 정한다(내 것 ↔ 정본)' },
-    { id: 'hold-file', why: '그 저장소가 든 후보 파일 — 어댑터가 읽는 꼴만 선다(화면이 꼴을 알지 못한다)' },
-    { id: 'hold-scope', why: '그 파일에서 어댑터가 **실제로 본** 스코프 — 자구를 추측하지 않는 자리다' },
+    { id: 'hold-tab-web', why: '조립하는 자리 고르개 — ⭐ 라디오인 것이 결정이다: 탭이 스크립트 없이 갈려야 터미널 걸음의 산문이 스크립트를 끈 방문자에게도 선다' },
+    { id: 'hold-tab-cli', why: '같은 고르개의 둘째 자리 — 두 패널이 **둘 다** 발행본의 바이트에 있고, 가르는 것은 CSS 다' },
+    { id: 'hold-axis', why: '헌법의 이름(공유값 축) — 이 한 칸이 조립되는 선언 1+N 벌 전부에 같은 자구로 들어간다. 묻지 않으면 우리가 이름을 고르게 된다' },
+    { id: 'hold-repo', why: '정본 저장소의 주소 **하나** — 축 하나가 가리키는 정본이 하나다(정본이 둘인 헌법은 정본이 없는 헌법이다)' },
+    { id: 'hold-file', why: '정본 파일의 **주소** — ⚠️ 고르개가 아닌 것이 결정이다: 고르개는 이 브라우저가 읽을 수 있는 공개 저장소만 받았고, 규칙의 정본을 비공개에 두는 조직에게 그 입구는 「여기서는 아무것도 못 한다」였다' },
+    { id: 'hold-scope', why: '어댑터가 값을 읽는 자리의 **주소** — 같은 사유로 주소다. 축이 드는 스코프가 하나라 칸도 하나이고, 읽힌 저장소면 본 것이 제안으로만 뜬다' },
+    { id: 'hold-link-repo', why: '연결 저장소의 주소 — 더하기 버튼이 목록에 쌓고, 조립이 그 목록만큼 선언을 낸다(손으로 N 번 돌던 자리다)' },
   ],
 };
 
@@ -804,28 +806,11 @@ test('입구 — 입력 칸이 선언된 그것뿐이다: PAT·비밀번호 입�
   assert.deepEqual(advertisedCommands(), ['npx graduand --open', 'npx graduand init']);
 });
 
-/**
- * 페이지가 **광고하는** 명령 전부. 입구의 둘째 칸이 파는 것이 이 한 줄이라, 이 목록은
- * 산문이 아니라 아래 테스트의 입력이다.
- */
-function advertisedCommands(): string[] {
-  // ⭐ **둘째 문서는 명령을 광고하지 않는다** — 그 문서가 내는 것은 붙여 넣을 **선언**이고,
-  //   쓰는 명령의 한 줄은 고객의 값(플래그)을 품어야 해서 이 가드가 **돌려 볼 수 없다**.
-  //   돌려 볼 수 없는 것을 광고하지 않는 것이 「광고와 실물의 일치」를 지키는 쪽이다.
-  //   ⚠️ 그래서 0 임을 **단정으로** 적는다: 누가 한 줄을 넣으면 여기서 빨갛고, 그때 함께
-  //   움직이는 것은 이 추출기(돌려 보는 손)다.
-  for (const doc of DOCUMENTS) {
-    if (doc === 'page') continue;
-    for (const locale of LOCALES) {
-      const html: string = documents()[publishedPath(locale, doc)]!;
-      assert.equal(
-        [...html.matchAll(/<pre[^>]*>\s*<code/g)].length,
-        0,
-        `${publishedPath(locale, doc)}: 돌려 보지 않는 명령을 광고한다`,
-      );
-    }
-  }
-  const perDocument = Object.entries(pageDocuments()).map(([name, html]) => {
+/** 그 문서가 명령 틀로 **광고하는** 명령 전부 — 산문이 아니라 아래 테스트들의 입력이다. */
+function advertisedIn(doc: DocumentId): string[] {
+  const perLocale = LOCALES.map((locale) => {
+    const name = publishedPath(locale, doc);
+    const html: string = documents()[name]!;
     const found = [...html.matchAll(/<pre[^>]*>\s*<code[^>]*>([\s\S]*?)<\/code>/g)].map((m) =>
       m[1]!.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').trim(),
     );
@@ -838,12 +823,25 @@ function advertisedCommands(): string[] {
 
   // ⭐ **명령은 번역되지 않는다** — 로케일마다 다른 명령을 광고하면 한쪽 독자가 받는 한 줄이
   //   실물과 어긋날 수 있고, 그 어긋남이 이 제품이 재는 결함이다.
-  const canon = perDocument[0]!;
-  for (const other of perDocument.slice(1)) {
+  const canon = perLocale[0]!;
+  for (const other of perLocale.slice(1)) {
     assert.deepEqual(other.found, canon.found, `${other.name}: 광고하는 명령이 정본과 다르다`);
   }
   return canon.found;
 }
+
+/**
+ * 페이지가 **광고하는** 명령 전부. 입구의 둘째 칸이 파는 것이 이 한 줄이라, 이 목록은
+ * 산문이 아니라 아래 테스트의 입력이다.
+ *
+ * ⚠️⚠️ **여기 「둘째 문서는 명령을 광고하지 않는다」가 단정으로 있었다.** 사유는 축자로
+ * 「쓰는 명령의 한 줄은 고객의 값(플래그)을 품어야 해서 이 가드가 **돌려 볼 수 없다**」였고,
+ * 같은 주석이 「누가 한 줄을 넣으면 그때 함께 움직이는 것은 이 추출기(돌려 보는 손)다」를
+ * 적어 두었다. ⇒ 둘째 문서가 터미널 걸음을 세우면서 **그 손이 움직였다**: 0 단정이 걷히고,
+ * 아래 셋째 축이 그 문서의 명령을 **값으로 픽스처를 지어** 돌린다. ⛔ 걷은 것은 0 이라는
+ * **수**이지 「광고와 실물이 일치한다」는 규율이 아니다 — 규율은 한 겹 더 넓어졌다.
+ */
+const advertisedCommands = (): string[] => advertisedIn('page');
 
 /**
  * ⭐⭐ **페이지가 광고하는 모든 명령이 CLI 에서 실제로 돈다.**
@@ -925,6 +923,123 @@ test('AC5 (둘째 축) — 산문이 이름으로 부르는 하위 명령이 CLI
       new RegExp(`^\\s*graduand ${sub}\\b`, 'm'),
       `화면이 「graduand ${sub}」 를 부르는데 CLI 의 usage 에 그 하위 명령이 없다`,
     );
+});
+
+/**
+ * `--플래그 값` 쌍 — ⭐ 반복되는 플래그는 값이 **여럿**이다(`--file`·`--root` 가 그렇다).
+ * 값 없는 플래그는 빈 목록으로 선다(`--json` 따위).
+ */
+function flagsOf(args: readonly string[]): Map<string, string[]> {
+  const found = new Map<string, string[]>();
+  for (let at = 0; at < args.length; at += 1) {
+    const arg = args[at]!;
+    if (!arg.startsWith('--')) continue;
+    const values = found.get(arg) ?? [];
+    const next = args[at + 1];
+    if (next !== undefined && !next.startsWith('--')) {
+      values.push(next);
+      at += 1;
+    }
+    found.set(arg, values);
+  }
+  return found;
+}
+
+/** 어댑터가 읽을 값 한 벌 — 선언된 스코프에 토큰이 **실제로** 살아야 조립이 선다. */
+const valuesFile = (scope: string): string => `${scope} {\n  --paper: #ffffff;\n  --ink: #101216;\n}\n`;
+
+/** 그 자리에 저장소 하나 — ⭐ 원격 이름이 있으면 그것이 곧 `owner/name` 이다(판정이 그것을 읽는다). */
+function gitRepoAt(root: string, files: Record<string, string>, remote: string | null = null): void {
+  mkdirSync(root, { recursive: true });
+  for (const [path, content] of Object.entries(files)) {
+    mkdirSync(join(root, dirname(path)), { recursive: true });
+    writeFileSync(join(root, path), content);
+  }
+  const git = (...args: string[]) => spawnSync('git', ['-C', root, ...args], { encoding: 'utf8' });
+  git('init', '-q', '-b', 'main');
+  if (remote !== null) git('remote', 'add', 'origin', `${['ht', 'tps://github.com/'].join('')}${remote}.git`);
+  git('add', '-A');
+  git('-c', 'user.name=t', '-c', 'user.email=t@example.com', 'commit', '-q', '-m', 'fixture');
+}
+
+/**
+ * ⭐⭐ **AC5 셋째 축 — 둘째 문서의 걸음도 돌려 본다.**
+ *
+ * ⚠️⚠️ 그 문서의 명령 틀은 **0 건이어야 한다**는 단정이 여기 있었고, 사유가 「고객의 값을
+ * 품은 줄은 돌려 볼 수 없다」였다. 그 사유를 푸는 길은 둘이고 하나만 정직하다 — ⛔ 자리표
+ * (`<이름>`)를 적고 가드를 걷는 길은 광고와 실물이 어긋날 자리를 다시 연다. ⭕ **실물 값을
+ * 적고, 가드가 그 값으로 픽스처를 짓는** 길을 골랐다.
+ *
+ * ⭐⭐ **픽스처를 플래그에서 유도한다** — 걸음마다 「무슨 파일이 있어야 하는가 · 어느 스코프에
+ * 값이 살아야 하는가 · 정본 체크아웃이 어느 자리에 어느 이름으로 서야 하는가」를 **광고된
+ * 줄이** 말한다. ⛔ 하네스에 손으로 적지 않는다: 적으면 그것이 사본이고, 걸음의 값이 움직이는
+ * 날 하네스만 낡은 채 초록이다.
+ *
+ * ⭐ 정본 저장소의 **선언은 제품이 짓는다**(그 체크아웃에서 `canon` 을 돌린다) — 손으로
+ * 적으면 조립기와 갈라지는 사본이 하나 더 생긴다.
+ *
+ * 종료 코드는 문서화된 셋 중 둘만 받는다 — 0 · 1. **2 는 0 건이다.**
+ */
+test('AC5 (셋째 축) — 둘째 문서가 광고하는 걸음이 전부 CLI 에서 돈다: 값까지 실물이다', () => {
+  const verifierRoot = join(ROOT, '..', 'verifier');
+  const bin = (
+    JSON.parse(readFileSync(join(verifierRoot, 'package.json'), 'utf8')) as { bin: Record<string, string> }
+  ).bin;
+  const commands = advertisedIn('constitution');
+
+  // ⭐ 어댑터 이름도 **광고된 줄에서** 받는다 — 하네스가 적으면 등록부와 갈라지는 사본이다.
+  const adapters = commands.flatMap((command) => flagsOf(command.split(/\s+/)).get('--adapter') ?? []);
+  assert.ok(adapters.length > 0, '둘째 문서의 걸음이 어댑터를 부르지 않는다 — 정본 선언을 지을 손이 없다');
+  const adapter: string = adapters[0]!;
+
+  for (const command of commands) {
+    const [runner, name, ...args] = command.split(/\s+/);
+    assert.equal(runner, 'npx', `${command}: 이 하네스가 돌릴 수 있는 꼴이 아니다`);
+    assert.ok(name !== undefined && name in bin, `${command}: ${String(name)} 은 패키지의 bin 에 없다`);
+    // 첫 자리는 하위 명령도 올 수 있고, 뒤는 플래그 또는 **그 값**이다.
+    // ⛔ 셸 메타문자는 받지 않는다 — 돌릴 수 없는 꼴을 광고하지 않는다는 그 단정이다.
+    args.forEach((arg) => {
+      assert.match(arg, /^(--[a-z-]+|[A-Za-z0-9@:._/-]+)$/, `${command}: ${arg} — 이 하네스가 돌릴 수 있는 꼴이 아니다`);
+    });
+
+    const flags = flagsOf(args);
+    const scope = (flags.get('--scope') ?? flags.get('--canon-scope') ?? [':root']).at(0)!;
+    const base = mkdtempSync(join(tmpdir(), 'graduand-steps-'));
+    const work = join(base, 'work');
+    const mine: Record<string, string> = { 'README.md': 'ok\n' };
+    for (const file of flags.get('--file') ?? []) mine[file] = valuesFile(scope);
+    gitRepoAt(work, mine);
+
+    // 시야 — 첫 `--root` 는 쓸 자리이고 나머지가 **정본 체크아웃**이다(CLI 의 그 규율 그대로).
+    const roots = flags.get('--root') ?? [];
+    const canonRepo = (flags.get('--canon') ?? []).at(0) ?? null;
+    const canonFile = (flags.get('--canon-file') ?? []).at(0) ?? null;
+    const axis = (flags.get('--axis') ?? []).at(0) ?? null;
+    for (const root of roots.slice(1)) {
+      const peer = join(base, root.replace(/^\.\.\//, ''));
+      const theirs: Record<string, string> = { 'README.md': 'ok\n' };
+      if (canonFile !== null) theirs[canonFile] = valuesFile(scope);
+      gitRepoAt(peer, theirs, canonRepo);
+      if (canonFile === null || axis === null) continue;
+      // ⭐ 정본의 선언을 **제품으로** 짓는다 — 연결 걸음이 어댑터를 그 선언에서 찾는다.
+      const seeded = spawnSync(
+        process.execPath,
+        [join(verifierRoot, bin[name]!), 'canon', '--axis', axis, '--adapter', adapter, '--file', canonFile, '--scope', scope],
+        { cwd: peer, encoding: 'utf8' },
+      );
+      assert.equal(seeded.status, 0, `정본 픽스처의 선언을 짓지 못했다: ${seeded.stderr}`);
+      const git = (...rest: string[]) => spawnSync('git', ['-C', peer, ...rest], { encoding: 'utf8' });
+      git('add', '-A');
+      git('-c', 'user.name=t', '-c', 'user.email=t@example.com', 'commit', '-q', '-m', 'declaration');
+    }
+
+    const ran = spawnSync(process.execPath, [join(verifierRoot, bin[name]!), ...args], {
+      cwd: work, // 광고된 대로 — 고객 저장소 안에서 그 플래그만 주고 돈다
+      encoding: 'utf8',
+    });
+    assert.notEqual(ran.status, 2, `${command} 가 판정 실패(2)로 죽었다: ${ran.stderr}`);
+    assert.ok([0, 1].includes(ran.status!), `${command}: 문서에 없는 종료 코드 ${ran.status} — ${ran.stderr}`);
+  }
 });
 
 /** 광고된 명령을 돌릴 최소 저장소 — 추적 파일 하나와 커밋 하나. */
@@ -1119,7 +1234,17 @@ const publisherBlockOf = (html: string): string => {
   return found;
 };
 
-test('AC4 — 푸터: 정책 문서 3종(privacy 가 보이는 링크) · 고객 포털 해지 · 갱신 조건 · 저작권 표시를 함께 담는다', () => {
+/**
+ * ⚠️⚠️ **이 단정에서 「갱신 조건」이 빠진 것이 결정이다.** 전에는 푸터 법률 컬럼이 자동
+ * 갱신과 시행일을 **두 줄로** 적었고 이 가드가 그 자구(`자동 갱신`)를 물었다. 그 두 줄은
+ * **사본**이었다 — 갱신 조건의 정본은 **같은 컬럼이 가리키는 이용약관**이고, 시행일의 정본은
+ * 그 정책 산문의 머리말이다. ⇒ 사본을 걷었고, 무는 자구도 함께 걷혔다.
+ *
+ * ⭕ **걷히지 않은 것** — 정책 셋의 보이는 링크 · 해지 입구(고객 포털) · 저작권 표시는
+ * 그대로 단정된다. 해지 **입구**는 제품의 행동이라 푸터가 지는 것이 맞고(제품 컬럼의 그 줄),
+ * 갱신 **조건**은 약관이 지는 글이다 — 그 둘을 가른 것이 이 변경의 전부다.
+ */
+test('AC4 — 푸터: 정책 문서 3종(privacy 가 보이는 링크) · 고객 포털 해지 · 저작권 표시를 함께 담는다', () => {
   const footer = footerOf(canonDocument());
   assert.ok((footer.match(/policy-link/g) ?? []).length >= 3);
 
@@ -1140,7 +1265,6 @@ test('AC4 — 푸터: 정책 문서 3종(privacy 가 보이는 링크) · 고객
   }
   assert.match(footer, /고객 포털/);
   assert.match(footer, /해지/);
-  assert.match(footer, /자동 갱신/);
 
   // ⭐ 저작권 줄은 법정 게시와 **다른 것**이다 — 관행이고, 자구가 확정돼 있다.
   assert.ok(footer.includes(copyrightLine()), '저작권 자구와 문자가 다르다');
