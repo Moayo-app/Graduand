@@ -120,19 +120,17 @@ test('꾸밈 한 벌이 루트에 난다 — 문서마다 사본을 만들지 �
 });
 
 /**
- * ⬜ **진단 발행본이 아직 이 저장소에 없다 — 배달이 돌지 않았다.**
+ * ⭕ **그 ⬜ 가 닫혔다 — 쪽지가 스스로 만기를 알렸다.**
  *
- * ⚠️ 그래서 「푸터 링크 셋이 200」을 **여기서는 잴 수 없다.** 안 재는 것이 아니라 **못
- * 재는 것**이고, 그 사실을 조용히 두지 않는다: 아래는 **부재 자체를 단정**해서, 배달이
- * 도는 날 **빨갛게** 된다. 그날 이 테스트가 링크 대조로 바뀐다.
+ * 여기 있던 단정은 「진단 발행본이 아직 없다」는 **부재 자체**였고, 발행본이 서는 날
+ * 빨개지도록 지어져 있었다. 발행본이 섰고, 실제로 빨개졌다. ⇒ 그 빨강의 올바른 해소는
+ * 단정을 지우는 것이 아니라 **예고된 대조를 세우는 것**이고, 그 자리는 이 파일이 아니다:
+ * `tools/lib/published-links.mjs` 가 판정하고 `tools/test/published-links.test.mjs` 가
+ * 분모와 배선을 문다(빌드가 그 대조를 반드시 지난다는 것까지).
+ *
+ * ⚠️ 여기서는 **바통이 끊기지 않았는지만** 묻는다 — 사본을 만들지 않는다.
  */
-test('⬜ 링크 대조는 배달 뒤다 — 진단 발행본이 서면 이 단정이 빨갛다', () => {
-  const published = policyFiles(ROOT)
-    .map(([, locale]) => path.join(ROOT, OUT_ROOT, locale, 'index.html'))
-    .filter((p) => fs.existsSync(p));
-  assert.deepEqual(
-    published,
-    [],
-    '진단 발행본이 섰다 — 이제 푸터의 ./policies/*.html 링크가 실제로 풀리는지 대조하도록 이 단정을 바꾼다',
-  );
+test('⭕ 링크 대조로 바통이 넘어갔다 — 그 자리가 실재한다', () => {
+  for (const at of ['tools/lib/published-links.mjs', 'tools/test/published-links.test.mjs'])
+    assert.ok(fs.existsSync(path.join(ROOT, at)), `${at} 가 없다 — 이 쪽지가 가리키는 자리가 비었다`);
 });
