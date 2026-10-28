@@ -162,17 +162,30 @@ test('G7 (negative): 본문에서 판번호를 지우면 「없다」로 지목�
  * ⭐ 발행일도 시행일과 **같은 모양**으로 묶인다 — 핀이 빠지거나 본문이 그 상태를 말하지
  * 않으면 빨갛다. ⚠️ 그리고 효력이 게시보다 먼저 시작될 수 없다(변경 고지 조항의 순서다).
  */
-test('G7 (negative): 발행일 상태를 본문이 말하지 않으면 지목된다', () => {
+test('G7 (negative): 발행일을 본문이 말하지 않으면 지목된다', () => {
   const root = cloneRoot();
-  const pin = loadStrings(root).required.published_unset.ko;
-  rewrite(root, 'docs/policies/privacy.md', (t) => t.replace(pin, '발행일은 적지 않습니다'));
+  // ⚠️⚠️ **심는 자리가 옮겨왔다.** 전에는 「미정」 상태의 **핀 문장**을 지웠다 — 그 가지는
+  //    날짜가 비었을 때만 도는 가지이고, 1.0.0 이 시행일을 박으면서(2026-10-28) 더는 돌지
+  //    않는다. ⛔ 안 도는 가지에 심는 음성 대조군은 **아무것도 재지 않는다**: 심어도 초록이
+  //    아니라 심은 것이 가드에 닿지도 않는다. ⇒ 지금 서 있는 가지에 심는다 —
+  //    「머리말은 날을 적는데 본문이 그 해를 말하지 않는다」.
+  const at = path.join(root, 'docs/policies/privacy.md');
+  const year = parsePolicyMeta(fs.readFileSync(at, 'utf8')).published_date?.split('-')[0];
+  assert.ok(year, '발행일이 미정이다 — 이 대조군은 날짜가 선 뒤의 가지를 잰다');
+  // ⭐ 본문에서만 지운다 — 머리말의 「발행일: YYYY-MM-DD」 가 **분모**라 그대로 둔다.
+  rewrite(root, 'docs/policies/privacy.md', (t) => {
+    const ends = t.indexOf('-->');
+    return t.slice(0, ends) + t.slice(ends).replaceAll(year, '연도 미상');
+  });
   assert.equal(hits(checkMeta(root), 'ko/privacy').filter((e) => e.includes('발행일')).length, 1);
 });
 
 test('G7 (negative): 발행일이 시행일보다 늦으면 던진다 — 읽히기 전에 효력이 생길 수 없다', () => {
   const root = cloneRoot();
+  // ⭐ 지금 값이 「미정」이든 ISO 날짜든 같은 자리를 집는다 — 축자로 「미정」을 집으면
+  //   날짜가 박히는 날 이 치환이 **조용히 아무것도 하지 않고**, 뒤집힌 날짜가 초록이 된다.
   rewrite(root, 'docs/policies/terms.md', (t) =>
-    t.replace('발행일: 미정', '발행일: 2027-03-02').replace('시행일: 미정', '시행일: 2027-03-01'),
+    t.replace(/발행일: \S+/, '발행일: 2027-03-02').replace(/시행일: \S+/, '시행일: 2027-03-01'),
   );
   assert.ok(hits(checkMeta(root), '보다 늦다').length > 0, '뒤집힌 날짜가 초록이다');
 });
