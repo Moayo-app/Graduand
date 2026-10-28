@@ -210,16 +210,23 @@ const DAY = (iso) => new Date(`${iso}T00:00:00Z`);
 const TODAY = DAY('2030-06-15');
 const stamped = (text, iso) => setChangeDate(text, `${iso}.`);
 
-test('⭐⭐ 지금의 초록에 **이름이 붙어 있다** — 「잴 날짜가 없다」이지 「날짜가 괜찮다」가 아니다', () => {
-  // 이 단정이 이 축의 요점이다. 발행 전에는 이 가드가 영원히 초록이고, 그 초록이
-  // 「괜찮다」로 읽히는 순간 아무도 이 축을 다시 보지 않는다 — 미판정이 통과가 된다.
+test('⭐⭐ 지금의 초록에 **이름이 붙어 있다** — 「재서 괜찮다」이고 「잴 날짜가 없다」가 아니다', () => {
+  // ⭕ **발행과 함께 이 축이 미판정을 벗었다.** 전에는 `unstamped`(잴 날짜가 없다)가 영원한
+  //    초록이었고, 그 초록이 「날짜가 괜찮다」로 읽히는 것이 이 단정이 막던 사고다. 날짜가
+  //    박힌 지금 이 가드는 **실제로 잰다** — 그래서 초록의 이름이 `future` 로 바뀐다.
+  // ⚠️ 이름이 `unstamped` 로 되돌아가면 그것은 박기가 풀렸다는 뜻이다(발행 절차 5항) —
+  //    그때 이 단정이 빨갛게 그 사실을 말한다. 초록 둘을 가르는 일은 그대로다.
+  // ⛔ 박힌 **값**을 여기 적지 않는다 — 발행마다 다시 박히는 칸이라, 값을 적으면 판마다 이
+  //    테스트가 깨진다. `restamp` 가 값에 매이지 않는 것과 같은 이유다.
   assert.deepEqual(checkChangeDatePassed(ROOT), []);
-  assert.deepEqual(changeDateState(read(ROOT, CERTIFICATE)), { state: 'unstamped' });
+  assert.equal(changeDateState(read(ROOT, CERTIFICATE)).state, 'future');
   assert.equal(CHANGE_DATE_STATES.length, 4);
 });
 
 test('상태 넷이 갈린다 — 미결 · 아직 멀다 · 지나갔다 · 모양이 아니다', () => {
-  const base = read(ROOT, CERTIFICATE);
+  // ⚠️ 미결을 **되돌린 사본**에서 잰다 — 실물은 박혀 있어 그 상태를 더는 보여주지 않는다.
+  //    ⛔ 실물의 상태를 분모로 쓰면 **발행이 테스트를 깬다**: 실제로 그렇게 깨졌다.
+  const base = setChangeDate(read(ROOT, CERTIFICATE), 'UNSET.');
   assert.equal(changeDateState(base, TODAY).state, 'unstamped');
   assert.equal(changeDateState(stamped(base, '2030-06-16'), TODAY).state, 'future');
   assert.equal(changeDateState(stamped(base, '2030-06-14'), TODAY).state, 'passed');
