@@ -3,7 +3,7 @@
   ⚠️ ko·en 양 벌이 같은 합집합(🇰🇷 ∪ 🇺🇸 13절)을 담는다 — 한쪽에만 담으면 한쪽 독자에게 요건이 빠진다.
   ko 정본이 개정되면 이 판을 재전파하고 아래 정본 해시를 갱신한다 — 가드가 둘의 일치를 잰다.
   ⛔ 머리말에 「버전:」·「발행일:」·「시행일:」 기계 줄을 넣지 않는다 — 메타의 출처는 ko 정본 하나다.
-  정본 해시: sha256:fc5a8ff0758771a7f4bc852b5f597378de70e4704fe257f882dd42c82fa5786c
+  정본 해시: sha256:efe16b7832d9c26a0910521467b2da2dbe1e0100ddd93380320239825f9d0c80
 -->
 
 # Privacy Policy
@@ -38,7 +38,7 @@ The items the Company processes, or is scheduled to process when the Service tak
 
 | Category | Items | How collected | Retention period |
 |---|---|---|---|
-| Contact information | Inquiry email address and the content of the inquiry | The inquiry channel (privacy@graduand.dev) | Not yet set — the retention period is to be stated once settled |
+| Contact information | Inquiry email address and the content of the inquiry | The inquiry channel (privacy@graduand.dev) | Destroyed without delay once the purpose of handling the inquiry is achieved. Where a record falls under **records of consumer complaints or dispute handling**, it is kept for **3 years** under the Act on Consumer Protection in Electronic Commerce and then destroyed |
 | Contact information | Items used to deliver the subscription benefit (not yet set — stated on the day the delivery mechanism is settled) | The subscription activation notice from the Seller | Not yet set — same as above |
 
 **Information collected at checkout** (email address, payment method, business verification details) is collected and processed by the Seller under the Seller's own privacy policy, and is provided directly from the customer's browser to the Seller — it does not pass through the Company. Payment method details do not reach the Company. Sections 5 and 6 state that entrustment and the overseas transfer.
