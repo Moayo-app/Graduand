@@ -1,6 +1,6 @@
 {
   "name": "graduand",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "license": "SEE LICENSE IN LICENSE",
   "description": "Configuration verifiers that run in the customer's CI and browser — one module, no copies, no telemetry.",
   "type": "module",
@@ -8,7 +8,7 @@
     "node": ">=23.6"
   },
   "bin": {
-    "graduand": "./dist/cli.js"
+    "graduand": "dist/cli.js"
   },
   "exports": {
     ".": {

@@ -19,7 +19,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -44,9 +44,14 @@ const manifest = JSON.parse(readFileSync(join(PKG_ROOT, 'package.json'), 'utf8')
  * 취소돼도** 그 문자열을 영구히 막는다. `0.0.0` 은 발행된 적이 없지만 이 저장소에서
  * 「아직 발행하지 않았다」의 표식이라 실모듈이 쓸 수 없다.
  *
+ * ⭕ **`0.1.0` 이 그 목록에 들어왔다 — 스텁이 아니라 첫 실판이었다.** 2026-10-28 에 나갔고,
+ * 그 순간부터 다시 쓸 수 없다. 앞의 셋과 성질이 다르다(저 셋은 쓰이지 못한 채 소진됐고 이것은
+ * **쓰였다**) — 그래도 같은 목록에 사는 이유는 이 목록이 재는 것이 「왜 못 쓰는가」가 아니라
+ * **「못 쓴다」** 하나이기 때문이다.
+ *
  * ⛔ 이 목록은 **줄지 않는다** — 줄이는 변경은 「이미 나간 판을 덮어쓴다」는 뜻이다.
  */
-const CONSUMED_VERSIONS: readonly string[] = ['0.0.0', '0.0.1', '0.0.0-stage'];
+const CONSUMED_VERSIONS: readonly string[] = ['0.0.0', '0.0.1', '0.0.0-stage', '0.1.0'];
 
 /** 매니페스트가 **가리키는** 파일 전부 — `bin` 과 `exports`(조건부 포함)를 평평하게 센다. */
 function declaredEntryPoints(from: unknown): string[] {
@@ -62,6 +67,17 @@ function declaredEntryPoints(from: unknown): string[] {
   walk(from);
   return [...new Set(out)].sort();
 }
+
+/**
+ * 선언된 진입점 → **타르볼 안의 경로.**
+ *
+ * ⚠️⚠️ **두 키의 규격이 다르다.** `exports` 의 값은 **지정자**라 규격이 `./` 를 요구하고,
+ * `bin` 의 값은 **그냥 경로**라 npm 이 선두 `./` 를 떼어 버린다 — 발행 때 말없이 고치고
+ * 「auto-corrected」 경고 한 줄만 남긴다. 실측: 커밋된 `./dist/cli.js` 가 레지스트리에서는
+ * `dist/cli.js` 로 섰다. ⇒ 받는 손은 둘 다 받고, **어느 모양이어야 하는가는 키마다** 아래
+ * AC 가 따로 묻는다. ⛔ 한 규칙으로 뭉치면 둘 중 하나가 반드시 거짓이 된다.
+ */
+const insidePackage = (entry: string): string => entry.replace(/^\.\//, '');
 
 /** 디렉터리 아래 파일 전부 — 저장소 상대 경로, 정렬됨. */
 function filesUnder(root: string, prefix = ''): string[] {
@@ -157,20 +173,28 @@ test('발행 AC3 — package.json 이 가리키는 진입점 전부가 타르볼
   assert.ok(manifest.exports !== undefined, 'exports 가 비었다');
   assert.ok(manifest.files !== undefined && manifest.files.length > 0, 'files 가 비었다');
 
-  const fromBin = declaredEntryPoints(manifest.bin);
+  // ⛔ `bin` 은 **걷지 않는다** — 평평한 `이름 → 경로` 이고, 그 값은 `./` 로 시작하지 않는다.
+  //    `declaredEntryPoints` 의 걸러내는 규칙(`./` 로 시작하는 문자열)에 넣으면 그 순간
+  //    **분모에서 조용히 빠진다** — 가드가 재는 척하며 아무것도 재지 않는 자리가 된다.
+  const fromBin = Object.values(manifest.bin);
   const fromExports = declaredEntryPoints(manifest.exports);
   assert.ok(fromBin.length > 0 && fromExports.length > 0, `${fromBin.length} · ${fromExports.length}`);
 
+  // ⭐ 모양은 **키마다** 다르다(위 `insidePackage` 의 사유) — 그래서 따로 묻는다.
+  for (const entry of fromExports)
+    assert.ok(entry.startsWith('./'), `exports 의 값은 지정자다 — './' 로 시작해야 한다: ${entry}`);
+  for (const entry of fromBin)
+    assert.ok(!entry.startsWith('./'), `bin 의 값에 './' 가 붙었다 — npm 이 발행 때 떼어 간다: ${entry}`);
+
   for (const entry of [...fromBin, ...fromExports]) {
-    assert.ok(entry.startsWith('./'), `진입점이 상대 경로가 아니다: ${entry}`);
-    const at = join(packed().dir, entry.slice(2));
+    const at = join(packed().dir, insidePackage(entry));
     assert.ok(existsSync(at) && statSync(at).isFile(), `선언된 진입점이 발행본에 없다: ${entry}`);
     assert.ok(statSync(at).size > 0, `선언된 진입점이 빈 파일이다: ${entry}`);
   }
 
   // ⭐⭐ **가드가 살아 있다** — 없는 자리를 적으면 빨갛다. 깨끗한 선언이 초록인 것이 대조군이다.
   for (const planted of ['./dist/nope.js', './dist/hosts/nope.js']) {
-    const at = join(packed().dir, planted.slice(2));
+    const at = join(packed().dir, insidePackage(planted));
     assert.ok(!existsSync(at), `${planted} 가 실재한다 — 이 대조군이 고장났다`);
   }
 });
@@ -179,7 +203,7 @@ test('발행 AC4 — bin 으로 설치되는 그 파일이 **실제로 돈다**:
   const targets = Object.values(manifest.bin ?? {});
   assert.ok(targets.length > 0);
   for (const target of targets) {
-    const at = join(packed().dir, target.slice(2));
+    const at = join(packed().dir, insidePackage(target));
     // npm 이 만드는 shim 이 하는 일은 `node <이 파일>` 하나다 — 그 한 가지를 그대로 한다.
     const said = spawnSync(process.execPath, [at, '--help'], { encoding: 'utf8' });
     assert.equal(said.status, 0, `${target}: exit ${said.status}\n${said.stderr}`);
@@ -218,4 +242,43 @@ test('발행 — `private` 가 걷혔고, 증서의 Change Date 가 **박혀 있
   for (const must of ['Change Date', '공개 전환']) {
     assert.ok(readme.includes(must), `README 가 발행 조건의 「${must}」를 적지 않았다`);
   }
+});
+
+/**
+ * ⭐⭐ **npm 이 우리 선언을 고쳐 쓰는 자리가 이 파일 밖에 있었다.**
+ *
+ * 이 파일의 규율은 「선언이 실물과 1:1 인가」인데, 여기서 **실물**은 로컬에서 포장한
+ * 타르볼이었다. 그런데 레지스트리가 내주는 매니페스트는 그것과 **또 한 번 다를 수 있다**:
+ * `npm publish` 가 매니페스트를 말없이 고치고 경고 한 줄만 남긴다. 실측 — 커밋된
+ * `./dist/cli.js` 가 레지스트리에서 `dist/cli.js` 로 섰고, 로컬 포장도 동작도 둘 다
+ * 초록이었다. ⇒ 고치는 손이 하나 더 있었고 아무도 묻지 않았다.
+ *
+ * ⛔ **npm 의 규칙을 베껴 적지 않는다** — 그 사본은 npm 이 바뀌는 날 갈라지고, 갈라진 쪽이
+ * 초록을 낸다. 대신 **npm 에게 묻는다**: 고칠 것이 있다고 말하는지.
+ *
+ * ⛔ **`npm publish --dry-run` 으로 묻지 않는다.** 그 길은 레지스트리를 부르고, 이미 나간
+ * 판에서는 「덮어쓸 수 없다」로 **먼저** 실패한다 — 발행 직후부터 이 가드가 영원히 빨갛고,
+ * 그 빨강은 매니페스트와 아무 상관이 없다. ⇒ 네트워크도 레지스트리 상태도 타지 않는
+ * `npm pkg fix` 를 **사본에** 돌린다.
+ *
+ * ⚠️ **사본에 돌린다** — `npm pkg fix` 는 제자리에서 고치는 손이라, 저장소의 매니페스트에
+ * 돌리면 가드가 **고쳐 놓고 초록**이 된다. 재는 것과 고치는 것이 한 손이면 아무것도 재지 못한다.
+ */
+const fixedByNpm = (manifest: string): string => {
+  const at = mkdtempSync(join(tmpdir(), 'graduand-pkgfix-'));
+  writeFileSync(join(at, 'package.json'), manifest);
+  const said = spawnSync('npm', ['pkg', 'fix'], { cwd: at, encoding: 'utf8' });
+  assert.equal(said.status, 0, `npm pkg fix 가 실패했다: ${said.stderr}`);
+  return readFileSync(join(at, 'package.json'), 'utf8');
+};
+
+test('발행 — npm 이 고칠 것이 0 이다: 커밋된 선언이 레지스트리에 그대로 선다', () => {
+  const committed = readFileSync(join(PKG_ROOT, 'package.json'), 'utf8');
+  assert.equal(fixedByNpm(committed), committed, 'npm 이 매니페스트를 고친다 — 커밋된 선언과 발행된 선언이 갈라진다');
+
+  // ⭐⭐ **대조군** — 그 한 칸을 되돌려 심으면 npm 이 실제로 고친다. 이 단정이 없으면 위의
+  //    초록은 「npm 이 아무것도 안 고친다」가 아니라 「우리가 묻는 법을 모른다」일 수 있다.
+  const planted = committed.replace('"graduand": "dist/cli.js"', '"graduand": "./dist/cli.js"');
+  assert.notEqual(planted, committed, '심기가 아무것도 바꾸지 않았다 — 대조군이 분모를 잃었다');
+  assert.notEqual(fixedByNpm(planted), planted, 'npm 이 선두 ./ 를 고치지 않았다 — 이 대조군이 낡았다');
 });
