@@ -74,7 +74,16 @@ body {
   text-decoration: none;
 }
 .brand-link:focus-visible { outline: 2px solid var(--ink-dense); outline-offset: 4px; }
-/* 락업은 `currentColor` 로 먹을 따른다 — 색 리터럴이 발행본에 박히지 않는다. */
+/* 락업은 `currentColor` 로 먹을 따른다 — 색 리터럴이 발행본에 박히지 않는다.
+   ⚠️ **이 치수를 한 번 키웠다가 되돌렸다**(2026-10-28 — 심볼은 그대로 두기로 했다). 재면서
+   안 것 둘을 남긴다 — 다시 재지 않게:
+   ⛔ **심볼만 키우는 길은 여기 없다.** 락업 한 장 안에서 심볼과 워드마크의 비율은 BI 정본의
+   씨값에서 **유도된** 것이고(기준 정사각 = 워드마크 cap height), 가드가 인라인 도형을 마스터
+   자산과 대조한다(`generate.test.ts` 의 `lockupShapes`). 비율을 바꾸려면 씨값을 움직여
+   재생성하는 BI 결정이 먼저다 — CSS 가 할 일이 아니다. ⇒ 키를 올리면 워드마크도 같이 커진다.
+   ⭕ **세로 정렬은 이미 맞다** — 실측(발행본): 심볼과 워드마크의 중심이 둘 다 viewBox 의
+   y=50 이고 렌더 픽셀 차가 **0.000px** 이다. 어긋나 보이는 것은 자리가 아니라 **광학적
+   무게**다(선 마크 대 솔리드 타입) — 자리를 옮기면 맞는 것을 틀리게 만들고 가드가 운다. */
 .lockup { display: block; height: 1.15rem; width: auto; }
 .foot-brand .lockup { height: 1.3rem; }
 
@@ -514,11 +523,18 @@ footer {
   text-underline-offset: 3px;
 }
 .policy-link { color: var(--ink-heavy); }
-/* privacy 링크는 대비되게 — 묻히지 않는다. */
+/* ⚠️ privacy 링크는 **구분되어야 한다** — 묻히면 안 되는 자리다(🇰🇷 개인정보 보호법 §30④ 의
+   공개 의무가 「다른 고지와 구분」을 전제한다). ⛔ 그래서 이 규칙을 걷지 않는다.
+   ⚠️⚠️ **강조가 두 번 깎였다** — 처음엔 셋이었다(먹 · 굵기 700 · 2px 실선 괘선). 굵기를
+   걷었고, 이어서 괘선도 나머지 둘과 같은 **1px** 으로 내렸다(2026-10-28, 두 번에 나뉘어).
+   ⇒ **남은 구분은 먹과 꼴 둘이다**: 진한 먹(`--ink-heavy` → `--ink-burnt`)과, 글자를
+   끊지 않고 이어지는 **실선 괘선**(나머지 둘은 `text-decoration` 이라 하강부에서 끊긴다).
+   ⛔ **여기서 더 걷으면 구분이 색 하나가 된다** — 색 하나로만 서는 구분은 색을 못 보는
+   사람에게 서지 않는다(이 저장소가 3상태 글리프에서 쓴 바로 그 논거다). 그리고 그 순간
+   법이 전제하는 「다른 고지와 구분」이 깨진다. 다음에 이 규칙을 만지는 손은 그 선을 넘는다. */
 .policy-link.privacy {
   color: var(--ink-burnt);
-  font-weight: 700;
-  border-bottom: 2px solid var(--ink-burnt);
+  border-bottom: 1px solid var(--ink-burnt);
   text-decoration: none;
 }
 .portal-link { color: var(--ink-dense); }
