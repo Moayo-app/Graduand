@@ -3,7 +3,7 @@
   ⚠️ ko·en 양 벌이 같은 합집합(🇰🇷 ∪ 🇺🇸 13절)을 담는다 — 한쪽에만 담으면 한쪽 독자에게 요건이 빠진다.
   ko 정본이 개정되면 이 판을 재전파하고 아래 정본 해시를 갱신한다 — 가드가 둘의 일치를 잰다.
   ⛔ 머리말에 「버전:」·「발행일:」·「시행일:」 기계 줄을 넣지 않는다 — 메타의 출처는 ko 정본 하나다.
-  정본 해시: sha256:b8cb7f5d9aef4fa0e5a46303d94e11fcc140263c4ce5c90a269d08d17064258f
+  정본 해시: sha256:18cf18cb6daa659e27b3eef39184473243c70b8896a2b31034ef0b264a7c631b
 -->
 
 # Privacy Policy
@@ -71,7 +71,19 @@ These records are used **only for the purpose of preservation**, and cannot be d
 
 ⚠️ **The items collected at checkout do not pass through the Company** (Section 2) — the Seller collects them as merchant of record, and the contract of sale stands between the buyer and the Seller. ⭕ **The preservation duty above is nonetheless the Company's**: the Company is a registered mail-order business and publishes that registration number on every screen of the Service, and the duty that comes with that standing is not moved by the commercial arrangement with the Seller.
 
-⬜ **Which items are preserved, and the procedure for obtaining them from the Seller, are not yet stated here.** The Seller's terms state no obligation to provide records, and the items cannot be written down before it is settled what is received and preserved. They will be stated here on the day it is settled — the discipline of Section 2, that empty cells are not filled with guesses, applies here too.
+**The items preserved** are **limited** to the following, out of the Seller's order records.
+
+| Group | Items |
+|---|---|
+| Identity of the transaction | Order identifier · subscription identifier · time of the transaction |
+| The other party | The buyer's email address |
+| What was supplied | Product name · billing interval (monthly or annual) · quantity (number of repositories) |
+| Payment | Subtotal, discount, tax and total at the time of the transaction, with the currency · payment status · refunded amount |
+| Evidence | Invoice number · receipt number |
+
+⛔ **The billing address and the tax identification number are not received.** What preservation requires is the **fact** of the contract, the payment and the supply; those two are items the Seller uses to issue invoices. ⛔ Payment instrument details never reach the Company by any route (Section 2).
+
+**How they are obtained**: the items above are obtained through the order-lookup features the Seller provides (its dashboard and API) and then preserved. The Seller's terms state no obligation to provide records, so if that access closes, the Company will arrange another way to continue preservation and state it here.
 
 ## 4. Provision to third parties, and categories of third parties
 
