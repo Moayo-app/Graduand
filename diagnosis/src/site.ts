@@ -130,6 +130,40 @@ export const REDIRECTS_FILE = '_redirects';
 export const OG_IMAGE_FILE = 'og.png';
 
 /**
+ * 검색 창구의 **소유 확인** — ⭐ 씨값이 하나다. 창구가 주는 파일은 본문에 **자기 파일 이름을
+ * 축자로** 적으므로 이름과 본문이 같은 토큰에서 유도된다. 둘을 따로 적으면 토큰이 움직이는
+ * 날 한쪽만 고쳐지고, 그 어긋남은 화면에 아무 표시도 남기지 않는다(확인만 조용히 깨진다).
+ *
+ * ⛔ **색인 선언이 아니다** — 위 셋은 크롤러에게 **무엇을 어떻게 읽을지**를 말하고, 이것은
+ * 창구에게 **이 자리가 우리 것임**을 말한다. 기전이 같아 같은 루프가 쓰지만 종류가 다르다.
+ *
+ * ⚠️⚠️ **호스팅의 `html_handling` 이 이 주소를 접는다.** `auto-trailing-slash` 에서
+ * `/<이름>.html` 요청은 `/<이름>` 으로 **307** 이 되고 본문은 그 뒤에서 200 으로 선다
+ * (실측 2026-10-29: `/en/index.html` → 307 `/en/`). 창구가 리다이렉트를 따르면 확인이 서고,
+ * 따르지 않으면 실패한다 — 그때 서는 길은 **메타 태그**다. ⛔ 그 거동을 피하려
+ * `html_handling` 을 걷지 않는다: 걷으면 `/ko/` 가 문서를 내지 못한다(그쪽이 결의된 주소다).
+ */
+export const NAVER_VERIFICATION_TOKEN = 'naverf818c92450ab40b93bf90e71f7d97e84';
+export const NAVER_VERIFICATION_FILE = `${NAVER_VERIFICATION_TOKEN}.html`;
+/** 창구가 준 바이트 그대로 — ⚠️ 끝에 줄바꿈이 **없다**(받은 파일이 67바이트 한 줄이다). */
+export const naverVerification = (): string =>
+  `naver-site-verification: ${NAVER_VERIFICATION_FILE}`;
+
+/**
+ * 같은 확인의 **둘째 길** — 메타 태그다. ⭕ 파일이 접히는 그 307 때문에 둘을 함께 세운다:
+ * 어느 쪽 하나가 서면 확인이 선다.
+ *
+ * ⚠️⚠️ **씨값이 둘이고 서로 유도되지 않는다.** 창구가 방식마다 **다른 문자열**을 준다
+ * (실측 2026-10-29: 파일 토큰 16진 32자 · 메타 토큰 16진 40자 — 한쪽에서 다른 쪽을 지을
+ * 수 없다). ⛔ 그래서 한 씨값으로 접지 않는다 — 접으려면 없는 관계를 발명해야 하고, 그
+ * 발명은 토큰이 움직이는 날 **조용히 틀린 태그**를 낸다. ⇒ 가드가 둘을 **따로** 묻는다.
+ */
+export const NAVER_META_TOKEN = 'edbf1a8ab54a9ab7597ca4f8e6a024ab6f9ac166';
+/** ⭐ 문서·로케일에 **불변**이다 — 소유는 자리의 성질이지 번역판의 성질이 아니다. */
+export const naverVerificationTag = (): string =>
+  `<meta name="naver-site-verification" content="${NAVER_META_TOKEN}">`;
+
+/**
  * hreflang 쌍 + `x-default` — ⭐ 두 문서가 **서로를** 가리키고, `x-default` 가 기본 로케일을
  * 가리킨다. ⛔ 로케일 **수**를 적지 않는다: 분모는 `LOCALES` 다.
  *
@@ -174,12 +208,90 @@ export function sitemapXml(): string {
 }
 
 /**
+ * AI 선호 신호 — Content Signals 문법(`search` · `ai-input` · `ai-train`, 값은 `yes`|`no`).
+ * ⭐⭐ **셋을 전부 적는다.** 규격에서 **빠진 신호는 「아니오」가 아니라 침묵**이다 —
+ *   허락도 거부도 아니다. 이 저장소가 「미판정」과 「위반 0」을 가르는 것과 같은 구별이라,
+ *   침묵으로 남길 칸을 두지 않는다.
+ * ⭐ `ai-input=yes` 가 **의도다** — 답변 엔진이 우리를 **인용**하는 길은 열어 둔다
+ *   (개발자 도구의 유입이 거기서 온다). 거부하는 것은 **학습**뿐이다.
+ * ⚠️ 이 줄은 **집행이 아니다** — robots 는 예의고 지키는지는 상대가 정한다.
+ *   그래서 `AI_TRAINING_AGENTS` 가 같은 말을 `Disallow` 로 한 번 더 한다.
+ */
+export const CONTENT_SIGNALS: ReadonlyArray<readonly [string, 'yes' | 'no']> = [
+  ['search', 'yes'],
+  ['ai-input', 'yes'],
+  ['ai-train', 'no'],
+];
+
+/**
+ * 학습 크롤러 — `ai-train=no` 를 `Disallow` 로 한 번 더 말하는 자리.
+ * ⚠️⚠️ **이 목록은 반드시 낡는다** — 새 크롤러는 우리가 적은 뒤에 생기고, 가드는
+ *   **없는 이름을 알 수 없다**. ⇒ 일반 선언(`Content-Signal`)이 이 열거의 **위**에 서고,
+ *   열거는 그 선언의 보강이지 분모가 아니다. ⛔ 「목록에 없으면 허용」으로 읽지 않는다.
+ * ⭐ `Google-Extended` 와 `Applebot-Extended` 는 **크롤러가 아니라 토큰**이다 — 바이트를
+ *   가져가는 것은 Googlebot · Applebot 이고, 이 이름은 그걸 학습에 쓸지만 가른다.
+ *   ⇒ 여기서 막아도 **검색 색인은 다치지 않는다**. ⚠️ 2026-10-29 에 WAF 로 Googlebot
+ *   **자체**를 막아 사이트맵이 403 으로 죽은 사고와 **반대 방향**이다 — 그 사고의
+ *   교훈이 바로 이 줄이다: 거부는 **이름 층**에서 하고 전송 층에서 하지 않는다.
+ */
+export const AI_TRAINING_AGENTS: readonly string[] = [
+  'GPTBot',
+  'ClaudeBot',
+  'anthropic-ai',
+  'CCBot',
+  'Google-Extended',
+  'Applebot-Extended',
+  'Bytespider',
+  'meta-externalagent',
+];
+
+/**
+ * ⭐⭐ **막으면 안 되는 이름들 — 가드의 분모다.** 검색 색인과 답변 인용이 이 이름으로 온다.
+ * ⛔ 이 목록의 이름이 `robots.txt` 에 **한 번이라도** 나타나면 빨강이다: `ai-input=yes`
+ *   라고 선언해 놓고 그 길을 막는 것은 **선언과 집행의 모순**이고, 그것이 이 제품이 파는
+ *   바로 그 결함이다. ⇒ 자기에게 먼저 적용한다.
+ * ⚠️ 이름이 서로의 부분문자열이 아니어야 그 대조가 선다(`ClaudeBot` ≠ `Claude-User`,
+ *   `Google-Extended` ≠ `Googlebot`) — 가드가 겹침까지 물어 그 전제를 지킨다.
+ */
+export const AI_ALLOWED_AGENTS: readonly string[] = [
+  'Googlebot',
+  'Bingbot',
+  'OAI-SearchBot',
+  'ChatGPT-User',
+  'Claude-SearchBot',
+  'Claude-User',
+  'PerplexityBot',
+  'Perplexity-User',
+];
+
+/**
  * robots — ⭐ **규칙이 로케일 간 동일하다.** 한쪽만 막으면 그 로케일이 조용히 사라지고,
  * 화면에는 아무 표시도 남지 않는다. ⇒ 규칙이 **경로를 가르지 않는다**.
  * ⛔ 숨길 자리가 없다 — 발행 루트에 있는 것은 전부 공개 배달 범위다.
+ * ⭐⭐ **가르는 축은 「누가」 하나다** — 경로가 아니라 이름이다(학습 크롤러만 막는다).
+ *   그래서 위 문단이 그대로 선다: 어느 로케일도 어느 문서도 따로 다뤄지지 않는다.
+ * ⚠️⚠️ **벤더 토글에 기대지 않는다** — 2026-10-29 까지 이 거부는 Cloudflare 의 관리형
+ *   블록이 앞에 붙여 주던 것이었고, 「봇 기본 설정 동기화」가 켜진 채 학습을 허용으로
+ *   바꾸자 **한 번의 클릭으로 통째로 사라졌다**(우리 파일은 그대로인데 발행된 바이트가
+ *   달라졌다 — 산문도 가드도 그 변화를 보지 못했다). ⇒ 거부가 선언으로 서려면
+ *   **우리 씨값에서 나야** 하고, 그래야 가드가 쉬다.
  */
 export function robotsTxt(): string {
-  return ['User-agent: *', 'Allow: /', '', `Sitemap: ${rootAssetUrl(SITEMAP_FILE)}`, ''].join('\n');
+  const signals = CONTENT_SIGNALS.map(([name, value]) => `${name}=${value}`).join(', ');
+  return [
+    '# Training use is expressly reserved by machine-readable means.',
+    '# Search indexing and citation by answer engines are welcome.',
+    '',
+    'User-agent: *',
+    `Content-Signal: ${signals}`,
+    'Allow: /',
+    '',
+    ...AI_TRAINING_AGENTS.map((agent) => `User-agent: ${agent}`),
+    'Disallow: /',
+    '',
+    `Sitemap: ${rootAssetUrl(SITEMAP_FILE)}`,
+    '',
+  ].join('\n');
 }
 
 /**

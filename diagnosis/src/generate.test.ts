@@ -44,11 +44,19 @@ import {
 } from './generate.ts';
 import { PUBLISHER } from './publisher.ts';
 import {
+  AI_ALLOWED_AGENTS,
+  AI_TRAINING_AGENTS,
   alternates,
+  CONTENT_SIGNALS,
   DEFAULT_LOCALE,
   DOCUMENTS,
   documentUrl,
   localeRootPath,
+  NAVER_META_TOKEN,
+  NAVER_VERIFICATION_FILE,
+  NAVER_VERIFICATION_TOKEN,
+  naverVerification,
+  naverVerificationTag,
   OG_IMAGE_FILE,
   REDIRECTS,
   REDIRECTS_FILE,
@@ -82,7 +90,7 @@ function generateInto(): string {
 }
 
 /**
- * 발행 루트에 **한 벌로** 서는 것 전수 — 로케일 불변 자산과 색인 선언 셋이다.
+ * 발행 루트에 **한 벌로** 서는 것 전수 — 로케일 불변 자산 · 색인 선언 셋 · 소유 확인 하나다.
  * ⛔ 수를 적지 않는다: 이름을 전부 생성기의 상수에서 받는다.
  */
 const rootFiles: readonly string[] = [
@@ -91,7 +99,48 @@ const rootFiles: readonly string[] = [
   SITEMAP_FILE,
   ROBOTS_FILE,
   REDIRECTS_FILE,
+  NAVER_VERIFICATION_FILE,
 ];
+
+/* ───────────── 소유 확인 — 이름과 본문이 한 씨값에서 난다 ───────────── */
+
+test('소유 확인 파일의 이름과 본문이 같은 토큰에서 유도된다', () => {
+  // ⭐ 창구가 주는 파일은 본문에 **자기 이름을 축자로** 적는다. 둘을 따로 적으면 토큰이
+  //   움직이는 날 한쪽만 고쳐지고, 그 어긋남은 화면에 아무 표시도 남기지 않는다.
+  assert.equal(NAVER_VERIFICATION_FILE, `${NAVER_VERIFICATION_TOKEN}.html`);
+  assert.equal(naverVerification(), `naver-site-verification: ${NAVER_VERIFICATION_FILE}`);
+
+  // ⚠️ 받은 파일이 **줄바꿈 없는 한 줄**이다 — 끝에 붙이면 바이트가 달라진다.
+  assert.ok(!naverVerification().endsWith('\n'), '본문 끝에 줄바꿈이 붙었다 — 받은 바이트와 다르다');
+
+  // ⭐ 그리고 **발행본에 실제로 선다** — 상수만 맞고 루프에서 빠지면 주소가 404 다.
+  assert.equal(
+    readFileSync(join(generateInto(), NAVER_VERIFICATION_FILE), 'utf8'),
+    naverVerification(),
+    '발행 루트의 소유 확인 파일이 본문과 다르다',
+  );
+});
+
+test('소유 확인 메타 태그가 문서 전수에 축자로 선다 — 그리고 두 씨값은 서로 다르다', () => {
+  // ⚠️⚠️ **씨값이 둘이고 서로 유도되지 않는다** — 창구가 방식마다 다른 문자열을 준다.
+  //   ⛔ 한쪽에서 다른 쪽을 짓는 손을 만들면 없는 관계를 발명하는 것이고, 그 발명은 토큰이
+  //   움직이는 날 **조용히 틀린 태그**를 낸다. 그래서 이 단정이 둘의 **분리**를 지킨다.
+  assert.notEqual(NAVER_META_TOKEN, NAVER_VERIFICATION_TOKEN, '두 토큰이 같아졌다 — 실측과 다르다');
+  assert.ok(!NAVER_VERIFICATION_FILE.includes(NAVER_META_TOKEN), '파일 이름이 메타 토큰에서 났다');
+
+  assert.equal(naverVerificationTag(), `<meta name="naver-site-verification" content="${NAVER_META_TOKEN}">`);
+
+  // ⭐ 분모는 **문서 × 로케일 전수**다 — 크롬이 한 벌이라 넷에 같이 서야 하고, 한 문서만
+  //   서면 창구가 보는 주소에 따라 확인이 갈린다. ⛔ 문서 수를 적지 않는다.
+  const rendered = Object.entries(renderSite(readSources()));
+  assert.ok(rendered.length > 0, '발행본이 0 이다 — 분모가 거짓이다');
+  for (const [name, html] of rendered) {
+    assert.ok(
+      html.includes(naverVerificationTag()),
+      `${name}: 소유 확인 메타 태그가 없다 — 크롬의 자리가 빠졌거나 생성기가 채우지 않았다`,
+    );
+  }
+});
 
 /* ───────────────── AC2 — 두 문서가 한 틀에서 난다 ───────────────── */
 
@@ -706,4 +755,47 @@ test('AC1 — 두 문서가 서로를 hreflang 으로 가리키고 x-default 가
     'sitemap 의 x-default 가 기본 로케일이 아니다',
   );
   assert.ok(robotsTxt().includes(rootAssetUrl(SITEMAP_FILE)), 'robots 가 sitemap 을 가리키지 않는다');
+});
+
+/**
+ * ⭐⭐ **AI 학습 거부 — 선언과 집행이 같은 말을 하는가.**
+ * 이 가드가 물는 것은 「거부가 있는가」가 아니라 **거부가 자기모순인가**다 —
+ * `ai-input=yes` 라고 적어 두고 답변 엔진을 `Disallow` 하는 것이 바로 이 제품이
+ * 파는 결함(선언만 하고 집행은 반대로 간다)이라, 자기에게 먼저 적용한다.
+ * ⚠️ 분모는 「세상의 모든 크롤러」가 **아니다** — 없는 이름은 가드도 모른다.
+ *   분모는 우리가 **선언한 두 목록**이고, 그 둘이 서로를 부정하지 않는지를 물는다.
+ */
+test('robots — 학습 거부가 선언·집행 양쪽에 서고, 둘이 서로를 부정하지 않는다', () => {
+  const robots = robotsTxt();
+
+  // ① 신호 셋이 **전부** 적힐다 — 규격에서 빠진 신호는 거부가 아니라 **침묵**이다.
+  assert.deepEqual(
+    CONTENT_SIGNALS.map(([name]) => name).sort(),
+    ['ai-input', 'ai-train', 'search'],
+    '신호의 분모가 규격의 셋과 다르다',
+  );
+  const line = CONTENT_SIGNALS.map(([name, value]) => `${name}=${value}`).join(', ');
+  assert.ok(robots.includes(`Content-Signal: ${line}`), 'Content-Signal 줄이 선언에서 나지 않았다');
+  assert.ok(robots.includes('ai-train=no'), '학습 거부가 신호에 없다');
+
+  // ② 선언한 학습 크롤러가 **전수** 집행된다 — 산문만 있고 줄이 없는 자리를 만들지 않는다.
+  assert.ok(AI_TRAINING_AGENTS.length > 0, '학습 크롤러 목록이 비었다');
+  for (const agent of AI_TRAINING_AGENTS) {
+    assert.ok(robots.includes(`User-agent: ${agent}\n`), `학습 크롤러 ${agent} 가 robots 에 없다`);
+  }
+  assert.ok(robots.includes('Disallow: /'), '학습 크롤러 묶음에 Disallow 가 없다');
+
+  // ③ ⭐⭐ **모순이 없다** — 열어 둔다고 한 이름은 한 번도 나타나지 않는다.
+  for (const agent of AI_ALLOWED_AGENTS) {
+    assert.ok(!robots.includes(agent), `${agent} 가 robots 에 나타난다 — 선언과 집행이 어긋난다`);
+  }
+  assert.deepEqual(
+    AI_TRAINING_AGENTS.filter((agent) => AI_ALLOWED_AGENTS.includes(agent)),
+    [],
+    '같은 이름이 막는 쪽과 여는 쪽에 함께 있다',
+  );
+
+  // ④ 열어 둔 쪽이 그대로다 — 거부를 더하면서 전체 허용을 잃지 않았다.
+  assert.ok(robots.includes('User-agent: *\n'), '전체 묶음이 사라졌다');
+  assert.ok(robots.includes('Allow: /'), '전체 허용이 사라졌다');
 });
