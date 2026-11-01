@@ -37,6 +37,9 @@ import {
   documentPath,
   documentUrl,
   localeRootPath,
+  NAVER_VERIFICATION_FILE,
+  naverVerification,
+  naverVerificationTag,
   OG_IMAGE_FILE,
   REDIRECTS_FILE,
   redirectsFile,
@@ -119,6 +122,10 @@ const RAW_SLOTS: readonly string[] = [
   'publisherRows',
   'indexing',
   'openGraph',
+  // ⭐ 소유 확인은 **색인 선언이 아니다** — 위 `indexing` 은 크롤러에게 무엇을 어떻게 읽을지
+  //   말하고, 이것은 창구에게 이 자리가 우리 것임을 말한다. 자리를 따로 두지 않으면 둘이
+  //   한 손에서 나고, 색인을 고치는 손이 소유 확인을 지울 수 있게 된다.
+  'verification',
   // ⭐ 제품 컬럼은 **문서마다 자기 블록을 가리킨다** — 같은 목록을 두 문서에 세우면 둘째
   //   문서의 닻이 없는 `id` 를 가리키고(잘못 선언한 것이라 판정 실패다) 정책 경로도 한 칸
   //   어긋난다. 그래서 생성기가 짓는다 — `publisherRows` 와 같은 급의 자리다.
@@ -353,6 +360,8 @@ function chromeSlots(
     publisherRows: publisherRows(strings),
     indexing: indexingLinks(strings.locale, doc),
     openGraph: openGraph(head, strings.locale, doc),
+    // ⭐ 문서·로케일에 **불변**이다 — 그래서 인자가 없다(소유는 번역판의 성질이 아니다).
+    verification: naverVerificationTag(),
     productLinks: productLinks(strings, doc),
     // ⭐ 원페이지에서 브랜드 링크는 **자기를 가리킨다**(정지 상태의 홈). 둘째 문서에서는
     //   그 링크가 원페이지로 가므로 `aria-current` 가 **거짓**이 된다 — 속성을 문서가 고른다.
@@ -739,7 +748,7 @@ export function renderSite(
 
 /**
  * 발행 루트를 **통째로** 짓는다 — 문서 넷(문서 × 로케일) · 화면 한 벌 · 브랜드 자산 ·
- * 색인 선언 셋.
+ * 색인 선언 셋 · 소유 확인 하나.
  *
  * ⭐⭐ **이 디렉터리가 곧 사이트다.** 호스팅 선언이 가리키는 자리가 여기이고, 그래서 문서가
  * `/<로케일>/` 과 그 아래 한 칸에 선다. ⚠️ 커밋하지 않는다(전부 생성물이다).
@@ -771,10 +780,13 @@ export function generate(out: string, root: string = PACKAGE_ROOT): string[] {
 
   // ⭐ 색인 선언 셋 — 발견이 리다이렉트에 기대지 않게 하는 자리(sitemap)와, 로케일을 가르지
   //   않는 규칙(robots)과, 헤더를 보지 않는 루트 한 줄(`_redirects`)이다.
+  // ⭐ 그리고 **소유 확인 하나** — 종류가 다르다(크롤러에게 말하는 것이 아니라 창구에게
+  //   말한다). 기전이 같아 같은 루프가 쓴다. 사유와 그 주소의 307 은 `site.ts` 가 든다.
   for (const [name, body] of [
     [SITEMAP_FILE, sitemapXml()],
     [ROBOTS_FILE, robotsTxt()],
     [REDIRECTS_FILE, redirectsFile()],
+    [NAVER_VERIFICATION_FILE, naverVerification()],
   ] as const) {
     const path = join(out, name);
     writeFileSync(path, body);
