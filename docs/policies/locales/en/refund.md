@@ -4,7 +4,7 @@
   (금칙의 정본은 config/policy-strings.yml).
   ko 정본이 개정되면 이 판을 재전파하고 아래 정본 해시를 갱신한다 — 가드가 둘의 일치를 잰다.
   ⛔ 머리말에 「버전:」·「발행일:」·「시행일:」 기계 줄을 넣지 않는다 — 메타의 출처는 ko 정본 하나다.
-  정본 해시: sha256:35c03483641508c7a5703fbea9dfb40b4a86c25d0a845547b7434686ca2b9d98
+  정본 해시: sha256:574862e64b04b20727834c4e10a7d388a141d0b29d7527b041f58a2cbc33f756
 -->
 
 # Refund Policy
@@ -12,6 +12,8 @@
 **graduand — Moayo Inc. (주식회사 모아요)**
 
 > The official version of this document is the Korean version. If this translation and the Korean version differ in interpretation, the Korean version prevails.
+
+> **Notice of change — effective 9 November 2026.** Section 6 now states the **channel for refund requests**: `support@moayo.app`. The previous version left that place empty and said only that it would be written into the section on the day the domain was settled — but paid checkout opened on 28 October 2026, so the previous version left no channel through which to request a refund. **The new address can be used from this notice onward**: if you want to request a refund before the effective date, use the same address. That the previous version remains in force until 9 November 2026 concerns the **conditions** of a refund. This notice gives the same 7 days as Article 11 ② of the Terms.
 
 This policy states the conditions for refunds of paid graduand subscriptions and the channel for them. The refund conditions are **declared to customers by the Company (Moayo Inc.) in its own name** — even though execution passes through the Seller's (Polar's) path, it is the Company that owes these conditions. The Terms of Service, Article 4 (Billing), Article 5 (Quantity changes) and Article 7 (Cancellation), state the same content as provisions; if the two diverge, that is a bug.
 
@@ -42,7 +44,7 @@ The conditions above are the **minimum** the Company promises. Where the Seller'
 **This section is the canonical home of the channel** for cancellation and refund requests — the Terms state only the conditions and name no channel.
 
 - **Cancelling the subscription** — you can cancel in the Seller's **customer portal.** The portal is the same surface the subscription came from — you enter it through the link in the email you receive after completing checkout (receipt and subscription notice). The conditions and effect of cancellation are as in the Terms, Article 7.
-- **Requesting a refund** — if you make a request to the Company, the Company decides under the conditions of this policy, and execution follows the Seller's path. Please include the email address used for the payment and the payment date. The request channel (an email address) will be stated in this section on the day the domain is settled — until then, paid checkout is not open, so while the channel is empty there is also no payment to refund.
+- **Requesting a refund** — if you make a request to the Company, the Company decides under the conditions of this policy, and execution follows the Seller's path. The request channel is **support@moayo.app** — please include the email address used for the payment and the payment date.
 - **Changing quantity** — handled by request to the Company (Terms, Article 5).
 
 The Company does not hold your payment method details — which is why a refund is never paid out by the Company directly and always passes through the Seller's path. The route by which a refunded amount returns, and how long it takes, are determined by the Seller and the issuer of your payment method.
@@ -55,8 +57,8 @@ Once a refund is applied, the paid scope bought by that payment closes. The rule
 
 ## Addendum
 
-This policy (version 1.1.0) takes effect on 28 October 2026.
+This policy (version 1.2.0) takes effect on 9 November 2026.
 
-This version was published on 28 October 2026 — for this version the publication date and the effective date are the same day.
+This version was published on 2 November 2026 — because a change is announced **at least 7 days before it takes effect**, the publication date and the effective date of this version are 7 days apart.
 
-What changed from the previous version: section 2 now states the consequence that **a full refund ends the subscription**. The previous version stated only the amount refunded and not what happens to the subscription, so it could be read as leaving the subscription alive after the whole payment had been returned. This is not a change that disadvantages the customer, so it takes effect on the same day it is published.
+What changed from the previous version: section 6 now states **the channel for refund requests.** The previous version left that place empty, saying only that it would be written in on the day the domain was settled, and placed next to it a sentence saying that while the channel was empty there was also no payment to refund — once paid checkout opened on 28 October 2026 that premise no longer held, and that sentence has been **removed.** This is not a change that disadvantages the customer, so it is announced 7 days in advance rather than 30 and takes effect then.
