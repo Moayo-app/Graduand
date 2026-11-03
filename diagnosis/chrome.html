@@ -118,7 +118,32 @@
               >{{publisher.about}}<span class="visually-hidden"> ({{footer.newWindow}})</span></a
             >
           </li>
-          <li><a href="{{plain:publisher.contactMail}}">{{footer.contact}}</a></li>
+          <!--
+            문의하기 — ⭐⭐ **발행본에 서는 것은 평 `mailto:` 앵커 하나**이고, 모달은
+              스크립트가 **만든다**. 그래서 스크립트를 끈 방문자와 `<dialog>` 를 모르는
+              브라우저는 **폼이 들어오기 전과 같은 것**을 받는다 — 메일 앱이 열린다.
+              ⇒ 죽은 컨트롤이 0 이다(눌리는데 아무 일도 일어나지 않는 자리를 두지 않는다).
+            ⛔ **`href` 에 질의를 붙이지 않는다** — 제목·본문을 붙인 주소는 **런타임의 것**이고,
+              발행본의 모든 `mailto:` 가 법정 게시의 문의와 **같은 한 손**에서 났는지는 가드가
+              문다(`generate.test.ts` 의 AC6 — 질의가 붙으면 그 단정이 빨갛다).
+            ⭐ 모달의 자구는 `data-…` 로 싣는다 — 스크립트가 자구를 쥐면 사본이 하나 늘고,
+              그 사본은 카탈로그가 움직이는 날 갈라진다(둘째 문서의 런타임 자리와 같은 규율).
+            ⛔ 칸의 **수**를 여기 적지 않는다 — 칸의 선언은 `contact-modal.ts` 가 들고,
+              이 자리는 그 선언이 부르는 **라벨**만 나른다.
+          -->
+          <li>
+            <a
+              class="contact-trigger"
+              href="{{plain:publisher.contactMail}}"
+              data-contact-title="{{plain:footer.contactModal.title}}"
+              data-contact-lede="{{plain:footer.contactModal.lede}}"
+              data-contact-subject="{{plain:footer.contactModal.subjectLabel}}"
+              data-contact-body="{{plain:footer.contactModal.bodyLabel}}"
+              data-contact-submit="{{plain:footer.contactModal.submit}}"
+              data-contact-close="{{plain:footer.contactModal.close}}"
+              >{{footer.contact}}</a
+            >
+          </li>
         </ul>
       </nav>
 

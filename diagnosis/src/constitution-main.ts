@@ -36,6 +36,7 @@ import {
 } from '../../verifier/src/index.ts';
 import { DECLARATION_FILE } from '../../verifier/src/index.ts';
 import { buildComposed } from './composed.ts';
+import { wireContactModal } from './contact-modal.ts';
 import { parseRepoInput, type RepoRef } from './github-url.ts';
 import { readRepo, readScopes, composeIntent, type ComposeNetOutcome } from './outcome.ts';
 import { renderComposed, renderScreen } from './render.ts';
@@ -358,3 +359,6 @@ form.addEventListener('submit', (event) => {
 });
 
 refreshLinks();
+
+// ⭐ 푸터의 문의하기 — 원페이지의 배선과 **같은 모듈**이다(크롬이 한 벌이라 자리도 한 벌이다).
+wireContactModal();

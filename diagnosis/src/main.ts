@@ -10,6 +10,7 @@
  */
 
 import { DECLARATION_FILE, looksLikeFragment, SCAFFOLD_JSON } from '../../verifier/src/index.ts';
+import { wireContactModal } from './contact-modal.ts';
 import { parseRepoInput } from './github-url.ts';
 import { diagnoseUrl, openFragment, type Outcome } from './outcome.ts';
 import { buildObservation } from './observation.ts';
@@ -152,3 +153,10 @@ scaffoldCopy.addEventListener('click', () => {
 if (new URLSearchParams(window.location.search).get('activated') !== null) {
   must<HTMLElement>('#activated-banner').hidden = false;
 }
+
+/**
+ * 푸터의 문의하기 — ⭐ **크롬이 한 벌이라 문서 둘이 같은 자리를 든다**: 두 배선이 **같은
+ * 모듈**을 부른다(여기 사본을 만들면 한 문서에서만 모달이 서는 날이 온다).
+ * ⭕ 모달을 세우지 못하면 아무것도 하지 않고 돌아가므로 그 링크는 평 `mailto:` 그대로 남는다.
+ */
+wireContactModal();

@@ -385,6 +385,14 @@ function chromeSlots(
     'footer.companyHeading': page.footer.companyHeading,
     'footer.newWindow': page.footer.newWindow,
     'footer.contact': page.footer.contact,
+    // ⭐ 모달의 자구 — 발행본이 `data-…` 로 나르고 스크립트가 **읽는다**. 자리와 키가 1:1 이라
+    //   하나를 빠뜨리면 생성기가 던진다(말 없는 칸이 발행본까지 가지 않는다).
+    'footer.contactModal.title': page.footer.contactModal.title,
+    'footer.contactModal.lede': page.footer.contactModal.lede,
+    'footer.contactModal.subjectLabel': page.footer.contactModal.subjectLabel,
+    'footer.contactModal.bodyLabel': page.footer.contactModal.bodyLabel,
+    'footer.contactModal.submit': page.footer.contactModal.submit,
+    'footer.contactModal.close': page.footer.contactModal.close,
     'footer.productHeading': page.footer.productHeading,
     'footer.legalHeading': page.footer.legalHeading,
     'footer.languagesHeading': page.footer.languagesHeading,

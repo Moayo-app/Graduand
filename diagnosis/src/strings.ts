@@ -337,6 +337,27 @@ export interface PageText {
     /** 새 창으로 열리는 링크가 **말없이** 열리지 않게 — 시각으로는 숨고 보조기술에는 들린다. */
     readonly newWindow: string;
     readonly contact: string;
+    /**
+     * 문의 모달의 자구 — ⭐⭐ **런타임에 태어나는 자리의 자구이고, 발행본이 `data-…` 로
+     * 싣는다**(둘째 문서의 런타임 자리와 같은 규율). 스크립트가 자구를 쥐면 그것이 **사본**이고,
+     * 그 사본은 카탈로그가 움직이는 날 갈라진다.
+     *
+     * ⛔ **키가 모달의 구조를 말하지 않는다** — 칸이 둘인 것은 `contact-modal.ts` 의 선언이
+     * 정본이고, 여기는 그 선언이 부르는 라벨만 든다. 두 자리에 수를 적으면 하나가 낡는다.
+     */
+    readonly contactModal: {
+      readonly title: string;
+      /**
+       * 무엇이 일어나는지 — ⛔ 「보냅니다」가 아니다: **보내는 것은 방문자의 메일 앱**이고
+       * 이 화면은 주소·제목·본문을 조립만 한다. 그 구별이 이 설계의 전부라 자구가 진다.
+       */
+      readonly lede: string;
+      readonly subjectLabel: string;
+      readonly bodyLabel: string;
+      /** 제출 — ⭐ 버튼이 아니라 **링크**의 자구다(조립된 `mailto:` 를 가리킨다). */
+      readonly submit: string;
+      readonly close: string;
+    };
     readonly productHeading: string;
     /** 가격 절로 가는 **같은 문서 안의 닻** — 별 페이지가 아니라 이 원페이지의 한 블록이다. */
     readonly pricing: string;
