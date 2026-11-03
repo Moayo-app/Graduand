@@ -3,7 +3,7 @@
   기한·수량·관할의 숫자와 조건은 축자로 옮긴다 — 번역가 재량 0.
   ko 정본이 개정되면 이 판을 재전파하고 아래 정본 해시를 갱신한다 — 가드가 둘의 일치를 잰다.
   ⛔ 머리말에 「버전:」·「발행일:」·「시행일:」 기계 줄을 넣지 않는다 — 메타의 출처는 ko 정본 하나다.
-  정본 해시: sha256:26ce8a7992f7d78abd122f9bc42d8b5076fd5d1faeb4084a58b15185f4baa1a1
+  정본 해시: sha256:582e0087d396222d380c065c25dc92cde48bfdd75d7976c6081ab1b0afeecf97
 -->
 
 # Terms of Service
@@ -12,7 +12,7 @@
 
 > The official version of this document is the Korean version. If this translation and the Korean version differ in interpretation, the Korean version prevails.
 
-> **Notice of change — effective 9 November 2026.** These terms add a **contact channel provision (Article 12)**, and the address of that channel is `support@moayo.app`. The previous version named no contact channel in its provisions, so a customer reading these terms could not find in this document where to ask. The new address can be used **from this notice onward.** This notice is the announcement **at least 7 days before the change takes effect** that Article 11 ② requires; until the effective date, **9 November 2026, the previous version remains in force** — which concerns the **content** of the rights and duties.
+> **Notice of change — effective 10 November 2026.** These terms add a **contact channel provision (Article 12)**, and the address of that channel is `support@moayo.app`. The previous version named no contact channel in its provisions, so a customer reading these terms could not find in this document where to ask. The new address can be used **from this notice onward.** This notice is the announcement **at least 7 days before the change takes effect** that Article 11 ② requires; until the effective date, **10 November 2026, the previous version remains in force** — which concerns the **content** of the rights and duties.
 
 ## Article 1 (Purpose and definitions)
 
@@ -130,8 +130,10 @@
 
 ## Addendum
 
-These terms (version 1.1.0) take effect on 9 November 2026.
+These terms (version 1.1.1) take effect on 10 November 2026.
 
-This version was published on 2 November 2026 — because Article 11 ② requires an amendment to be announced **at least 7 days before it takes effect**, the publication date and the effective date of this version are 7 days apart.
+This version was published on 3 November 2026 — because Article 11 ② requires an amendment to be announced **at least 7 days before it takes effect**, the publication date and the effective date of this version are 7 days apart.
 
 What changed from the previous version: **Article 12 (Contact channel) was added.** This is not a change unfavorable to customers or a material one, so it is announced 7 days in advance rather than 30 and takes effect then.
+
+The same content was first announced as 1.1.0 with an effective date of 9 November 2026, but the day that published copy actually stood on the surface where this document is published was 3 November 2026 — so that the notice is 7 days even counted from that surface, the effective date is moved by one day and the document is published again as this version.
