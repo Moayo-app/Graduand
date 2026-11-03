@@ -3,7 +3,7 @@
   ⚠️ ko·en 양 벌이 같은 합집합(🇰🇷 ∪ 🇺🇸 13절)을 담는다 — 한쪽에만 담으면 한쪽 독자에게 요건이 빠진다.
   ko 정본이 개정되면 이 판을 재전파하고 아래 정본 해시를 갱신한다 — 가드가 둘의 일치를 잰다.
   ⛔ 머리말에 「버전:」·「발행일:」·「시행일:」 기계 줄을 넣지 않는다 — 메타의 출처는 ko 정본 하나다.
-  정본 해시: sha256:ebce72f42ac164645ceb6897dcf1925c76268ae0b2405aa4d17a6d29e9dc50b3
+  정본 해시: sha256:fc7849e3615eb76605e97613e9cef2565691cfd6e4ee77d060f6e7887abcb15f
 -->
 
 # Privacy Policy
@@ -12,7 +12,7 @@
 
 > The official version of this document is the Korean version. If this translation and the Korean version differ in interpretation, the Korean version prevails.
 
-> **Notice of change — effective 9 November 2026.** The address of the inquiry and request channel stated in this policy changes to `privacy@moayo.app`. There are three such places — the "Contact" row of the masthead below, the "Collection route" cell in the Section 2 table, and the privacy officer's contact in Section 11. Only the **address** changes; the demands the channel receives (access, correction, deletion and suspension of processing under Section 9) and the procedure and deadlines for handling them stay the same. The new address can be used **from this notice onward**, and mail sent to the earlier address continues to be received. This notice is the announcement **at least 7 days before the change takes effect** that Section 12 requires; until the effective date, **9 November 2026, the previous version remains in force.**
+> **Notice of change — effective 10 November 2026.** The address of the inquiry and request channel stated in this policy changes to `privacy@moayo.app`. There are three such places — the "Contact" row of the masthead below, the "Collection route" cell in the Section 2 table, and the privacy officer's contact in Section 11. Only the **address** changes; the demands the channel receives (access, correction, deletion and suspension of processing under Section 9) and the procedure and deadlines for handling them stay the same. The new address can be used **from this notice onward**, and mail sent to the earlier address continues to be received. This notice is the announcement **at least 7 days before the change takes effect** that Section 12 requires; until the effective date, **10 November 2026, the previous version remains in force.**
 
 Moayo Inc. (the "Company") processes personal data in providing graduand (the "Service"). This policy states what personal data the Company processes and for what, how long it is kept, and what you can demand about it.
 
@@ -153,8 +153,10 @@ When the Company changes this policy, it announces the content of the change and
 
 ## 13. Effective date
 
-This policy (version 1.1.0) takes effect on 9 November 2026.
+This policy (version 1.1.1) takes effect on 10 November 2026.
 
-This version was published on 2 November 2026 — because Section 12 requires a change to be announced **at least 7 days before it takes effect**, the publication date and the effective date of this version are 7 days apart.
+This version was published on 3 November 2026 — because Section 12 requires a change to be announced **at least 7 days before it takes effect**, the publication date and the effective date of this version are 7 days apart.
 
 What changed from the previous version: **the address of the inquiry and request channel** was changed (the masthead, the collection route in the Section 2 table, and Section 11). The demands the channel receives and the procedure and deadlines for handling them stay the same; this is not a change unfavorable to users or a material one, so it is announced 7 days in advance rather than 30 and takes effect then.
+
+The same content was first announced as 1.1.0 with an effective date of 9 November 2026, but the day that published copy actually stood on the surface where this document is published was 3 November 2026 — so that the notice is 7 days even counted from that surface, the effective date is moved by one day and the document is published again as this version.
