@@ -561,6 +561,76 @@ footer {
 .copyright { margin: 0.9rem 0 0; font-size: 0.82rem; }
 
 /* ───────────────────────────────────────────────────────────────
+   문의 모달 — ⭐ **발행본에는 이 중 아무것도 없다.** 스크립트가 짓는 자리이고,
+   그래서 스크립트를 끈 방문자에게는 이 블록이 그릴 것이 0 이다(평 `mailto:` 링크만 남는다).
+   ⭐ `.contact-trigger` 에 규칙이 **없는 것이 맞다** — 그 클래스는 칠하는 이름이 아니라
+     스크립트가 자리를 찾는 **손잡이**이고, 칠은 위 `.foot-col a` 가 이미 한다.
+     ⛔ 뜻 없는 규칙을 세워 「규칙 있는 클래스」로 보이게 하지 않는다.
+   ⛔ 담채 셋(`--state-*`)을 쓰지 않는다 — **판정 전용**이고, 빌리면 같은 색이 주어가 다른
+     두 문장을 뜻하게 된다(`src/tokens.test.ts` 가 그 잠금을 센다).
+   ─────────────────────────────────────────────────────────────── */
+.contact-modal {
+  max-width: 32rem;
+  width: calc(100% - 32px);
+  padding: 1.3rem 1.3rem 1.1rem;
+  border: 1px solid var(--ink-light);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--ink-burnt);
+  font-size: 0.95rem;
+}
+.contact-modal::backdrop { background: rgb(26 29 46 / 38%); }
+.contact-modal-h { margin: 0 0 0.5rem; font-size: 1.1rem; }
+.contact-modal-lede { margin: 0 0 1rem; color: var(--ink-dense); font-size: 0.88rem; }
+.contact-modal-row { margin: 0 0 0.8rem; }
+.contact-modal-row label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.85rem;
+  color: var(--ink-dense);
+}
+.contact-modal-row input,
+.contact-modal-row textarea {
+  width: 100%;
+  min-height: var(--tap-min);
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--ink-light);
+  border-radius: 6px;
+  background: var(--base);
+  color: var(--ink-burnt);
+  font: inherit;
+}
+.contact-modal-row textarea { min-height: 7rem; resize: vertical; }
+.contact-modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+  margin: 1rem 0 0;
+}
+/* ⭐ 제출은 **링크**다 — 버튼처럼 칠하되 이동은 브라우저가 쥔다. */
+.contact-modal-submit {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap-min);
+  padding: 0 1rem;
+  border-radius: 6px;
+  background: var(--ink-burnt);
+  color: var(--base);
+  text-decoration: none;
+}
+.contact-modal-close {
+  min-height: var(--tap-min);
+  padding: 0 0.9rem;
+  border: 1px solid var(--ink-light);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ink-dense);
+  font: inherit;
+  cursor: pointer;
+}
+
+/* ───────────────────────────────────────────────────────────────
    둘째 문서 — 헌법 관리 · 관측 결과.
    ⭐ 토큰은 하나도 새로 만들지 않는다 — 램프 안에서 쓴다(담채 셋은 판정 전용이고,
    격자의 칸은 **판정 결과**라 그 자리에서 담채를 쓴다 — `src/tokens.test.ts` 가 센다).
