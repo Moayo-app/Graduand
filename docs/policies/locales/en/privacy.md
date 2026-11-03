@@ -3,7 +3,7 @@
   ⚠️ ko·en 양 벌이 같은 합집합(🇰🇷 ∪ 🇺🇸 13절)을 담는다 — 한쪽에만 담으면 한쪽 독자에게 요건이 빠진다.
   ko 정본이 개정되면 이 판을 재전파하고 아래 정본 해시를 갱신한다 — 가드가 둘의 일치를 잰다.
   ⛔ 머리말에 「버전:」·「발행일:」·「시행일:」 기계 줄을 넣지 않는다 — 메타의 출처는 ko 정본 하나다.
-  정본 해시: sha256:fc7849e3615eb76605e97613e9cef2565691cfd6e4ee77d060f6e7887abcb15f
+  정본 해시: sha256:6c2b94aed7ad0535959c74750895f149babbb4da077d1d6264c84a22e3b2925d
 -->
 
 # Privacy Policy
@@ -12,7 +12,7 @@
 
 > The official version of this document is the Korean version. If this translation and the Korean version differ in interpretation, the Korean version prevails.
 
-> **Notice of change — effective 10 November 2026.** The address of the inquiry and request channel stated in this policy changes to `privacy@moayo.app`. There are three such places — the "Contact" row of the masthead below, the "Collection route" cell in the Section 2 table, and the privacy officer's contact in Section 11. Only the **address** changes; the demands the channel receives (access, correction, deletion and suspension of processing under Section 9) and the procedure and deadlines for handling them stay the same. The new address can be used **from this notice onward**, and mail sent to the earlier address continues to be received. This notice is the announcement **at least 7 days before the change takes effect** that Section 12 requires; until the effective date, **10 November 2026, the previous version remains in force.**
+> **Notice of change — effective 10 November 2026.** This policy changes **two** things. ⑴ The address of the inquiry and request channel it states changes to `privacy@moayo.app` — there are three such places (the "Contact" row of the masthead below, the "How collected" cell in the Section 2 table, and the privacy officer's contact in Section 11), and the demands the channel receives (access, correction, deletion and suspension of processing under Section 9) and the procedure and deadlines for handling them stay the same. ⑵ **The Section 2 table now names both channels** — `support@moayo.app`, which receives general inquiries and refund requests (Terms, Article 12; Refund Policy, Section 6), was already the address the public documents pointed at, but it had no name in that table. This is **not the Company starting to collect something new: it is the table finally stating a place that was already receiving** — the items a refund request asks you to include (the email address used for the payment, and the payment date) are stated in the same table. The new address can be used **from this notice onward**, and mail sent to the earlier address continues to be received. This notice is the announcement **at least 7 days before the change takes effect** that Section 12 requires; until the effective date, **10 November 2026, the previous version remains in force.**
 
 Moayo Inc. (the "Company") processes personal data in providing graduand (the "Service"). This policy states what personal data the Company processes and for what, how long it is kept, and what you can demand about it.
 
@@ -40,8 +40,9 @@ The items the Company processes, or is scheduled to process when the Service tak
 
 | Category | Items | How collected | Retention period |
 |---|---|---|---|
-| Contact information | Inquiry email address and the content of the inquiry | The inquiry channel (privacy@moayo.app) | Destroyed without delay once the purpose of handling the inquiry is achieved. Where a record falls under **records of consumer complaints or dispute handling**, it is kept for **3 years** under the Act on Consumer Protection in Electronic Commerce and then destroyed |
+| Contact information | Inquiry email address and the content of the inquiry | The personal-data inquiry and request channel (privacy@moayo.app) · the general inquiry channel (support@moayo.app — Terms, Article 12) | Destroyed without delay once the purpose of handling the inquiry is achieved. Where a record falls under **records of consumer complaints or dispute handling**, it is kept for **3 years** under the Act on Consumer Protection in Electronic Commerce and then destroyed |
 | Contact information | Items used to deliver the subscription benefit (not yet set — stated on the day the delivery mechanism is settled) | The subscription activation notice from the Seller | Not yet set — same as above |
+| Transaction confirmation information | The **email address used for the payment and the payment date**, as a refund request asks you to include | The refund request channel (support@moayo.app — Refund Policy, Section 6) | Destroyed without delay once the refund request has been handled — the retention obligation is the same as the first row above. The Company does not hold records of payment settlement (see the checkout paragraph below) |
 
 **Information collected at checkout** (email address, payment method, business verification details) is collected and processed by the Seller under the Seller's own privacy policy, and is provided directly from the customer's browser to the Seller — it does not pass through the Company. Payment method details do not reach the Company. Sections 5 and 6 state that entrustment and the overseas transfer.
 
@@ -153,10 +154,16 @@ When the Company changes this policy, it announces the content of the change and
 
 ## 13. Effective date
 
-This policy (version 1.1.1) takes effect on 10 November 2026.
+This policy (version 1.2.0) takes effect on 10 November 2026.
 
 This version was published on 3 November 2026 — because Section 12 requires a change to be announced **at least 7 days before it takes effect**, the publication date and the effective date of this version are 7 days apart.
 
-What changed from the previous version: **the address of the inquiry and request channel** was changed (the masthead, the collection route in the Section 2 table, and Section 11). The demands the channel receives and the procedure and deadlines for handling them stay the same; this is not a change unfavorable to users or a material one, so it is announced 7 days in advance rather than 30 and takes effect then.
+**Two** things changed from the version in force (1.0.0).
 
-The same content was first announced as 1.1.0 with an effective date of 9 November 2026, but the day that published copy actually stood on the surface where this document is published was 3 November 2026 — so that the notice is 7 days even counted from that surface, the effective date is moved by one day and the document is published again as this version.
+⑴ **The address of the inquiry and request channel** was changed (the masthead, the "How collected" cell in the Section 2 table, and Section 11). The demands the channel receives and the procedure and deadlines for handling them stay the same.
+
+⑵ **The Section 2 table now names both channels.** support@moayo.app, which receives general inquiries and refund requests (Terms, Article 12; Refund Policy, Section 6), was already the address the public documents pointed at, but it had no name in that table — this is **not the Company starting to collect something new: it is the table finally stating a place that was already receiving.** The items a refund request asks you to include (the email address used for the payment, and the payment date) are stated in the same table.
+
+Neither is a change unfavorable to users or a material one, so they are announced 7 days in advance rather than 30 and take effect then.
+
+The same content was first announced as 1.1.0 with an effective date of 9 November 2026, and then as 1.1.1 with an effective date of 10 November 2026 — for 1.1.0 the day that published copy actually stood on the surface where this document is published was 3 November 2026, so the notice fell short of 7 days; 1.1.1 is superseded by this version on the same day, with ⑵ added. Both were superseded **before taking effect**, so neither was ever in force.
